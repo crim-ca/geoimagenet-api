@@ -58,9 +58,8 @@ def upgrade():
             DECLARE 
                 validated_id int;
             BEGIN 
-                SELECT id FROM annotation_status WHERE name = 'validated' into validated_id;
-                IF OLD.status = validated_id AND NEW.status = validated_id THEN
-                    RAISE EXCEPTION 'Can''t update an annotation with status ''validated''.';
+                IF OLD.released AND NEW.released = validated_id THEN
+                    RAISE EXCEPTION 'Can''t update an annotation that is ''released''.';
                 END IF;
                 NEW.updated_at = NOW();
                 RETURN NEW; 
