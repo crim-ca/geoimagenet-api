@@ -18,19 +18,24 @@ depends_on = None
 
 def upgrade():
     trigger = """
-        CREATE OR REPLACE FUNCTION annotation_save_event() 
-        RETURNS trigger AS 
-        $$ 
+        CREATE OR REPLACE FUNCTION annotation_save_event() RETURNS trigger AS $$ 
             BEGIN 
                 INSERT INTO annotation_log
-                (annotation_id, annotator_id, geometry, taxonomy_class_id, image_name)
-                VALUES (NEW.id, NEW.annotator_id, NEW.geometry, NEW.taxonomy_class_id, NEW.image_name);
+                (annotation_id, annotator_id, geometry, taxonomy_class_id, image_name, released, description)
+                VALUES (
+                    NEW.id, 
+                    CASE WHEN OLD.annotator_id = NEW.annotator_id THEN NULL ELSE NEW.annotator_id END, 
+                    CASE WHEN st_equals(OLD.geometry, NEW.geometry) THEN NULL ELSE NEW.geometry END, 
+                    CASE WHEN OLD.taxonomy_class_id = NEW.taxonomy_class_id THEN NULL ELSE NEW.taxonomy_class_id END, 
+                    CASE WHEN OLD.image_name = NEW.image_name THEN NULL ELSE NEW.image_name END,
+                    CASE WHEN OLD.released = NEW.released THEN NULL ELSE NEW.released END,
+                    (SELECT id FROM annotation_log_description WHERE name=lower(tg_op))
+                );
                 RETURN NEW; 
-            END; 
+            END;
         $$ LANGUAGE 'plpgsql';
 
-        CREATE TRIGGER log_annotation_action AFTER INSERT OR UPDATE
-        ON annotation
+        CREATE TRIGGER log_annotation_action AFTER INSERT OR UPDATE ON annotation
         FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
     """
     op.execute(trigger)
