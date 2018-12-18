@@ -39,6 +39,17 @@ def upgrade():
         FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
     """
     op.execute(trigger)
+    trigger_delete = """
+        CREATE OR REPLACE FUNCTION annotation_delete_event() RETURNS trigger AS $$ 
+            BEGIN 
+                INSERT INTO annotation_log (annotation_id, description) VALUES (OLD.id, lower(tg_op));
+            END; 
+        $$ LANGUAGE 'plpgsql';
+
+        CREATE TRIGGER log_annotation_action_delete AFTER DELETE ON annotation
+        FOR EACH ROW EXECUTE PROCEDURE annotation_delete_event();
+    """
+    op.execute(trigger_delete)
 
     trigger_annotation_update = """
         CREATE OR REPLACE FUNCTION annotation_update_check() 
