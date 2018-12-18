@@ -36,17 +36,27 @@ class Annotation(Base):
     released = Column(Boolean)
 
 
+class AnnotationLogDescription(Base):
+    __tablename__ = "annotation_log_description"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False, unique=True)
+
+
 class AnnotationLog(Base):
     __tablename__ = "annotation_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
-
-    annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
-    geometry = Column(Geometry("GEOMETRY"), nullable=False)
-    updated_at = Column(DateTime, server_default=text("NOW()"))
-    taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), nullable=False)
-    image_name = Column(String, nullable=False)
+    annotation_id = Column(Integer, ForeignKey("annotation.id"))
+    annotator_id = Column(Integer, ForeignKey("person.id"))
+    geometry = Column(Geometry("GEOMETRY"))
+    created_at = Column(DateTime, server_default=text("NOW()"))
+    taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"))
+    image_name = Column(String)
+    released = Column(Boolean)
+    description = Column(
+        Integer, ForeignKey("annotation_log_description.id"), server_default="1"
+    )
 
 
 class Batch(Base):
