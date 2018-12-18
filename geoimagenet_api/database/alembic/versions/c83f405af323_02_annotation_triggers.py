@@ -7,7 +7,7 @@ Create Date: 2018-12-17 17:01:04.809382
 """
 from alembic import op
 import sqlalchemy as sa
-import geoalchemy2
+from sqlalchemy.sql import table, column
 
 # revision identifiers, used by Alembic.
 revision = "c83f405af323"
@@ -73,7 +73,17 @@ def upgrade():
 
     op.execute(trigger_annotation_update)
 
+    op.bulk_insert(anno_table, [
+        {"name": "insert"},
+        {"name": "update"},
+        {"name": "delete"},
+    ])
+
+
+anno_table = table("annotation_log_description", column('name', sa.String))
+
 
 def downgrade():
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
     op.execute("drop trigger if exists annotation_update_check on annotation cascade;")
+    op.execute(anno_table.delete().where(anno_table.c.name.in_(['insert', 'update', 'delete'])))
