@@ -24,13 +24,6 @@ class Person(Base):
     name = Column(String, nullable=False)
 
 
-class AnnotationStatus(Base):
-    __tablename__ = "annotation_status"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False, unique=True)
-
-
 class Annotation(Base):
     __tablename__ = "annotation"
 
@@ -40,9 +33,7 @@ class Annotation(Base):
     updated_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), nullable=False)
     image_name = Column(String, nullable=False)
-    status = Column(
-        Integer, ForeignKey("annotation_status.id"), nullable=False, server_default="1"
-    )
+    released = Column(Boolean)
 
 
 class AnnotationLog(Base):
