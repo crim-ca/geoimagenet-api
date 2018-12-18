@@ -1,0 +1,387 @@
+openapi: "3.0.0"
+info:
+  title: Geoimagenet API
+  description: API for Geoimagenet
+  version: 1.0.0
+servers:
+  #  - url: http://geoimagenet.crim.ca
+  - url: /v1
+    description: Production server
+paths:
+  /:
+    get:
+      summary: General information about the api
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfo'
+  /persons:
+    get:
+      summary: Search a person
+      parameters:
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+    post:
+      summary: Add a person
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: The person created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+  /persons/{username}:
+    get:
+      summary: Get a person by username
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+  /taxonomy_classes:
+    get:
+      summary: Search taxonomy class elements
+      tags:
+        - not implemented
+      parameters:
+        - name: taxonomy_group_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: taxonomy_class_id
+          in: query
+          schema:
+            type: integer
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: depth
+          in: query
+          description: The depth of taxonomy class children to return. -1 means infinite, 0 is the default
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxonomyClass'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+    post:
+      summary: Add a taxonomy class
+      tags:
+        - not implemented
+      parameters:
+        - name: name
+          description: The name of the taxonomy class
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: taxonomy_group_id
+          description: The id of the parent taxonomy group
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        201:
+          description: The taxonomy class created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyClass'
+
+  /taxonomy_classes/{id}:
+    get:
+      summary: Get a specific taxonomy class by id
+      tags:
+        - not implemented
+      parameters:
+        - name: id
+          in: path
+          description: The id of the taxonomy class
+          required: true
+          schema:
+            type: integer
+        - name: depth
+          in: query
+          description: The depth of taxonomy class children to return. -1 means infinite, 0 is the default
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyClass'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+
+  /taxonomy_groups:
+    get:
+      summary: Search taxonomy group elements
+      tags:
+        - not implemented
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: version
+          description: The version number of the taxonomy group
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxonomyGroup'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+    post:
+      summary: Add a taxonomy group
+      tags:
+        - not implemented
+      parameters:
+        - name: name
+          description: The name of the taxonomy group
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: version
+          description: The version of the taxonomy group
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: The taxonomy class created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyGroup'
+
+  /taxonomy_groups/{id}:
+    get:
+      summary: Get a specific taxonomy group by id
+      tags:
+        - not implemented
+      parameters:
+        - name: id
+          in: path
+          description: The id of the taxonomy group
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyGroup'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+
+  /validations:
+    get:
+      summary: Search validations
+      tags:
+        - not implemented
+      parameters:
+        - name: annotation_id
+          in: query
+          description: The id of the annotation that was validated
+          schema:
+            type: integer
+        - name: validator_id
+          in: query
+          description: The id of the person that validated
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        404:
+          description: Not found
+          content:
+            application/json: {}
+    post:
+      summary: Validate annotations
+      tags:
+        - not implemented
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationPost'
+      responses:
+        201:
+          description: The validations created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Validation'
+components:
+  schemas:
+    ApiInfo:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+    Person:
+      type: object
+      required:
+        - id
+        - username
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        name:
+          type: string
+    TaxonomyClass:
+      type: object
+      required:
+        - id
+        - name
+        - taxonomy_group_id
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        taxonomy_group_id:
+          type: integer
+          format: int64
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxonomyClass'
+    TaxonomyGroup:
+      type: object
+      required:
+        - id
+        - name
+        - version
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        version:
+          type: string
+    Validation:
+      type: object
+      required:
+        - id
+        - annotation_id
+        - validator_id
+      properties:
+        id:
+          type: integer
+          format: int64
+        annotation_id:
+          type: integer
+          format: int64
+        validator_id:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+    ValidationPost:
+      type: object
+      required:
+        - annotation_ids
+        - validator_id
+      properties:
+        annotation_ids:
+          type: array
+          items:
+            type: integer
+        validator_id:
+          type: integer
+          format: int64
