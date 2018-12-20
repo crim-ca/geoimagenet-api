@@ -1,5 +1,4 @@
 import connexion
-from sqlalchemy.exc import IntegrityError
 
 from geoimagenet_api.openapi_schemas import Validation, ValidationPost
 from geoimagenet_api.database.models import ValidationEvent as DBValidation
