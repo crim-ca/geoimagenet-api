@@ -15,7 +15,7 @@ class ApiInfo:
 
 
 @dataclass
-class Person:
+class User:
     id: int
     username: str
     name: str

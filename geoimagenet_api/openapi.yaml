@@ -17,9 +17,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiInfo'
-  /persons:
+  /users:
     get:
-      summary: Search a person
+      summary: Search users
       parameters:
         - name: username
           in: query
@@ -37,13 +37,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Person'
+                  $ref: '#/components/schemas/User'
         404:
           description: Not found
           content:
             application/json: {}
     post:
-      summary: Add a person
+      summary: Add a user
       parameters:
         - name: username
           in: query
@@ -61,10 +61,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
-  /persons/{username}:
+                $ref: '#/components/schemas/User'
+  /users/{username}:
     get:
-      summary: Get a person by username
+      summary: Get a user by username
       parameters:
         - name: username
           in: path
@@ -77,7 +77,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/User'
         404:
           description: Not found
           content:
@@ -305,7 +305,7 @@ components:
           type: string
         version:
           type: string
-    Person:
+    User:
       type: object
       required:
         - id
