@@ -4,8 +4,7 @@ info:
   description: API for Geoimagenet
   version: 1.0.0
 servers:
-  #  - url: http://geoimagenet.crim.ca
-  - url: /v1
+  - url: /api/v1
     description: Production server
 paths:
   /:
