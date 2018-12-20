@@ -12,7 +12,7 @@ def search(name=None, version=None):
     taxo = session.query(DBTaxonomyGroup).filter_by(**filter_by)
     taxo = [dataclass_from_object(TaxonomyGroup, t) for t in taxo]
     if not taxo:
-        return "Not Found", 404
+        return "No taxonomy group found", 404
     return taxo
 
 
@@ -21,7 +21,7 @@ def get(id):
     taxo = session.query(DBTaxonomyGroup).filter_by(id=id).first()
     taxo = dataclass_from_object(TaxonomyGroup, taxo)
     if not taxo:
-        return "Not Found", 404
+        return "Taxonomy group id not found", 404
     return taxo
 
 
@@ -33,5 +33,5 @@ def post(name, version):
     try:
         session.commit()
     except IntegrityError:
-        return "Conflict", 409
+        return "A taxonomy class having this name and version already exists", 409
     return dataclass_from_object(TaxonomyGroup, taxo)

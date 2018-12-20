@@ -12,7 +12,7 @@ def search(username=None, name=None):
     persons = session.query(Person).filter_by(**filter_by)
     users = [dataclass_from_object(User, p) for p in persons]
     if not users:
-        return "Not Found", 404
+        return "No user found", 404
     return users
 
 
@@ -21,7 +21,7 @@ def get(username):
     person = session.query(Person).filter_by(username=username).first()
     user = dataclass_from_object(User, person)
     if not user:
-        return "Not Found", 404
+        return "username not found", 404
     return user
 
 
@@ -32,5 +32,5 @@ def post(username, name):
     try:
         session.commit()
     except IntegrityError:
-        return "Conflict", 409
+        return "A user with this username already exists", 409
     return dataclass_from_object(User, person)

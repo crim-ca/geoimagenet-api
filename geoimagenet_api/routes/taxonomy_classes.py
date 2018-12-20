@@ -14,7 +14,7 @@ def search(taxonomy_group_name, taxonomy_class_id=None, name=None, depth=0):
     # todo: depth
     taxo = [dataclass_from_object(TaxonomyClass, t) for t in taxo]
     if not taxo:
-        return "Not Found", 404
+        return "No taxonomy class found", 404
     return taxo
 
 
@@ -24,17 +24,16 @@ def get(id, depth=0):
     # todo: depth
     taxo = dataclass_from_object(TaxonomyClass, taxo)
     if not taxo:
-        return "Not Found", 404
+        return "Taxonomy class id not found", 404
     return taxo
 
 
 def post(name, taxonomy_group_id):
     session = Session()
     taxo = DBTaxonomyClass(name=name, taxonomy_group_id=taxonomy_group_id)
-    # todo: conflict
     session.add(taxo)
     try:
         session.commit()
     except IntegrityError:
-        return "Conflict", 409
+        return "A taxonomy class having this name and parent_id already exists", 409
     return dataclass_from_object(TaxonomyClass, taxo)

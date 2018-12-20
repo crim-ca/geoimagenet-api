@@ -13,7 +13,7 @@ def search(annotation_id=None, validator_id=None):
     validations = session.query(DBValidation).filter_by(**filter_by)
     validations = [dataclass_from_object(Validation, t) for t in validations]
     if not validations:
-        return "Not Found", 404
+        return "No validation found", 404
     return validations
 
 
@@ -26,8 +26,5 @@ def post():
         validations.append(validation)
 
     session.add_all(validations)
-    try:
-        session.commit()
-    except IntegrityError:
-        return "Conflict", 409
+    session.commit()
     return [dataclass_from_object(Validation, t) for t in validations]
