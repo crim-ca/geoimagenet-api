@@ -16,4 +16,4 @@ RUN python setup.py develop
 
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind=0.0.0.0:8080", "--workers=4", "geoimagenet_api:application.app"]
+CMD ["gunicorn", "--bind=0.0.0.0:8080", "--workers=4", "geoimagenet_api:application"]
