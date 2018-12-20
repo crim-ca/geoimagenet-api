@@ -8,8 +8,8 @@ from geoimagenet_api.openapi_schemas import Optional
 
 def dataclass_from_object(data_cls, source_obj):
     fields = [f.name for f in dataclasses.fields(data_cls)]
-    source_items = source_obj.__dict__.items()
-    filtered_properties = {k: v for k, v in source_items if k in fields}
+    fields_in_source_obj = [f for f in dir(source_obj) if f in fields]
+    filtered_properties = {f: getattr(source_obj, f) for f in fields_in_source_obj}
     return data_cls(**filtered_properties)
 
 
