@@ -42,7 +42,7 @@ def ignore_custom_ini(request):
 def test_defaults(ignore_custom_ini):
     """Test that the default config is loaded"""
     db = config.get("postgis_db", str)
-    username = config.get("postgis_username", str)
+    username = config.get("postgis_user", str)
     password = config.get("postgis_password", str)
 
     assert (db, username, password) == ("postgres", "postgres", "postgres")

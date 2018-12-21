@@ -64,7 +64,7 @@ def _convert_bool(value):
 
 def get_database_url():
     db = get("postgis_db", str)
-    username = get("postgis_username", str)
+    username = get("postgis_user", str)
     password = get("postgis_password", str)
     url = f"postgresql://{username}:{password}@192.168.99.201/{db}"
 
