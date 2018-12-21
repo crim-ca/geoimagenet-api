@@ -10,9 +10,6 @@ from geoimagenet_api import config
 if config.get("check_db_connection_on_import", bool):
     connection.check_connection()
 
-if config.get("run_migrations_on_import", bool):
-    migrations.upgrade_head()
-
 app = connexion.App(__name__, port=8080)
 app.add_api(
     "openapi.yaml",

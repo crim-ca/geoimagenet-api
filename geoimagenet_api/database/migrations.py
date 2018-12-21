@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import os
 from pathlib import Path
+import sys
 
 import alembic.config
 
@@ -16,8 +17,14 @@ def cwd(path):
         os.chdir(old_pwd)
 
 
-def upgrade_head():
+def main():
+    """Entrypoint for command-line migrations.
+
+    Use the `migrate` command exactly like `alembic`.
+    Ex: `migrate upgrade head`
+    """
     here = str(Path(__file__).parent)
     with cwd(here):
-        argv = ["--raiseerr", "upgrade", "head"]
+        argv = ["--raiseerr"] + sys.argv[1:]
         alembic.config.main(argv=argv)
+
