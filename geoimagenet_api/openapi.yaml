@@ -93,7 +93,7 @@ paths:
           required: true
           schema:
             type: string
-        - name: taxonomy_class_id
+        - name: id
           in: query
           schema:
             type: integer

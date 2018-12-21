@@ -6,11 +6,21 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 from geoimagenet_api.openapi_schemas import Optional
 
 
-def dataclass_from_object(data_cls, source_obj):
+def dataclass_from_object(data_cls, source_obj, depth=None):
     fields = [f.name for f in dataclasses.fields(data_cls)]
-    fields_in_source_obj = [f for f in dir(source_obj) if f in fields]
-    filtered_properties = {f: getattr(source_obj, f) for f in fields_in_source_obj}
-    return data_cls(**filtered_properties)
+    common_fields = [f for f in dir(source_obj) if f in fields]
+    properties = {}
+    for field in common_fields:
+        value = getattr(source_obj, field)
+        if isinstance(value, list) and len(value) and isinstance(value[0], type(source_obj)):
+            # recursive data type
+            if depth is None or depth > 0:
+                new_depth = depth - 1 if depth is not None else None
+                value = [dataclass_from_object(data_cls, v, new_depth) for v in value]
+            else:
+                value = []
+        properties[field] = value
+    return data_cls(**properties)
 
 
 class DataclassEncoder(FlaskJSONEncoder):
