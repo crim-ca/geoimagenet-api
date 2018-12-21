@@ -73,3 +73,8 @@ def test_custom_ini(temp_custom_ini):
     assert db == "bananas"
 
 
+def test_environment_variable():
+    os.environ["GEOIMAGENET_API_POSTGIS_DB"] = 'bananas'
+    db = config.get("postgis_db")
+
+    assert db == "bananas"
