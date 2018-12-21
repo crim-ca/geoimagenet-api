@@ -85,8 +85,6 @@ paths:
   /taxonomy_classes:
     get:
       summary: Search taxonomy class elements
-      tags:
-        - not implemented
       parameters:
         - name: taxonomy_group_name
           in: query
