@@ -1,0 +1,616 @@
+{
+	"version": 1,
+	"name": "Objets",
+	"value": [{
+		"name": "Batiment résidentiel",
+		"value": [{
+			"name": "Unifamilial"
+		},
+		{
+			"name": "Unifamiliale détaché"
+		},
+		{
+			"name": "Unifamiliale jumelé"
+		},
+		{
+			"name": "Multifamiliale"
+		},
+		{
+			"name": "Maison mobile"
+		},
+		{
+			"name": "Autre bâtiment"
+		}]
+	},
+	{
+		"name": "Batiment commercial et service",
+		"value": [{
+			"name": "Centre commercial"
+		},
+		{
+			"name": "Commerce indépendant (pharmacie, épicerie, …)"
+		},
+		{
+			"name": "Commerce de véhicules"
+		},
+		{
+			"name": "Station de service et garage"
+		},
+		{
+			"name": "Hôtel"
+		},
+		{
+			"name": "Motel"
+		},
+		{
+			"name": "Restaurant, brasserie"
+		},
+		{
+			"name": "Autre commerce/service"
+		}]
+	},
+	{
+		"name": "Batiment de service et d'utilité publique (équipements collectifs)",
+		"value": [{
+			"name": "Édifice gouvennemental"
+		},
+		{
+			"name": "Hôtel de ville"
+		},
+		{
+			"name": "Établissement d'incarcération"
+		},
+		{
+			"name": "Poste de police"
+		},
+		{
+			"name": "Poste de pompiers"
+		},
+		{
+			"name": "Hôpital"
+		},
+		{
+			"name": "Église"
+		},
+		{
+			"name": "Maison de religieux"
+		},
+		{
+			"name": "Université, collège"
+		},
+		{
+			"name": "École primaire/secondaire"
+		},
+		{
+			"name": "Cinéma extérieur"
+		},
+		{
+			"name": "Aréna"
+		},
+		{
+			"name": "Stade"
+		},
+		{
+			"name": "Centre sportif"
+		},
+		{
+			"name": "Terrain de jeu, parc urbain"
+		},
+		{
+			"name": "Cimetière"
+		},
+		{
+			"name": "Poste de douane"
+		},
+		{
+			"name": "Observatoire"
+		},
+		{
+			"name": "Chateau d'eau"
+		},
+		{
+			"name": "Bassin de rétention"
+		}]
+	},
+	{
+		"name": "Installations sportives extérieures",
+		"value": [{
+			"name": "Terrain de baseball"
+		},
+		{
+			"name": "Terrain de soccer"
+		},
+		{
+			"name": "Terrain de football"
+		},
+		{
+			"name": "Piscine extérieure"
+		},
+		{
+			"name": "Terrain de tennis"
+		},
+		{
+			"name": "Terrain de basketball"
+		},
+		{
+			"name": "Piste d'athlétisme"
+		},
+		{
+			"name": "Terrain à vocation multiples"
+		},
+		{
+			"name": "Terrain de volley-ball"
+		},
+		{
+			"name": "Terrain de golf"
+		},
+		{
+			"name": "Centre de ski"
+		},
+		{
+			"name": "Piste de course"
+		},
+		{
+			"name": "Parc d'attractions"
+		},
+		{
+			"name": "hippodrome"
+		}]
+	},
+	{
+		"name": "Batiment ou infrastructure industriel",
+		"value": [{
+			"name": "Usine d'extraction (carrière, sablière, gravière)"
+		},
+		{
+			"name": "Usine de fabrication/transformation légère"
+		},
+		{
+			"name": "Usine de fabrication/transformation lourde"
+		},
+		{
+			"name": "Entrepôt de marchandise"
+		},
+		{
+			"name": "Entrepôt d'hydrocarbures"
+		},
+		{
+			"name": "Station d'épuration des eaux"
+		},
+		{
+			"name": "Bassin de décantation"
+		},
+		{
+			"name": "Site d'enfouissement (dépôt de déchets)"
+		},
+		{
+			"name": "Réservoir"
+		},
+		{
+			"name": "Cheminée"
+		},
+		{
+			"name": "Usine autre"
+		}]
+	},
+	{
+		"name": "Autre objets bâtis (mobilier urbain)",
+		"value": [{
+			"name": "Clôture"
+		},
+		{
+			"name": "Lampadaire"
+		},
+		{
+			"name": "Troittoir"
+		},
+		{
+			"name": "Haie"
+		},
+		{
+			"name": "Poteau électrique"
+		},
+		{
+			"name": "Abribus"
+		}]
+	},
+	{
+		"name": "Infrastructure de transport routier",
+		"value": [{
+			"name": "Autoroute"
+		},
+		{
+			"name": "Échangeur"
+		},
+		{
+			"name": "Route pavée"
+		},
+		{
+			"name": "Route non pavée"
+		},
+		{
+			"name": "Pont"
+		},
+		{
+			"name": "Viaduc"
+		},
+		{
+			"name": "Balance routière"
+		},
+		{
+			"name": "Centre de services autoroutiers"
+		},
+		{
+			"name": "Poste de péage"
+		},
+		{
+			"name": "Signalisation routière"
+		},
+		{
+			"name": "Stationnement"
+		},
+		{
+			"name": "Balance routière"
+		},
+		{
+			"name": "Paraneige"
+		},
+		{
+			"name": "Tunnel (entrée et sortie)"
+		}]
+	},
+	{
+		"name": "Infrastructure de transport ferroviaire",
+		"value": [{
+			"name": "Gare de train"
+		},
+		{
+			"name": "Voie ferrée unique"
+		},
+		{
+			"name": "Voie ferrée multiple"
+		},
+		{
+			"name": "Voie de garage"
+		},
+		{
+			"name": "Gare de triage"
+		},
+		{
+			"name": "Croisement"
+		}]
+	},
+	{
+		"name": "Infrastructure de transport maritime",
+		"value": [{
+			"name": "Port commercial"
+		},
+		{
+			"name": "Marina / Port de plaisance"
+		},
+		{
+			"name": "Port militaire"
+		},
+		{
+			"name": "Quai"
+		},
+		{
+			"name": "Rampe de mise à l'eau"
+		},
+		{
+			"name": "Écluse"
+		}]
+	},
+	{
+		"name": "Infrastructure de transport aérien",
+		"value": [{
+			"name": "Aéroport"
+		},
+		{
+			"name": "Piste de décollage"
+		},
+		{
+			"name": "Hangar"
+		}]
+	},
+	{
+		"name": "Moyen de transport mobile",
+		"value": [{
+			"name": "Voiture"
+		},
+		{
+			"name": "Fourgonnette"
+		},
+		{
+			"name": "Camionnette"
+		},
+		{
+			"name": "Autocar/autobus"
+		},
+		{
+			"name": "Train - locomotive"
+		},
+		{
+			"name": "Train - wagon de passagers"
+		},
+		{
+			"name": "Train - wagon de marchandise"
+		},
+		{
+			"name": "Bateau de plaisance, voilier"
+		},
+		{
+			"name": "Bateau de marchandise"
+		},
+		{
+			"name": "Porte contenaires"
+		},
+		{
+			"name": "Pétrolier/méthanier"
+		},
+		{
+			"name": "Avion type cesna"
+		},
+		{
+			"name": "Avion de ligne"
+		},
+		{
+			"name": "Avion militaire"
+		},
+		{
+			"name": "Train routier"
+		},
+		{
+			"name": "Paquebot"
+		},
+		{
+			"name": "Navire militaire"
+		}]
+	},
+	{
+		"name": "Télécommunications",
+		"value": [{
+			"name": "Tour (dédiée)"
+		},
+		{
+			"name": "Antenne de communication (sur toît)"
+		},
+		{
+			"name": "Station de réception satellite (grandes paraboles)"
+		}]
+	},
+	{
+		"name": "Énergie",
+		"value": [{
+			"name": "Ligne de haute tension"
+		},
+		{
+			"name": "Pipeline"
+		},
+		{
+			"name": "Pylône"
+		},
+		{
+			"name": "Centrale thermique"
+		},
+		{
+			"name": "Centrale hydro-électrique"
+		},
+		{
+			"name": "Centrale nucléaire"
+		},
+		{
+			"name": "Éolienne"
+		},
+		{
+			"name": "Panneau solaire"
+		},
+		{
+			"name": "Transformateur d'électricité, poste électrique"
+		},
+		{
+			"name": "Puit de pétrole/gaz"
+		},
+		{
+			"name": "Raffinerie"
+		}]
+	},
+	{
+		"name": "Structures anthropiques hydrographiques",
+		"value": [{
+			"name": "Digue"
+		},
+		{
+			"name": "Brise-Lame"
+		},
+		{
+			"name": "Cale sèche"
+		},
+		{
+			"name": "Entrave à la navigation"
+		},
+		{
+			"name": "Mur de protection (seawall)"
+		},
+		{
+			"name": "Repère de navigation"
+		},
+		{
+			"name": "Vivier / pisciculture"
+		},
+		{
+			"name": "Échelle à poisson"
+		}]
+	},
+	{
+		"name": "Exploitation agricole",
+		"value": [{
+			"name": "Champ - grandes cultures"
+		},
+		{
+			"name": "Champ - cultures maraîchères"
+		},
+		{
+			"name": "Champ - horticulture"
+		},
+		{
+			"name": "Champ - fourrager"
+		},
+		{
+			"name": "Friche"
+		},
+		{
+			"name": "Verger"
+		},
+		{
+			"name": "Vignoble"
+		},
+		{
+			"name": "Enclos"
+		}]
+	},
+	{
+		"name": "Batiments agricoles",
+		"value": [{
+			"name": "Grange, entrepôt, hangar"
+		},
+		{
+			"name": "Silo"
+		},
+		{
+			"name": "Ferme d'élevage"
+		},
+		{
+			"name": "Fosse lisier"
+		},
+		{
+			"name": "Serre d'exploitation agricole"
+		},
+		{
+			"name": "Serre commerciale"
+		},
+		{
+			"name": "Élévateur à grain"
+		}]
+	},
+	{
+		"name": "Arbres (en divers milieux)",
+		"value": [{
+			"name": "Arbre feuillus (Deciduous tree)"
+		},
+		{
+			"name": "Arbre conifère (Evergreen Forest Land )"
+		}]
+	},
+	{
+		"name": "Hydrographie linéaire",
+		"value": [{
+			"name": "Rivière (Streams)"
+		},
+		{
+			"name": "Ruisseau"
+		},
+		{
+			"name": "Fossé"
+		},
+		{
+			"name": "Chute"
+		},
+		{
+			"name": "Rapide"
+		},
+		{
+			"name": "Cours d'eau tari"
+		}]
+	},
+	{
+		"name": "Hydrographie surfacique",
+		"value": [{
+			"name": "Eau"
+		}]
+	},
+	{
+		"name": "Milieux humides",
+		"value": [{
+			"name": "Bog - arboré"
+		},
+		{
+			"name": "Bog - non arboré"
+		},
+		{
+			"name": "Fen"
+		},
+		{
+			"name": "Marécage"
+		},
+		{
+			"name": "Marais"
+		},
+		{
+			"name": "Eau peu profonde"
+		}]
+	},
+	{
+		"name": "Mines",
+		"value": [{
+			"name": "Pit"
+		},
+		{
+			"name": "Mine shaft"
+		},
+		{
+			"name": "Tailings"
+		},
+		{
+			"name": "Decantation basin"
+		}]
+	},
+	{
+		"name": "Formes terrestres",
+		"value": [{
+			"name": "Esker"
+		},
+		{
+			"name": "Moraine"
+		},
+		{
+			"name": "Pingo"
+		},
+		{
+			"name": "Drumlin"
+		}]
+	},
+	{
+		"name": "Énergie verte",
+		"value": [{
+			"name": "Roofedge - toit vert"
+		},
+		{
+			"name": "Roofedge - avec panneau solaire"
+		},
+		{
+			"name": "Toît plat"
+		},
+		{
+			"name": "Toît plat < 10 % obstruction"
+		},
+		{
+			"name": "Toît plat  10 - 30% obstruction"
+		},
+		{
+			"name": "Toît plat > 30 % obstruction"
+		},
+		{
+			"name": "Toît 2 pentes"
+		},
+		{
+			"name": "Toît 4 pentes"
+		},
+		{
+			"name": "Toît complexe"
+		},
+		{
+			"name": "Toît convexe"
+		}]
+	}]
+}
