@@ -11,6 +11,11 @@ def force_reload_config():
     config.config.config_ini = None
 
 
+@pytest.fixture(autouse=True)
+def skip_initial_db_check():
+    os.environ["GEOIMAGENET_API_CHECK_DB_CONNECTION_ON_STARTUP"] = False
+
+
 def test_key_error():
     with pytest.raises(KeyError):
         config.get("something_impossible")
