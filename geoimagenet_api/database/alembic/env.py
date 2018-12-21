@@ -26,7 +26,7 @@ target_metadata = Base.metadata
 sys.path.insert(0, str(Path.cwd().parent / 'config'))
 from config import get_database_url
 
-config.set_main_option(get_database_url(), "sqlalchemy.url")
+config.set_main_option("sqlalchemy.url", get_database_url())
 
 
 # other values from the config, defined by the needs of env.py,
