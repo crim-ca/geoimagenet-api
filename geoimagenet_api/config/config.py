@@ -31,8 +31,8 @@ def _get_environment_var(parameter_name, default=None):
 def get(parameter_name: str):
     """
     Get a configuration parameter.
-    The priorities are:
-      - environment variables prefixed by `ENVIRONMENT_PREFIX`
+    In order of priority:
+      - environment variables prefixed by `GEOIMAGENET_API_`
       - parameters in the ini file located in GEOIMAGENET_API_CONFIG environment variable
       - parameters in the ./custom.ini file
       - parameters in the ./default.ini file
