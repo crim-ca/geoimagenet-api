@@ -73,18 +73,20 @@ def upgrade():
 
     op.execute(trigger_annotation_update)
 
-    op.bulk_insert(anno_table, [
-        {"name": "insert"},
-        {"name": "update"},
-        {"name": "delete"},
-    ])
+    op.bulk_insert(
+        anno_table, [{"name": "insert"}, {"name": "update"}, {"name": "delete"}]
+    )
 
 
-anno_table = table("annotation_log_description", column('name', sa.String))
+anno_table = table("annotation_log_description", column("name", sa.String))
 
 
 def downgrade():
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
-    op.execute("drop trigger if exists log_annotation_action_delete on annotation cascade;")
+    op.execute(
+        "drop trigger if exists log_annotation_action_delete on annotation cascade;"
+    )
     op.execute("drop trigger if exists annotation_update_check on annotation cascade;")
-    op.execute(anno_table.delete().where(anno_table.c.name.in_(['insert', 'update', 'delete'])))
+    op.execute(
+        anno_table.delete().where(anno_table.c.name.in_(["insert", "update", "delete"]))
+    )
