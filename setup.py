@@ -51,7 +51,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'migrate = geoimagenet_api.database.migrations:main',
+            'migrate = geoimagenet_api.database.migrations:migrate',
+            'init = geoimagenet_api.database.migrations:init_database_data',
         ],
     }
 )
