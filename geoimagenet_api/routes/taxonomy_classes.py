@@ -25,7 +25,6 @@ def search(taxonomy_group_name, id=None, name=None, depth=None):
         filter_by["name"] = name
 
     taxo = session.query(DBTaxonomyClass).filter_by(**filter_by).all()
-    # todo: depth
     taxo = [dataclass_from_object(TaxonomyClass, t, depth=depth) for t in taxo]
     if not taxo:
         return "No taxonomy class found", 404
@@ -35,8 +34,7 @@ def search(taxonomy_group_name, id=None, name=None, depth=None):
 def get(id, depth=None):
     session = Session()
     taxo = session.query(DBTaxonomyClass).filter_by(id=id).first()
-    # todo: depth
-    taxo = dataclass_from_object(TaxonomyClass, taxo)
+    taxo = dataclass_from_object(TaxonomyClass, taxo, depth=depth)
     if not taxo:
         return "Taxonomy class id not found", 404
     return taxo

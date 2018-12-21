@@ -145,8 +145,6 @@ paths:
   /taxonomy_classes/{id}:
     get:
       summary: Get a specific taxonomy class by id
-      tags:
-        - not implemented
       parameters:
         - name: id
           in: path
