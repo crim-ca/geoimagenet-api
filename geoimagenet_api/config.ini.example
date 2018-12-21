@@ -1,4 +1,0 @@
-[geoimagenet_api]
-postgis_db = gis
-postgis_username = docker
-postgis_password = docker
