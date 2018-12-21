@@ -40,7 +40,11 @@ def get(parameter_name: str):
     """
     config = _load_config_ini()
 
+    configuration = config["geoimagenet_api"]
+    if parameter_name not in configuration:
+        raise KeyError("Parameter name not found in configuration.")
+
     from_environment = _get_environment_var(parameter_name)
-    from_config = config["geoimagenet_api"].get(parameter_name)
+    from_config = configuration[parameter_name]
 
     return from_environment or from_config
