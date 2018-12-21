@@ -4,11 +4,14 @@ from geoimagenet_api.__about__ import __version__, __author__, __email__
 
 import connexion
 from geoimagenet_api.utils import DataclassEncoder
-from geoimagenet_api.database import connection
+from geoimagenet_api.database import connection, migrations
 from geoimagenet_api import config
 
-if config.get('check_db_connection_on_import', bool):
+if config.get("check_db_connection_on_import", bool):
     connection.check_connection()
+
+if config.get("run_migrations_on_import", bool):
+    migrations.upgrade_head()
 
 app = connexion.App(__name__, port=8080)
 app.add_api(
@@ -21,5 +24,5 @@ app.add_api(
 app.app.json_encoder = DataclassEncoder
 application = app.app
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
