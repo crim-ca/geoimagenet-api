@@ -3,9 +3,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 import sys
-import os
-
-sys.path.insert(0, os.getcwd())
+from pathlib import Path
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -19,9 +17,17 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+sys.path.insert(0, str(Path.cwd()))
 from models import Base
 
 target_metadata = Base.metadata
+
+# Set sqlalchemy url from configuration
+sys.path.insert(0, str(Path.cwd().parent / 'config'))
+from config import get_database_url
+
+config.set_main_option(get_database_url(), "sqlalchemy.url")
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

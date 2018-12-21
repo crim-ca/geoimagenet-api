@@ -48,3 +48,12 @@ def get(parameter_name: str):
     from_config = configuration[parameter_name]
 
     return from_environment or from_config
+
+
+def get_database_url():
+    db = get("postgis_db")
+    username = get("postgis_username")
+    password = get("postgis_password")
+    url = f"postgresql://{username}:{password}@192.168.99.201/{db}"
+
+    return url

@@ -1,12 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from geoimagenet_api import config
+from geoimagenet_api.config import get_database_url
 
-db = config.get("postgis_db")
-username = config.get("postgis_username")
-password = config.get("postgis_password")
 
-connection_string = f"postgresql://{username}:{password}@192.168.99.201/{db}"
-
-engine = create_engine(connection_string, echo=True)
+engine = create_engine(get_database_url(), echo=True)
 Session = sessionmaker(bind=engine)
