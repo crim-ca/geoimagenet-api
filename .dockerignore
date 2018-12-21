@@ -1,3 +1,5 @@
+custom.ini
+
 .git
 docs/
 tests/
@@ -7,7 +9,7 @@ tests/
 .pytest_cache
 
 # PyCharm
-*.idea
+.idea
 
 # Byte-compiled / optimized / DLL files
 **/__pycache__
