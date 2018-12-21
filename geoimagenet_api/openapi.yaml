@@ -172,8 +172,6 @@ paths:
   /taxonomy_groups:
     get:
       summary: Search taxonomy group elements
-      tags:
-        - not implemented
       parameters:
         - name: name
           in: query
@@ -225,8 +223,6 @@ paths:
   /taxonomy_groups/{id}:
     get:
       summary: Get a specific taxonomy group by id
-      tags:
-        - not implemented
       parameters:
         - name: id
           in: path
