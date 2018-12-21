@@ -73,7 +73,7 @@ def init_database_data():
     """Entrypoint to build an empty database with data.
 
     While unique constraints shouldn't allow duplicate data,
-    You should be careful when loading data into the database.
+    you should be careful when loading data into the database.
     Any required migrations will be applied prior to inserting the data.
     """
     old_argv = copy(sys.argv)
