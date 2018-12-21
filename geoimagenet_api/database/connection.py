@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from geoimagenet_api.config import get_database_url
+from geoimagenet_api import config
 
 
-engine = create_engine(get_database_url(), echo=True)
+verbose_sqlalchemy = config.get('verbose_sqlalchemy', bool)
+engine = create_engine(config.get_database_url(), echo=verbose_sqlalchemy)
 Session = sessionmaker(bind=engine)
 
 
