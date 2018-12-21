@@ -28,7 +28,7 @@ def _get_environment_var(parameter_name, default=None):
     return os.environ.get(environment_variable, default)
 
 
-def get(parameter_name: str):
+def get(parameter_name: str, type_):
     """
     Get a configuration parameter.
     In order of priority:
@@ -37,6 +37,7 @@ def get(parameter_name: str):
       - parameters in the ./custom.ini file
       - parameters in the ./default.ini file
     :param parameter_name: the name of the config element to get
+    :param type_: the type of the parameter. Booleans are handled. (ex: bool('false') -> False)
     """
     config = _load_config_ini()
 
@@ -47,13 +48,24 @@ def get(parameter_name: str):
     from_environment = _get_environment_var(parameter_name)
     from_config = configuration[parameter_name]
 
-    return from_environment or from_config
+    conversion_function = {
+        bool: _convert_bool
+    }.get(type_, type_)
+
+    return conversion_function(from_environment or from_config)
+
+
+def _convert_bool(value):
+    boolean_states = configparser.ConfigParser.BOOLEAN_STATES
+    if value.lower() not in boolean_states:
+        raise ValueError('Not a boolean: %s' % value)
+    return boolean_states[value.lower()]
 
 
 def get_database_url():
-    db = get("postgis_db")
-    username = get("postgis_username")
-    password = get("postgis_password")
+    db = get("postgis_db", str)
+    username = get("postgis_username", str)
+    password = get("postgis_password", str)
     url = f"postgresql://{username}:{password}@192.168.99.201/{db}"
 
     return url

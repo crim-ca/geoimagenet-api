@@ -13,12 +13,12 @@ def force_reload_config():
 
 @pytest.fixture(autouse=True)
 def skip_initial_db_check():
-    os.environ["GEOIMAGENET_API_CHECK_DB_CONNECTION_ON_STARTUP"] = False
+    os.environ["GEOIMAGENET_API_CHECK_DB_CONNECTION_ON_STARTUP"] = 'false'
 
 
 def test_key_error():
     with pytest.raises(KeyError):
-        config.get("something_impossible")
+        config.get("something_impossible", str)
 
 
 @pytest.fixture
@@ -41,11 +41,17 @@ def ignore_custom_ini(request):
 
 def test_defaults(ignore_custom_ini):
     """Test that the default config is loaded"""
-    db = config.get("postgis_db")
-    username = config.get("postgis_username")
-    password = config.get("postgis_password")
+    db = config.get("postgis_db", str)
+    username = config.get("postgis_username", str)
+    password = config.get("postgis_password", str)
 
     assert (db, username, password) == ("postgres", "postgres", "postgres")
+
+
+def test_boolean(ignore_custom_ini):
+    """Test for boolean type conversion in config"""
+    check = config.get("check_db_connection_on_startup", bool)
+    assert not check
 
 
 @pytest.fixture
@@ -73,13 +79,13 @@ def temp_custom_ini(request):
 
 def test_custom_ini(temp_custom_ini):
     """Test that the default config is loaded"""
-    db = config.get("postgis_db")
+    db = config.get("postgis_db", str)
 
     assert db == "bananas"
 
 
 def test_environment_variable():
     os.environ["GEOIMAGENET_API_POSTGIS_DB"] = 'bananas'
-    db = config.get("postgis_db")
+    db = config.get("postgis_db", str)
 
     assert db == "bananas"
