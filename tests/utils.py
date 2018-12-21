@@ -3,7 +3,7 @@ import contextlib
 import requests
 from requests import exceptions
 
-from geoimagenet_api.tests import TEST_SERVER_URL
+from tests import TEST_SERVER_URL
 
 
 def join_url(*args):

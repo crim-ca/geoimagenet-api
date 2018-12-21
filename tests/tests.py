@@ -7,7 +7,7 @@ So if any json is not valid, it would raise an error.
 
 import pytest
 
-from geoimagenet_api.tests.utils import get, post, assert_http_error
+from tests.utils import get, post, assert_http_error
 
 
 pytestmark = pytest.mark.usefixtures("server")  # The server is always started
