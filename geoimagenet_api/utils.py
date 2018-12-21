@@ -6,7 +6,7 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 from geoimagenet_api.openapi_schemas import Optional
 
 
-def dataclass_from_object(data_cls, source_obj, depth=None):
+def dataclass_from_object(data_cls, source_obj, depth=0):
     fields = [f.name for f in dataclasses.fields(data_cls)]
     common_fields = [f for f in dir(source_obj) if f in fields]
     properties = {}
@@ -14,9 +14,8 @@ def dataclass_from_object(data_cls, source_obj, depth=None):
         value = getattr(source_obj, field)
         if isinstance(value, list) and len(value) and isinstance(value[0], type(source_obj)):
             # recursive data type
-            if depth is None or depth > 0:
-                new_depth = depth - 1 if depth is not None else None
-                value = [dataclass_from_object(data_cls, v, new_depth) for v in value]
+            if depth > 0:
+                value = [dataclass_from_object(data_cls, v, depth - 1) for v in value]
             else:
                 value = []
         properties[field] = value

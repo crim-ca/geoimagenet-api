@@ -8,7 +8,7 @@ from geoimagenet_api.database import Session
 from geoimagenet_api.utils import dataclass_from_object
 
 
-def search(taxonomy_group_name, id=None, name=None, depth=None):
+def search(taxonomy_group_name, id=None, name=None, depth=0):
     session = Session()
     try:
         taxonomy_group = session.query(DBTaxonomyGroup).filter_by(name=taxonomy_group_name).one()
@@ -31,7 +31,7 @@ def search(taxonomy_group_name, id=None, name=None, depth=None):
     return taxo
 
 
-def get(id, depth=None):
+def get(id, depth=0):
     session = Session()
     taxo = session.query(DBTaxonomyClass).filter_by(id=id).first()
     taxo = dataclass_from_object(TaxonomyClass, taxo, depth=depth)
