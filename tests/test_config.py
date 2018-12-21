@@ -50,7 +50,7 @@ def test_defaults(ignore_custom_ini):
 
 def test_boolean(ignore_custom_ini):
     """Test for boolean type conversion in config"""
-    check = config.get("check_db_connection_on_startup", bool)
+    check = config.get("check_db_connection_on_import", bool)
     assert not check
 
 
