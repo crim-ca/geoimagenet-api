@@ -24,6 +24,7 @@ def main():
     Ex: `migrate upgrade head`
     """
     here = str(Path(__file__).parent)
+    print(":: running_migrations ::")
     with cwd(here):
         argv = ["--raiseerr"] + sys.argv[1:]
         alembic.config.main(argv=argv)
