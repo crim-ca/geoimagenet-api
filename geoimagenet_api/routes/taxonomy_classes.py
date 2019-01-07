@@ -4,12 +4,12 @@ from sqlalchemy.orm.exc import NoResultFound
 from geoimagenet_api.openapi_schemas import TaxonomyClass
 from geoimagenet_api.database.models import TaxonomyClass as DBTaxonomyClass
 from geoimagenet_api.database.models import TaxonomyGroup as DBTaxonomyGroup
-from geoimagenet_api.database import Session
+from geoimagenet_api.database import session_factory
 from geoimagenet_api.utils import dataclass_from_object
 
 
 def search(taxonomy_group_name, id=None, name=None, depth=0):
-    session = Session()
+    session = session_factory()
     try:
         taxonomy_group = session.query(DBTaxonomyGroup).filter_by(name=taxonomy_group_name).one()
     except NoResultFound:
@@ -32,7 +32,7 @@ def search(taxonomy_group_name, id=None, name=None, depth=0):
 
 
 def get(id, depth=0):
-    session = Session()
+    session = session_factory()
     taxo = session.query(DBTaxonomyClass).filter_by(id=id).first()
     taxo = dataclass_from_object(TaxonomyClass, taxo, depth=depth)
     if not taxo:
@@ -41,7 +41,7 @@ def get(id, depth=0):
 
 
 def post(name, taxonomy_group_id):
-    session = Session()
+    session = session_factory()
     taxo = DBTaxonomyClass(name=name, taxonomy_group_id=taxonomy_group_id)
     session.add(taxo)
     try:

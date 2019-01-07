@@ -6,7 +6,8 @@ import json
 from copy import copy
 
 import alembic.config
-from geoimagenet_api.database.connection import Session
+
+from geoimagenet_api.database.connection import get_engine, session_factory
 from geoimagenet_api.database.models import TaxonomyClass, TaxonomyGroup
 
 
@@ -36,7 +37,7 @@ def migrate():
 
 def load_taxonomy():
     here = Path(__file__).parent
-    session = Session()
+    session = session_factory()
 
     objets = here / "json_data" / "objets.json"
     couverture = here / "json_data" / "couverture_de_sol.json"
