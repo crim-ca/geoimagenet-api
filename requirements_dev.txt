@@ -1,2 +1,4 @@
 pytest
 black
+pp-ez
+pytest-icdiff
