@@ -13,6 +13,8 @@ from tests.utils import api_url
 def test_root(client):
     r = client.get(api_url("/"))
     assert r.status_code == 200
+    assert "name" in r.json
+    assert "version" in r.json
 
 
 def test_not_found(client):
