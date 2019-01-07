@@ -1,5 +1,0 @@
-TEST_SERVER_PORT = 8989
-TEST_SERVER_BASE_URL = "v1"
-TEST_SERVER_URL = "http://localhost:{}/{}".format(
-    TEST_SERVER_PORT, TEST_SERVER_BASE_URL
-)

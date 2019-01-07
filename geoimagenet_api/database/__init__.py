@@ -1,1 +1,1 @@
-from .connection import Session
+from .connection import session_factory
