@@ -20,5 +20,15 @@ def test_not_found(client):
     assert r.status_code == 404
 
 
-def test_taxonomy(client):
-    client.get(api_url("/taxonomy"))
+def test_taxonomy_class_depth_0(client):
+    query = {"taxonomy_group_name": "Objets", "name": "Objets", "depth": "0"}
+    r = client.get(api_url("/taxonomy_classes"), query_string=query)
+    assert len(r.json) == 1
+    assert len(r.json[0]["children"]) == 0
+
+
+def test_taxonomy_class_depth_1(client):
+    query = {"taxonomy_group_name": "Objets", "name": "Objets", "depth": "1"}
+    r = client.get(api_url("/taxonomy_classes"), query_string=query)
+    assert len(r.json) == 1
+    assert len(r.json[0]["children"]) >= 1
