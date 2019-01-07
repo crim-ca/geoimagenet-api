@@ -7,21 +7,18 @@ So if any json is not valid, it would raise an error.
 
 import pytest
 
-from tests.utils import get, post, assert_http_error
+from tests.utils import api_url
 
 
-pytestmark = pytest.mark.usefixtures("server")  # The server is always started
-
-
-def test_api():
-    r = get("/")
+def test_root(client):
+    r = client.get(api_url("/"))
     assert r.status_code == 200
 
 
-def test_not_found():
-    with assert_http_error(404):
-        get("/yadayada")
+def test_not_found(client):
+    r = client.get(api_url("/yadayada"))
+    assert r.status_code == 404
 
 
-def test_taxonomy():
-    get("/taxonomy")
+def test_taxonomy(client):
+    client.get(api_url("/taxonomy"))
