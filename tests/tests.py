@@ -4,8 +4,12 @@ But the server is setup to validate every input and output using the openapi sch
 
 So if any json is not valid, it would raise an error.
 """
+import string
 
 import pytest
+import pp
+
+import random
 
 from tests.utils import api_url
 
@@ -20,6 +24,32 @@ def test_root(client):
 def test_not_found(client):
     r = client.get(api_url("/yadayada"))
     assert r.status_code == 404
+
+
+@pytest.fixture
+def random_user_name():
+    length = 10
+    return "".join(random.choice(string.ascii_uppercase) for _ in range(length))
+
+
+def test_add_user(client, random_user_name):
+    """Adds a new user and get it using different routes"""
+    username = random_user_name
+    full_name = "Test User"
+
+    query = {"username": username, "name": full_name}
+
+    r = client.post(api_url("/users"), query_string=query)
+    assert r.json["name"] == full_name
+    assert r.json["username"]
+
+    r = client.get(api_url("/users"))
+    assert any(
+        user["username"] == username and user["name"] == full_name for user in r.json
+    )
+
+    r = client.get(api_url(f"/users/{username}"))
+    assert r.json["username"] == username and r.json["name"] == full_name
 
 
 def test_taxonomy_class_depth_0(client):
