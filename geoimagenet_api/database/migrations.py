@@ -45,6 +45,18 @@ def migrate():
         alembic.config.main(argv=argv)
 
 
+def try_insert(session, class_, **kwargs):
+    session.begin_nested()
+    db_object = class_(**kwargs)
+    session.add(db_object)
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        db_object = session.query(class_).filter_by(**kwargs).first()
+    return db_object
+
+
 def load_taxonomy():
     here = Path(__file__).parent
     session = session_factory()
@@ -54,23 +66,27 @@ def load_taxonomy():
 
     def recurse_json(obj, parent_taxonomy=None):
         if parent_taxonomy is None:
-            taxonomy_group = TaxonomyGroup(name=obj["name"], version=obj["version"])
-            session.add(taxonomy_group)
-            session.flush()
+            taxonomy_group = try_insert(
+                session, TaxonomyGroup, name=obj["name"], version=str(obj["version"])
+            )
             taxonomy_group_id = taxonomy_group.id
             parent_id = None
         else:
             taxonomy_group_id = parent_taxonomy.taxonomy_group_id
             parent_id = parent_taxonomy.id
 
-        taxonomy_class = TaxonomyClass(
-            taxonomy_group_id=taxonomy_group_id, name=obj["name"], parent_id=parent_id
+        taxonomy_class = try_insert(
+            session,
+            TaxonomyClass,
+            taxonomy_group_id=taxonomy_group_id,
+            name=obj["name"],
+            parent_id=parent_id,
         )
-        session.add(taxonomy_class)
-        session.flush()
 
-        if 'value' in obj:
-            taxonomy_class.children = [recurse_json(o, taxonomy_class) for o in obj["value"]]
+        if "value" in obj:
+            taxonomy_class.children = [
+                recurse_json(o, taxonomy_class) for o in obj["value"]
+            ]
 
         return taxonomy_class
 
