@@ -5,6 +5,8 @@ import sys
 import json
 from copy import copy
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy_utils import database_exists, create_database
 import alembic.config
 
 from geoimagenet_api.database.connection import get_engine, session_factory
@@ -20,6 +22,14 @@ def cwd(path):
         yield
     finally:
         os.chdir(old_pwd)
+
+
+def ensure_database_exists():
+    """If the database name given in the config doesn't exist, create it"""
+    engine = get_engine()
+    if not database_exists(engine.url):
+        create_database(engine.url)
+        engine.execute("CREATE EXTENSION postgis;")
 
 
 def migrate():
@@ -77,6 +87,7 @@ def init_database_data():
     you should be careful when loading data into the database.
     Any required migrations will be applied prior to inserting the data.
     """
+    ensure_database_exists()
     old_argv = copy(sys.argv)
     sys.argv = [sys.argv[0], "upgrade", "head"]
     migrate()
