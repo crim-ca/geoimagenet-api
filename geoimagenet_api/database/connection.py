@@ -14,7 +14,7 @@ def session_factory():
     return sessionmaker(bind=engine)()
 
 
-def check_connection(seconds=10):
+def wait_for_db_connection(seconds=10):
     """Wait for a successful database connection for a specified time"""
     engine = get_engine()
     while seconds >= 1:
