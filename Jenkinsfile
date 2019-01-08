@@ -31,7 +31,7 @@ pipeline {
 
         stage('Push Docker Image') {
             when {
-                branch 'master'
+                branch 'jenkins'
             }
             steps {
                 withDockerRegistry([ credentialsId: "f6c3d8c2-ac53-45bd-971e-1a3a02da3b19", url: "https://docker-registry.crim.ca/" ]) {
