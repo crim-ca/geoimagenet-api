@@ -34,7 +34,7 @@ pipeline {
                 branch 'jenkins'
             }
             steps {
-                withDockerRegistry([ credentialsId: "f6c3d8c2-ac53-45bd-971e-1a3a02da3b19", url: "https://docker-registry.crim.ca/" ]) {
+                withDockerRegistry([ credentialsId: "docker-registry-caronda", url: "https://docker-registry.crim.ca/" ]) {
                   sh 'docker push docker-registry.crim.ca/geoimagenet/api:latest'
                 }
             }
