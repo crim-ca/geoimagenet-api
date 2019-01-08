@@ -3,6 +3,11 @@
 pipeline {
     agent any
 
+    environment {
+        TAG_NAME = sh(returnStdout: true, script: 'git tag -l --points-at HEAD')
+        GIT_BRANCH = sh(returnStdout: true, script: "git branch | grep '\\\\\\*' | cut -d ' ' -f2")
+    }
+
     options {
         buildDiscarder (logRotator(numToKeepStr:'10'))
     }
@@ -11,6 +16,8 @@ pipeline {
 
         stage('Build') {
             steps {
+                sh 'printenv'
+                error 'stop'
                 sh 'docker build -t docker-registry.crim.ca/geoimagenet/api:latest .'
             }
         }
