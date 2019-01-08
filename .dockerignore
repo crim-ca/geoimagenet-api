@@ -1,8 +1,6 @@
 custom.ini
 
 .git
-docs/
-tests/
 
 # Unit test / Coverage reports
 .cache
