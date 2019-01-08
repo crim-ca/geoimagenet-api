@@ -17,6 +17,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                sh 'env | sort'
                 sh 'docker build -t $LOCAL_IMAGE_NAME .'
             }
         }
