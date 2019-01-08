@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from geoimagenet_api import config
+from geoimagenet_api.config.config import ENVIRONMENT_PREFIX
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +40,24 @@ def ignore_custom_ini(request):
     request.addfinalizer(write_data_back)
 
 
-def test_defaults(ignore_custom_ini):
+@pytest.fixture
+def ignore_environment_variables(request):
+    """
+    Replace environment variables for the duration of the test and put them back afterwards.
+    """
+    previous_environ = {k: v for k, v in os.environ.items() if k.startswith(ENVIRONMENT_PREFIX)}
+    for k in previous_environ:
+        os.environ.pop(k)
+
+    def set_os_environ_back():
+        if previous_environ:
+            for k, v in previous_environ.items():
+                os.environ[k] = v
+
+    request.addfinalizer(set_os_environ_back)
+
+
+def test_defaults(ignore_custom_ini, ignore_environment_variables):
     """Test that the default config is loaded"""
     db = config.get("postgis_db", str)
     username = config.get("postgis_user", str)
@@ -48,10 +66,10 @@ def test_defaults(ignore_custom_ini):
     assert (db, username, password) == ("postgres", "postgres", "postgres")
 
 
-def test_boolean(ignore_custom_ini):
+def test_boolean(ignore_custom_ini, ignore_environment_variables):
     """Test for boolean type conversion in config"""
-    check = config.get("wait_for_db_connection_on_import", bool)
-    assert check
+    check = config.get("verbose_sqlalchemy", bool)
+    assert not check
 
 
 @pytest.fixture
