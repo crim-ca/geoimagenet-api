@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from geoimagenet_api import config
 
@@ -16,4 +17,9 @@ def session_factory():
 def check_connection():
     """Checks that the connection to the database is successful"""
     engine = get_engine()
-    engine.table_names()
+    try:
+        engine.table_names()
+    except OperationalError:
+        print(f"Can't connect to postgis url:{engine.url}")
+        raise
+
