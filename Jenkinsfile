@@ -4,7 +4,7 @@ pipeline {
     agent any
 
     environment {
-        TAG_NAME = sh(returnStdout: true, script: 'git tag -l --points-at HEAD')
+        TAG_NAME = sh(returnStdout: true, script: '[[ -z $(git tag -l --points-at HEAD) ]] && echo latest || $(git tag -l --points-at HEAD)')
         LOCAL_IMAGE_NAME = "geoimagenet_api:$TAG_NAME"
         IMAGE_NAME = "docker-registry.crim.ca/geoimagenet/api:${TAG_NAME}"
     }
