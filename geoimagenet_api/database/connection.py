@@ -24,6 +24,8 @@ def check_connection(seconds=10):
         except OperationalError:
             print(f"Can't connect to postgis url. Retrying. ({engine.url})")
             seconds -= 1
+            import time
+            time.sleep(1)
     import sys
     sys.exit(1)
 
