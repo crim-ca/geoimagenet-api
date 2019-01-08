@@ -15,15 +15,17 @@ pipeline {
     stages {
 
         stage('Checkout Git') {
-            checkout(
-                [
-                $class: 'GitSCM',
-                branches: [[name: '*/*']],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[$class: 'CleanBeforeCheckout'], [$class: 'LocalBranch']],
-                submoduleCfg: [],
-                userRemoteConfigs: [[credentialsId: 'f6c3d8c2-ac53-45bd-971e-1a3a02da3b19',
-                url: 'https://www.crim.ca/stash/scm/geo/geoimagenet_api.git']]])
+            steps {
+                checkout(
+                    [
+                    $class: 'GitSCM',
+                    branches: [[name: '*/*']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [[$class: 'CleanBeforeCheckout'], [$class: 'LocalBranch']],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[credentialsId: 'f6c3d8c2-ac53-45bd-971e-1a3a02da3b19',
+                    url: 'https://www.crim.ca/stash/scm/geo/geoimagenet_api.git']]])
+             }
         }
 
         stage('Build') {
