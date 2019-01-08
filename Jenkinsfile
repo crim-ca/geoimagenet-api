@@ -5,7 +5,6 @@ pipeline {
 
     environment {
         TAG_NAME = sh(returnStdout: true, script: 'git tag -l --points-at HEAD')
-        GIT_BRANCH = sh(returnStdout: true, script: "git branch | grep '\\\\\\*' | cut -d ' ' -f2")
     }
 
     options {
