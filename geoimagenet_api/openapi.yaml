@@ -297,6 +297,10 @@ components:
           type: string
         version:
           type: string
+        authors:
+          type: string
+        email:
+          type: string
     User:
       type: object
       required:

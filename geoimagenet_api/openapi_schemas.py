@@ -12,6 +12,8 @@ class Optional:
 class ApiInfo:
     name: str
     version: str
+    authors: str
+    email: str
 
 
 @dataclass
