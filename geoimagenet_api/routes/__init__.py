@@ -3,7 +3,7 @@ from geoimagenet_api import __version__, __author__, __email__
 
 
 def get() -> ApiInfo:
-    return ApiInfo(name="Geoimagenet API",
+    return ApiInfo(name="GeoImageNet API",
                    version=__version__,
                    authors=__author__,
                    email=__email__)

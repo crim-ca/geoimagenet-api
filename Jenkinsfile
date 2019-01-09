@@ -7,7 +7,7 @@ pipeline {
         TAG_NAME = sh(returnStdout: true, script: '[[ -z $(git tag -l --points-at HEAD) ]] && printf latest || printf $(git tag -l --points-at HEAD)')
         LOCAL_IMAGE_NAME = "geoimagenet_api:$TAG_NAME"
         LATEST_IMAGE_NAME = "docker-registry.crim.ca/geoimagenet/api:latest"
-        FULL_IMAGE_NAME = "docker-registry.crim.ca/geoimagenet/api:${TAG_NAME}"
+        TAGGED_IMAGE_NAME = "docker-registry.crim.ca/geoimagenet/api:$TAG_NAME"
     }
 
     options {
@@ -42,8 +42,8 @@ pipeline {
                 environment name: 'GIT_LOCAL_BRANCH', value: 'master'
             }
             steps {
-                sh 'docker tag $LOCAL_IMAGE_NAME $FULL_IMAGE_NAME'
-                sh 'docker push $FULL_IMAGE_NAME'
+                sh 'docker tag $LOCAL_IMAGE_NAME $TAGGED_IMAGE_NAME'
+                sh 'docker push $TAGGED_IMAGE_NAME'
                 sh 'docker tag $LOCAL_IMAGE_NAME $LATEST_IMAGE_NAME'
                 sh 'docker push $LATEST_IMAGE_NAME'
                 sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh down && ./geoimagenet-compose.sh pull && ./geoimagenet-compose.sh up -d"'
