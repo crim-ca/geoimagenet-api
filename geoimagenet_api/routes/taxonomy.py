@@ -1,3 +1,4 @@
+from slugify import slugify
 from sqlalchemy.exc import IntegrityError
 
 from geoimagenet_api.openapi_schemas import Taxonomy
@@ -7,22 +8,42 @@ from geoimagenet_api.utils import dataclass_from_object
 
 
 def search(name=None, version=None):
-    filter_by = {k: v for k, v in locals().items() if v is not None}
     session = session_factory()
-    taxo = session.query(DBTaxonomy).filter_by(**filter_by)
-    taxo = [dataclass_from_object(Taxonomy, t) for t in taxo]
-    if not taxo:
+    # we won't have a lot of taxonomy elements so this shouldn't be slow
+    taxonomy_list = []
+    for taxonomy in session.query(DBTaxonomy):
+        if name is not None:
+            if name not in (taxonomy.name, slugify(taxonomy.name)):
+                continue
+        if version is not None:
+            if not taxonomy.version == version:
+                continue
+        taxonomy_list.append(
+            Taxonomy(
+                id=taxonomy.id,
+                name=taxonomy.name,
+                slug=slugify(taxonomy.name),
+                version=taxonomy.version,
+            )
+        )
+
+    if not taxonomy_list:
         return "No taxonomy found", 404
-    return taxo
+    return taxonomy_list
 
 
-def get(id):
+def get_by_slug(name_slug, version):
     session = session_factory()
-    taxo = session.query(DBTaxonomy).filter_by(id=id).first()
-    taxo = dataclass_from_object(Taxonomy, taxo)
-    if not taxo:
-        return "taxonomy id not found", 404
-    return taxo
+    # we won't have a lot of taxonomy elements so this shouldn't be slow
+    for taxonomy in session.query(DBTaxonomy):
+        if slugify(taxonomy.name) == name_slug and taxonomy.version == version:
+            return Taxonomy(
+                id=taxonomy.id,
+                name=taxonomy.name,
+                slug=name_slug,
+                version=taxonomy.version,
+            )
+    return "Taxonomy not found", 404
 
 
 def post(name, version):

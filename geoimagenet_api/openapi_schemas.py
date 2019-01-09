@@ -35,6 +35,7 @@ class TaxonomyClass:
 class Taxonomy:
     id: int
     name: str
+    slug: str
     version: str
 
 

@@ -5,3 +5,5 @@ geoalchemy2
 alembic
 psycopg2-binary
 sqlalchemy-utils
+text-unidecode
+python-slugify

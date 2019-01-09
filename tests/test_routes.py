@@ -101,8 +101,34 @@ def test_taxonomy_class_by_id_route_infinite_depth(client):
     assert depth >= 3
 
 
-def test_taxonomy_get(client):
-    query = {"taxonomy_name": "Objets", "name": "Objets", "depth": "1"}
-    r = client.get(api_url("/taxonomy_classes"), query_string=query)
+def test_taxonomy_search_all(client):
+    r = client.get(api_url(f"/taxonomy"))
+    assert len(r.json) >= 2
+
+
+def test_taxonomy_search_by_slug(client):
+    query = {"name": "couverture-de-sol", "version": "1"}
+    r = client.get(api_url(f"/taxonomy"), query_string=query)
     assert len(r.json) == 1
-    assert len(r.json[0]["children"]) >= 1
+    assert r.json[0]["name"] == "Couverture de sol"
+
+
+def test_taxonomy_search_by_name(client):
+    query = {"name": "Couverture de sol", "version": "1"}
+    r = client.get(api_url(f"/taxonomy"), query_string=query)
+    assert len(r.json) == 1
+    assert r.json[0]["name"] == "Couverture de sol"
+
+
+def test_taxonomy_get_by_slug(client):
+    name_slug = "couverture-de-sol"
+    version = "1"
+    r = client.get(api_url(f"/taxonomy/{name_slug}/{version}"))
+    assert r.json["name"] == "Couverture de sol"
+
+
+def test_taxonomy_get_by_slug_not_found(client):
+    name_slug = "not-found"
+    version = "10"
+    r = client.get(api_url(f"/taxonomy/{name_slug}/{version}"))
+    assert r.status_code == 404
