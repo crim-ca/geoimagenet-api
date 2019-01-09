@@ -96,7 +96,7 @@ class TaxonomyClass(Base):
     __tablename__ = "taxonomy_class"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    taxonomy_group_id = Column(Integer, ForeignKey("taxonomy_group.id"), nullable=False)
+    taxonomy_id = Column(Integer, ForeignKey("taxonomy.id"), nullable=False)
     parent_id = Column(Integer, ForeignKey("taxonomy_class.id"))
     children = relationship(
         "TaxonomyClass", backref=backref("parent", remote_side=[id])
@@ -105,13 +105,13 @@ class TaxonomyClass(Base):
     __table_args__ = (UniqueConstraint("parent_id", "name", name="uc_taxonomy_class"),)
 
 
-class TaxonomyGroup(Base):
-    __tablename__ = "taxonomy_group"
+class Taxonomy(Base):
+    __tablename__ = "taxonomy"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     version = Column(String, nullable=False)
-    __table_args__ = (UniqueConstraint("name", "version", name="uc_taxonomy_group"),)
+    __table_args__ = (UniqueConstraint("name", "version", name="uc_taxonomy"),)
 
 
 class ValidationEvent(Base):

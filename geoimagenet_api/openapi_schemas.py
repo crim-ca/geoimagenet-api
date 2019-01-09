@@ -27,12 +27,12 @@ class User:
 class TaxonomyClass:
     id: int
     name: str
-    taxonomy_group_id: int
+    taxonomy_id: int
     children: List["TaxonomyClass"] = field(default=Optional)
 
 
 @dataclass
-class TaxonomyGroup:
+class Taxonomy:
     id: int
     name: str
     version: str

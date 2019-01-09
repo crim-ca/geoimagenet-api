@@ -3,20 +3,20 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from geoimagenet_api.openapi_schemas import TaxonomyClass
 from geoimagenet_api.database.models import TaxonomyClass as DBTaxonomyClass
-from geoimagenet_api.database.models import TaxonomyGroup as DBTaxonomyGroup
+from geoimagenet_api.database.models import Taxonomy as DBTaxonomy
 from geoimagenet_api.database import session_factory
 from geoimagenet_api.utils import dataclass_from_object
 
 
-def search(taxonomy_group_name, id=None, name=None, depth=-1):
+def search(taxonomy_name, id=None, name=None, depth=-1):
     session = session_factory()
     depth = 9999 if depth == -1 else depth
     try:
-        taxonomy_group = session.query(DBTaxonomyGroup).filter_by(name=taxonomy_group_name).one()
+        taxonomy = session.query(DBTaxonomy).filter_by(name=taxonomy_name).one()
     except NoResultFound:
-        return f"Taxonomy group not found: {taxonomy_group_name}", 404
+        return f"Taxonomy not found: {taxonomy_name}", 404
 
-    filter_by = {'taxonomy_group_id': taxonomy_group.id}
+    filter_by = {'taxonomy_id': taxonomy.id}
     if id is None and name is None:
         # todo add response code 400
         return "Please provide one of: id, name", 400
@@ -42,9 +42,9 @@ def get(id, depth=-1):
     return taxo
 
 
-def post(name, taxonomy_group_id):
+def post(name, taxonomy_id):
     session = session_factory()
-    taxo = DBTaxonomyClass(name=name, taxonomy_group_id=taxonomy_group_id)
+    taxo = DBTaxonomyClass(name=name, taxonomy_id=taxonomy_id)
     session.add(taxo)
     try:
         session.commit()

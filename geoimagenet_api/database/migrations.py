@@ -10,7 +10,7 @@ from sqlalchemy_utils import database_exists, create_database
 import alembic.config
 
 from geoimagenet_api.database.connection import get_engine, session_factory
-from geoimagenet_api.database.models import TaxonomyClass, TaxonomyGroup
+from geoimagenet_api.database.models import TaxonomyClass, Taxonomy
 
 
 @contextmanager
@@ -63,19 +63,19 @@ def load_taxonomy():
 
     def recurse_json(obj, parent_taxonomy=None):
         if parent_taxonomy is None:
-            taxonomy_group = try_insert(
-                session, TaxonomyGroup, name=obj["name"], version=str(obj["version"])
+            taxonomy = try_insert(
+                session, Taxonomy, name=obj["name"], version=str(obj["version"])
             )
-            taxonomy_group_id = taxonomy_group.id
+            taxonomy_id = taxonomy.id
             parent_id = None
         else:
-            taxonomy_group_id = parent_taxonomy.taxonomy_group_id
+            taxonomy_id = parent_taxonomy.taxonomy_id
             parent_id = parent_taxonomy.id
 
         taxonomy_class = try_insert(
             session,
             TaxonomyClass,
-            taxonomy_group_id=taxonomy_group_id,
+            taxonomy_id=taxonomy_id,
             name=obj["name"],
             parent_id=parent_id,
         )

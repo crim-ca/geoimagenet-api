@@ -32,12 +32,12 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('username')
     )
-    op.create_table('taxonomy_group',
+    op.create_table('taxonomy',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('version', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name', 'version', name='uc_taxonomy_group')
+    sa.UniqueConstraint('name', 'version', name='uc_taxonomy')
     )
     op.create_table('validation_rules',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -54,11 +54,11 @@ def upgrade():
     )
     op.create_table('taxonomy_class',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('taxonomy_group_id', sa.Integer(), nullable=False),
+    sa.Column('taxonomy_id', sa.Integer(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['parent_id'], ['taxonomy_class.id'], ),
-    sa.ForeignKeyConstraint(['taxonomy_group_id'], ['taxonomy_group.id'], ),
+    sa.ForeignKeyConstraint(['taxonomy_id'], ['taxonomy.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('parent_id', 'name', name='uc_taxonomy_class')
     )
@@ -120,7 +120,7 @@ def downgrade():
     op.drop_table('taxonomy_class')
     op.drop_table('batch')
     op.drop_table('validation_rules')
-    op.drop_table('taxonomy_group')
+    op.drop_table('taxonomy')
     op.drop_table('person')
     op.drop_table('annotation_log_description')
     # ### end Alembic commands ###

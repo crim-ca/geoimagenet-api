@@ -53,21 +53,21 @@ def test_add_user(client, random_user_name):
 
 
 def test_taxonomy_class_depth_0(client):
-    query = {"taxonomy_group_name": "Objets", "name": "Objets", "depth": "0"}
+    query = {"taxonomy_name": "Objets", "name": "Objets", "depth": "0"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
     assert len(r.json) == 1
     assert len(r.json[0]["children"]) == 0
 
 
 def test_taxonomy_class_depth_1(client):
-    query = {"taxonomy_group_name": "Objets", "name": "Objets", "depth": "1"}
+    query = {"taxonomy_name": "Objets", "name": "Objets", "depth": "1"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
     assert len(r.json) == 1
     assert len(r.json[0]["children"]) >= 1
 
 
 def test_taxonomy_class_by_id_query_param(client):
-    query = {"taxonomy_group_name": "Objets", "id": "2"}
+    query = {"taxonomy_name": "Objets", "id": "2"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
     assert len(r.json) == 1
     assert r.json[0]["name"]
@@ -101,8 +101,8 @@ def test_taxonomy_class_by_id_route_infinite_depth(client):
     assert depth >= 3
 
 
-def test_taxonomy_groups(client):
-    query = {"taxonomy_group_name": "Objets", "name": "Objets", "depth": "1"}
+def test_taxonomy_get(client):
+    query = {"taxonomy_name": "Objets", "name": "Objets", "depth": "1"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
     assert len(r.json) == 1
     assert len(r.json[0]["children"]) >= 1
