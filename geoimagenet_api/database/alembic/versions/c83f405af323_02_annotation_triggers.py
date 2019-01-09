@@ -55,10 +55,8 @@ def upgrade():
         CREATE OR REPLACE FUNCTION annotation_update_check() 
         RETURNS trigger AS 
         $$ 
-            DECLARE 
-                validated_id int;
             BEGIN 
-                IF OLD.released AND NEW.released = validated_id THEN
+                IF OLD.released AND NEW.released THEN
                     RAISE EXCEPTION 'Can''t update an annotation that is ''released''.';
                 END IF;
                 NEW.updated_at = NOW();
