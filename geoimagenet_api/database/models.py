@@ -30,10 +30,12 @@ class Annotation(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
     geometry = Column(Geometry("GEOMETRY"), nullable=False)
-    updated_at = Column(DateTime, server_default=text("NOW()"))
+    updated_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), nullable=False)
     image_name = Column(String, nullable=False)
-    released = Column(Boolean)
+    released = Column(
+        Boolean, default=False, server_default=expression.false(), nullable=False
+    )
 
 
 class AnnotationLogDescription(Base):
@@ -63,7 +65,7 @@ class Batch(Base):
     __tablename__ = "batch"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     validation_rules_id = Column(
         Integer, ForeignKey("validation_rules.id"), nullable=False
     )
@@ -86,7 +88,7 @@ class ValidationRules(Base):
     __tablename__ = "validation_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    nb_validators = Column(Integer, server_default="0")
+    nb_validators = Column(Integer, server_default="0", nullable=False)
     consensus = Column(Boolean, server_default=expression.true(), nullable=False)
 
 
@@ -119,4 +121,4 @@ class ValidationEvent(Base):
     annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
     validator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
     validator = relationship("Person")
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
