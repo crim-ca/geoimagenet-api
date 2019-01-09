@@ -24,11 +24,26 @@ def upgrade():
                 (annotation_id, annotator_id, geometry, taxonomy_class_id, image_name, released, description)
                 VALUES (
                     NEW.id, 
-                    CASE WHEN OLD.annotator_id = NEW.annotator_id THEN NULL ELSE NEW.annotator_id END, 
-                    CASE WHEN st_equals(OLD.geometry, NEW.geometry) THEN NULL ELSE NEW.geometry END, 
-                    CASE WHEN OLD.taxonomy_class_id = NEW.taxonomy_class_id THEN NULL ELSE NEW.taxonomy_class_id END, 
-                    CASE WHEN OLD.image_name = NEW.image_name THEN NULL ELSE NEW.image_name END,
-                    CASE WHEN OLD.released = NEW.released THEN NULL ELSE NEW.released END,
+                    CASE WHEN tg_op = 'INSERT' THEN NEW.annotator_id 
+                         WHEN OLD.annotator_id = NEW.annotator_id THEN NULL 
+                         ELSE NEW.annotator_id 
+                    END, 
+                    CASE WHEN tg_op = 'INSERT' THEN NEW.geometry 
+                         WHEN st_equals(OLD.geometry, NEW.geometry) THEN NULL 
+                         ELSE NEW.geometry 
+                    END,
+                    CASE WHEN tg_op = 'INSERT' THEN NEW.taxonomy_class_id 
+                         WHEN OLD.taxonomy_class_id = NEW.taxonomy_class_id THEN NULL 
+                         ELSE NEW.taxonomy_class_id 
+                    END,
+                    CASE WHEN tg_op = 'INSERT' THEN NEW.image_name 
+                         WHEN OLD.image_name = NEW.image_name THEN NULL 
+                         ELSE NEW.image_name 
+                    END,
+                    CASE WHEN tg_op = 'INSERT' THEN NEW.released 
+                         WHEN OLD.released = NEW.released THEN NULL 
+                         ELSE NEW.released 
+                    END,
                     (SELECT id FROM annotation_log_description WHERE name=lower(tg_op))
                 );
                 RETURN NEW; 
