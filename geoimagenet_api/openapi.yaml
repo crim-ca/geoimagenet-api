@@ -101,7 +101,7 @@ paths:
             type: string
         - name: depth
           in: query
-          description: The depth of taxonomy class children to return. -1 means infinite, 0 is the default
+          description: The depth of taxonomy class children to return. -1 means infinite and is the default.
           schema:
             type: integer
       responses:
@@ -154,7 +154,7 @@ paths:
             type: integer
         - name: depth
           in: query
-          description: The depth of taxonomy class children to return. -1 means infinite, 0 is the default
+          description: The depth of taxonomy class children to return. -1 means infinite and is the default.
           schema:
             type: integer
       responses:

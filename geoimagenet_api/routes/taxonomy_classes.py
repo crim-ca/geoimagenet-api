@@ -8,8 +8,9 @@ from geoimagenet_api.database import session_factory
 from geoimagenet_api.utils import dataclass_from_object
 
 
-def search(taxonomy_group_name, id=None, name=None, depth=0):
+def search(taxonomy_group_name, id=None, name=None, depth=-1):
     session = session_factory()
+    depth = 9999 if depth == -1 else depth
     try:
         taxonomy_group = session.query(DBTaxonomyGroup).filter_by(name=taxonomy_group_name).one()
     except NoResultFound:
@@ -31,8 +32,9 @@ def search(taxonomy_group_name, id=None, name=None, depth=0):
     return taxo
 
 
-def get(id, depth=0):
+def get(id, depth=-1):
     session = session_factory()
+    depth = 9999 if depth == -1 else depth
     taxo = session.query(DBTaxonomyClass).filter_by(id=id).first()
     taxo = dataclass_from_object(TaxonomyClass, taxo, depth=depth)
     if not taxo:

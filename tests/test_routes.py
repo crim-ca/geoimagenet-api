@@ -88,6 +88,19 @@ def test_taxonomy_class_by_id_route_depth_1(client):
     assert r.json["name"] == "Objets"
 
 
+def test_taxonomy_class_by_id_route_infinite_depth(client):
+    id_ = 1
+    query = {"depth": "-1"}
+    r = client.get(api_url(f"/taxonomy_classes/{id_}"), query_string=query)
+
+    def max_depth(obj, depth=0):
+        return max([max_depth(c["children"], depth + 1) for c in obj] + [depth])
+
+    assert len(r.json["children"]) >= 1
+    depth = max_depth([r.json])
+    assert depth >= 3
+
+
 def test_taxonomy_groups(client):
     query = {"taxonomy_group_name": "Objets", "name": "Objets", "depth": "1"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
