@@ -7,6 +7,7 @@ from geoimagenet_api import app
 from geoimagenet_api.database.connection import get_engine
 
 
+@pytest.fixture(scope="module", autouse=True)
 def reset_test_database():
     """Reset the database to a brand new clean state.
 
@@ -14,6 +15,11 @@ def reset_test_database():
     - Drop all tables except 'spatial_ref_sys'
     - Initialize the database with data (taxonomy, etc.)
     """
+
+    # configuration
+    os.environ["GEOIMAGENET_API_POSTGIS_DB"] = "geoimagenet_test"
+    os.environ["GEOIMAGENET_API_VERBOSE_SQLALCHEMY"] = "false"
+
     migrations.ensure_database_exists()
 
     engine = get_engine()
@@ -28,12 +34,6 @@ def reset_test_database():
 @pytest.fixture(scope="module")
 def client():
     app.app.validate_responses = True
-
-    # configuration
-    os.environ["GEOIMAGENET_API_POSTGIS_DB"] = "geoimagenet_test"
-    os.environ["GEOIMAGENET_API_VERBOSE_SQLALCHEMY"] = "false"
-
-    reset_test_database()
 
     with app.app.test_client() as c:
         yield c
