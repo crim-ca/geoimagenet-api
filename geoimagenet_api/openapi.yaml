@@ -310,6 +310,9 @@ components:
           type: string
         email:
           type: string
+        documetation_url:
+          type: string
+
     User:
       type: object
       required:

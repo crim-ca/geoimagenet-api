@@ -14,6 +14,7 @@ class ApiInfo:
     version: str
     authors: str
     email: str
+    documetation_url: str
 
 
 @dataclass
