@@ -25,7 +25,8 @@ def wait_for_db_connection(seconds=30):
             print(f"Can't connect to postgis url. Retrying {seconds}s. ({engine.url})")
             seconds -= 1
             import time
+
             time.sleep(1)
     import sys
-    sys.exit(1)
 
+    sys.exit(1)

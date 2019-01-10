@@ -48,9 +48,7 @@ def get(parameter_name: str, type_):
     from_environment = _get_environment_var(parameter_name)
     from_config = configuration[parameter_name]
 
-    conversion_function = {
-        bool: _convert_bool
-    }.get(type_, type_)
+    conversion_function = {bool: _convert_bool}.get(type_, type_)
 
     return conversion_function(from_environment or from_config)
 
@@ -58,7 +56,7 @@ def get(parameter_name: str, type_):
 def _convert_bool(value):
     boolean_states = configparser.ConfigParser.BOOLEAN_STATES
     if value.lower() not in boolean_states:
-        raise ValueError('Not a boolean: %s' % value)
+        raise ValueError("Not a boolean: %s" % value)
     return boolean_states[value.lower()]
 
 

@@ -50,9 +50,9 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
     ],
     entry_points={
-        'console_scripts': [
-            'migrate = geoimagenet_api.database.migrations:migrate',
-            'init_database = geoimagenet_api.database.migrations:init_database_data',
-        ],
-    }
+        "console_scripts": [
+            "migrate = geoimagenet_api.database.migrations:migrate",
+            "init_database = geoimagenet_api.database.migrations:init_database_data",
+        ]
+    },
 )

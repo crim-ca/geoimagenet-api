@@ -13,6 +13,7 @@ if config.get("wait_for_db_connection_on_import", bool):
 
 if config.get("sentry_url", str):
     import sentry_sdk
+
     sentry_sdk.init(config.get("sentry_url", str))
 
 
@@ -27,7 +28,7 @@ def make_app(validate_responses=False):
     )
     app.app.json_encoder = DataclassEncoder
 
-    @app.app.route('/api/')
+    @app.app.route("/api/")
     def root():
         return redirect(request.url + "v1/")
 

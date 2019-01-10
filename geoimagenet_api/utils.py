@@ -12,7 +12,11 @@ def dataclass_from_object(data_cls, source_obj, depth=0):
     properties = {}
     for field in common_fields:
         value = getattr(source_obj, field)
-        if isinstance(value, list) and len(value) and isinstance(value[0], type(source_obj)):
+        if (
+            isinstance(value, list)
+            and len(value)
+            and isinstance(value[0], type(source_obj))
+        ):
             # recursive data type
             if depth > 0:
                 value = [dataclass_from_object(data_cls, v, depth - 1) for v in value]

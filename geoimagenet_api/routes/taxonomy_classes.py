@@ -16,7 +16,7 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
     except NoResultFound:
         return f"Taxonomy not found: {taxonomy_name}", 404
 
-    filter_by = {'taxonomy_id': taxonomy.id}
+    filter_by = {"taxonomy_id": taxonomy.id}
     if id is None and name is None:
         # todo add response code 400
         return "Please provide one of: id, name", 400

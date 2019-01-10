@@ -1,4 +1,3 @@
-
 import pytest
 import pp
 from geoalchemy2 import functions
