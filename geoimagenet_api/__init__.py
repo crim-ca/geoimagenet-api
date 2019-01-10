@@ -18,21 +18,21 @@ if config.get("sentry_url", str):
 
 
 def make_app(validate_responses=False):
-    app = connexion.App(__name__, port=8080)
-    app.add_api(
+    connexion_app = connexion.App(__name__, port=8080)
+    connexion_app.add_api(
         "openapi.yaml",
         strict_validation=True,
         validate_responses=validate_responses,
         resolver=connexion.RestyResolver("geoimagenet_api.routes"),
         resolver_error=404,
     )
-    app.app.json_encoder = DataclassEncoder
+    connexion_app.app.json_encoder = DataclassEncoder
 
-    @app.app.route("/api/")
+    @connexion_app.app.route("/api/")
     def root():
         return redirect(request.url + "v1/")
 
-    return app
+    return connexion_app
 
 
 app = make_app()
