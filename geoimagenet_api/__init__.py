@@ -1,8 +1,9 @@
 """GeoImageNet API to support the web mapping platform"""
 
-from geoimagenet_api.__about__ import __version__, __author__, __email__
-
 import connexion
+from flask import redirect, request
+
+from geoimagenet_api.__about__ import __version__, __author__, __email__
 from geoimagenet_api.utils import DataclassEncoder
 from geoimagenet_api.database import connection, migrations
 from geoimagenet_api import config
@@ -25,6 +26,11 @@ def make_app(validate_responses=False):
         resolver_error=404,
     )
     app.app.json_encoder = DataclassEncoder
+
+    @app.app.route('/api/')
+    def root():
+        return redirect(request.url + "v1/")
+
     return app
 
 
