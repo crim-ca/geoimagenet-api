@@ -1,3 +1,4 @@
+
 import pytest
 import pp
 from geoalchemy2 import functions
@@ -10,17 +11,26 @@ from geoimagenet_api.database.models import (
     AnnotationLog,
     AnnotationLogDescription,
 )
+from tests.utils import random_user_name
+
+
+def random_user():
+    session = session_factory()
+    username = random_user_name()
+    person = Person(username=username, name="Unit Tester")
+    session.add(person)
+    session.commit()
+
+    return person.id
 
 
 def test_annotation_log_triggers():
     session = session_factory()
 
-    person = Person(username="test", name="Unit Tester")
-    session.add(person)
-    session.flush()
+    user_id = random_user()
 
     annotation = Annotation(
-        annotator_id=person.id,
+        annotator_id=user_id,
         geometry="POLYGON((0 0,1 0,1 1,0 1,0 0))",
         taxonomy_class_id=1,
         image_name="my image",
@@ -66,14 +76,12 @@ def test_annotation_log_triggers():
     assert log[2].description == 2  # UPDATE
 
     # update annotator
-    person2 = Person(username="test2", name="Unit Tester 2")
-    session.add(person2)
-    session.flush()
-    annotation.annotator_id = person2.id
+    user2_id = random_user()
+    annotation.annotator_id = user2_id
     session.add(annotation)
     session.commit()
     log = session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()[-1]
-    assert log.annotator_id == person2.id
+    assert log.annotator_id == user2_id
 
     # update released
     annotation.released = True
@@ -96,15 +104,11 @@ def test_annotation_log_triggers():
 def test_cant_update_released_annotation():
     session = session_factory()
 
-    person = Person(username="test", name="Unit Tester")
-    session.add(person)
-    session.flush()
-    person2 = Person(username="test2", name="Unit Tester 2")
-    session.add(person2)
-    session.flush()
+    user_id = random_user()
+    user2_id = random_user()
 
     annotation = Annotation(
-        annotator_id=person.id,
+        annotator_id=user_id,
         geometry="POLYGON((0 0,1 0,1 1,0 1,0 0))",
         taxonomy_class_id=1,
         image_name="my image",
@@ -118,7 +122,7 @@ def test_cant_update_released_annotation():
     with pytest.raises(InternalError):
         session = session_factory()
         annotation = session.query(Annotation).filter_by(id=annotation_id).scalar()
-        annotation.annotator_id = person2.id
+        annotation.annotator_id = user2_id
         session.add(annotation)
         session.commit()
 
@@ -159,12 +163,10 @@ def test_cant_update_released_annotation():
 def test_log_delete_annotation():
     session = session_factory()
 
-    person = Person(username="test", name="Unit Tester")
-    session.add(person)
-    session.flush()
+    user_id = random_user()
 
     annotation = Annotation(
-        annotator_id=person.id,
+        annotator_id=user_id,
         geometry="POLYGON((0 0,1 0,1 1,0 1,0 0))",
         taxonomy_class_id=1,
         image_name="my image",

@@ -14,7 +14,7 @@ def force_reload_config():
 
 @pytest.fixture(autouse=True)
 def skip_initial_db_check():
-    os.environ["GEOIMAGENET_API_CHECK_DB_CONNECTION_ON_STARTUP"] = 'false'
+    os.environ["GEOIMAGENET_API_CHECK_DB_CONNECTION_ON_STARTUP"] = "false"
 
 
 def test_key_error():
@@ -45,7 +45,9 @@ def ignore_environment_variables(request):
     """
     Replace environment variables for the duration of the test and put them back afterwards.
     """
-    previous_environ = {k: v for k, v in os.environ.items() if k.startswith(ENVIRONMENT_PREFIX)}
+    previous_environ = {
+        k: v for k, v in os.environ.items() if k.startswith(ENVIRONMENT_PREFIX)
+    }
     for k in previous_environ:
         os.environ.pop(k)
 
@@ -95,15 +97,29 @@ def temp_custom_ini(request):
     request.addfinalizer(write_data_back)
 
 
-def test_custom_ini(temp_custom_ini):
+def test_custom_ini(temp_custom_ini, ignore_environment_variables):
     """Test that the default config is loaded"""
     db = config.get("postgis_db", str)
 
     assert db == "bananas"
 
 
-def test_environment_variable():
-    os.environ["GEOIMAGENET_API_POSTGIS_DB"] = 'bananas'
+@pytest.fixture
+def temp_environment_variable_db(request):
+    old = os.environ.get("GEOIMAGENET_API_POSTGIS_DB")
+
+    os.environ["GEOIMAGENET_API_POSTGIS_DB"] = "bananas"
+
+    def put_back_environment():
+        if old is not None:
+            os.environ["GEOIMAGENET_API_POSTGIS_DB"] = old
+        else:
+            del os.environ["GEOIMAGENET_API_POSTGIS_DB"]
+
+    request.addfinalizer(put_back_environment)
+
+
+def test_environment_variable(temp_environment_variable_db):
     db = config.get("postgis_db", str)
 
     assert db == "bananas"
