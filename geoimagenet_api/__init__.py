@@ -10,6 +10,10 @@ from geoimagenet_api import config
 if config.get("wait_for_db_connection_on_import", bool):
     connection.wait_for_db_connection()
 
+if config.get("sentry_url", str):
+    import sentry_sdk
+    sentry_sdk.init(config.get("sentry_url", str))
+
 
 def make_app(validate_responses=False):
     app = connexion.App(__name__, port=8080)
