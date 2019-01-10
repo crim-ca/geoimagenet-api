@@ -57,7 +57,17 @@ def upgrade():
     trigger_delete = """
         CREATE OR REPLACE FUNCTION annotation_delete_event() RETURNS trigger AS $$ 
             BEGIN 
-                INSERT INTO annotation_log (annotation_id, description) VALUES (OLD.id, lower(tg_op));
+                INSERT INTO annotation_log 
+                    (
+                        annotation_id, 
+                        description
+                    ) 
+                SELECT 
+                    OLD.id, 
+                    annotation_log_description.id
+                FROM annotation_log_description 
+                WHERE name=lower(tg_op);
+                RETURN NEW;
             END; 
         $$ LANGUAGE 'plpgsql';
 
