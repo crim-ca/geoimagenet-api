@@ -7,7 +7,7 @@ from geoimagenet_api import make_app
 from geoimagenet_api.database.connection import get_engine
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def reset_test_database():
     """Reset the database to a brand new clean state.
 
