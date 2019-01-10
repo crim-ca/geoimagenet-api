@@ -19,6 +19,7 @@ def test_root(client):
     assert r.status_code == 200
     assert "name" in r.json
     assert "version" in r.json
+    assert "authors" in r.json
 
 
 def test_not_found(client):
