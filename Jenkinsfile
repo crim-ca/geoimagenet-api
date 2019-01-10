@@ -47,7 +47,16 @@ pipeline {
                 sh 'docker tag $LOCAL_IMAGE_NAME $LATEST_IMAGE_NAME'
                 sh 'docker push $LATEST_IMAGE_NAME'
                 sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh down && ./geoimagenet-compose.sh pull && ./geoimagenet-compose.sh up -d"'
+                slackSend channel: '#geoimagenet', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
             }
         }
+    }
+    post {
+       success {
+           slackSend channel: '#geoimagenet', color: 'good', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>)"
+       }
+       failure {
+           slackSend channel: '#geoimagenet', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sueur_et_sourire: (<${env.BUILD_URL}|View>)"
+       }
     }
 }
