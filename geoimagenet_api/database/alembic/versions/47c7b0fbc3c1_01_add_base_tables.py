@@ -76,7 +76,7 @@ def upgrade():
     )
     op.create_table('annotation_log',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('annotation_id', sa.Integer(), nullable=True),
+    sa.Column('annotation_id', sa.Integer(), nullable=False),
     sa.Column('annotator_id', sa.Integer(), nullable=True),
     sa.Column('geometry', geoalchemy2.types.Geometry(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('NOW()'), nullable=True),
@@ -84,7 +84,6 @@ def upgrade():
     sa.Column('image_name', sa.String(), nullable=True),
     sa.Column('released', sa.Boolean(), nullable=True),
     sa.Column('description', sa.Integer(), server_default='1', nullable=True),
-    sa.ForeignKeyConstraint(['annotation_id'], ['annotation.id'], ),
     sa.ForeignKeyConstraint(['annotator_id'], ['person.id'], ),
     sa.ForeignKeyConstraint(['description'], ['annotation_log_description.id'], ),
     sa.ForeignKeyConstraint(['taxonomy_class_id'], ['taxonomy_class.id'], ),

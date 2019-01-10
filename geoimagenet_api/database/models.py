@@ -49,7 +49,7 @@ class AnnotationLog(Base):
     __tablename__ = "annotation_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    annotation_id = Column(Integer, ForeignKey("annotation.id"))
+    annotation_id = Column(Integer, nullable=False)
     annotator_id = Column(Integer, ForeignKey("person.id"))
     geometry = Column(Geometry("GEOMETRY"))
     created_at = Column(DateTime, server_default=text("NOW()"))
