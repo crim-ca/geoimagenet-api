@@ -14,7 +14,7 @@ def session_factory():
     return sessionmaker(bind=engine)()
 
 
-def wait_for_db_connection(seconds=10):
+def wait_for_db_connection(seconds=30):
     """Wait for a successful database connection for a specified time"""
     engine = get_engine()
     while seconds >= 1:
@@ -22,7 +22,7 @@ def wait_for_db_connection(seconds=10):
             engine.execute("SELECT 1;")
             return
         except OperationalError:
-            print(f"Can't connect to postgis url. Retrying. ({engine.url})")
+            print(f"Can't connect to postgis url. Retrying {seconds}s. ({engine.url})")
             seconds -= 1
             import time
             time.sleep(1)
