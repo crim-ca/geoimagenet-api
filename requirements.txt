@@ -7,4 +7,4 @@ psycopg2-binary
 sqlalchemy-utils
 text-unidecode
 python-slugify
-sentry-sdk
+sentry-sdk[flask]
