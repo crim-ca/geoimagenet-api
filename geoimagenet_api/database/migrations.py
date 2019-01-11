@@ -5,11 +5,10 @@ import sys
 import json
 from copy import copy
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import database_exists, create_database
 import alembic.config
 
-from geoimagenet_api.database.connection import get_engine, session_factory
+from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import TaxonomyClass, Taxonomy
 
 
@@ -26,7 +25,7 @@ def cwd(path):
 
 def ensure_database_exists():
     """If the database name given in the config doesn't exist, create it"""
-    engine = get_engine()
+    engine = connection_manager.engine
     if not database_exists(engine.url):
         create_database(engine.url)
         engine.execute("CREATE EXTENSION postgis;")
@@ -56,41 +55,41 @@ def try_insert(session, class_, **kwargs):
 
 def load_taxonomy():
     here = Path(__file__).parent
-    session = session_factory()
 
-    objets = here / "json_data" / "objets.json"
-    couverture = here / "json_data" / "couverture_de_sol.json"
+    with connection_manager.get_db_session() as session:
+        objets = here / "json_data" / "objets.json"
+        couverture = here / "json_data" / "couverture_de_sol.json"
 
-    def recurse_json(obj, parent_taxonomy=None):
-        if parent_taxonomy is None:
-            taxonomy = try_insert(
-                session, Taxonomy, name=obj["name"], version=str(obj["version"])
+        def recurse_json(obj, parent_taxonomy=None):
+            if parent_taxonomy is None:
+                taxonomy = try_insert(
+                    session, Taxonomy, name=obj["name"], version=str(obj["version"])
+                )
+                taxonomy_id = taxonomy.id
+                parent_id = None
+            else:
+                taxonomy_id = parent_taxonomy.taxonomy_id
+                parent_id = parent_taxonomy.id
+
+            taxonomy_class = try_insert(
+                session,
+                TaxonomyClass,
+                taxonomy_id=taxonomy_id,
+                name=obj["name"],
+                parent_id=parent_id,
             )
-            taxonomy_id = taxonomy.id
-            parent_id = None
-        else:
-            taxonomy_id = parent_taxonomy.taxonomy_id
-            parent_id = parent_taxonomy.id
 
-        taxonomy_class = try_insert(
-            session,
-            TaxonomyClass,
-            taxonomy_id=taxonomy_id,
-            name=obj["name"],
-            parent_id=parent_id,
-        )
+            if "value" in obj:
+                taxonomy_class.children = [
+                    recurse_json(o, taxonomy_class) for o in obj["value"]
+                ]
 
-        if "value" in obj:
-            taxonomy_class.children = [
-                recurse_json(o, taxonomy_class) for o in obj["value"]
-            ]
+            return taxonomy_class
 
-        return taxonomy_class
+        recurse_json(json.load(objets.open()))
+        recurse_json(json.load(couverture.open()))
 
-    recurse_json(json.load(objets.open()))
-    recurse_json(json.load(couverture.open()))
-
-    session.commit()
+        session.commit()
 
 
 def init_database_data():

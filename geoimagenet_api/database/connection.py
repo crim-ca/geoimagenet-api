@@ -1,22 +1,53 @@
-from sqlalchemy import create_engine
+from contextlib import contextmanager
+
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import sessionmaker
 from geoimagenet_api import config
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 
-def get_engine():
-    verbose_sqlalchemy = config.get("verbose_sqlalchemy", bool)
-    return create_engine(config.get_database_url(), echo=verbose_sqlalchemy)
+class _ConnectionManager:
+    """Handles the creation of the engine and sessions.
+
+    This class is instantiated only once.
+
+    This permits creating the engine and session factory only once, but
+    adds the possibility to manually recreate them using a new configuration.
+    """
+
+    def __init__(self):
+        self._engine = None
+        self._session_maker = None
+        self.reload_config()
+
+    @property
+    def engine(self):
+        return self._engine
+
+    @contextmanager
+    def get_db_session(self):
+        session = self._session_maker()
+        try:
+            yield session
+        finally:
+            self._session_maker.remove()
+
+    def reload_config(self):
+        verbose_sqlalchemy = config.get("verbose_sqlalchemy", bool)
+        self._engine = create_engine(
+            config.get_database_url(), convert_unicode=True, echo=verbose_sqlalchemy
+        )
+        self._session_maker = scoped_session(
+            sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
+        )
 
 
-def session_factory():
-    engine = get_engine()
-    return sessionmaker(bind=engine)()
+connection_manager = _ConnectionManager()
 
 
 def wait_for_db_connection(seconds=30):
     """Wait for a successful database connection for a specified time"""
-    engine = get_engine()
+    engine = connection_manager.engine
     while seconds >= 1:
         try:
             engine.execute("SELECT 1;")

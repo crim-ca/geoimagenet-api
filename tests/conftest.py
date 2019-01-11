@@ -4,7 +4,7 @@ import pytest
 
 from geoimagenet_api.database import migrations
 from geoimagenet_api import make_app
-from geoimagenet_api.database.connection import get_engine
+from geoimagenet_api.database.connection import connection_manager
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -19,10 +19,11 @@ def reset_test_database():
     # configuration
     os.environ["GEOIMAGENET_API_POSTGIS_DB"] = "geoimagenet_test"
     os.environ["GEOIMAGENET_API_VERBOSE_SQLALCHEMY"] = "false"
+    connection_manager.reload_config()
 
     migrations.ensure_database_exists()
 
-    engine = get_engine()
+    engine = connection_manager.engine
     for table in engine.table_names():
         if not table == "spatial_ref_sys":
             engine.execute(f"DROP TABLE IF EXISTS {table} CASCADE;")

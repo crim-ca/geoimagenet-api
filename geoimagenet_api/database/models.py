@@ -13,6 +13,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import expression
 from geoalchemy2 import Geometry
 
+
 Base = declarative_base()
 
 
