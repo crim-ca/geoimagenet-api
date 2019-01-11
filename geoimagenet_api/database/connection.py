@@ -35,7 +35,11 @@ class _ConnectionManager:
     def reload_config(self):
         verbose_sqlalchemy = config.get("verbose_sqlalchemy", bool)
         self._engine = create_engine(
-            config.get_database_url(), convert_unicode=True, echo=verbose_sqlalchemy
+            config.get_database_url(),
+            convert_unicode=True,
+            echo=verbose_sqlalchemy,
+            pool_size=20,
+            max_overflow=0,
         )
         self._session_maker = scoped_session(
             sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
