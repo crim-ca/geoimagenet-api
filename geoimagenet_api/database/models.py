@@ -100,7 +100,7 @@ class TaxonomyClass(Base):
     taxonomy_id = Column(Integer, ForeignKey("taxonomy.id"), nullable=False)
     parent_id = Column(Integer, ForeignKey("taxonomy_class.id"))
     children = relationship(
-        "TaxonomyClass", backref=backref("parent", remote_side=[id])
+        "TaxonomyClass", backref=backref("parent", remote_side=[id]), join_depth=10, lazy='joined'
     )
     name = Column(String, nullable=False)
     __table_args__ = (UniqueConstraint("parent_id", "name", name="uc_taxonomy_class"),)
