@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from sqlalchemy_utils import drop_database, create_database
 
 from geoimagenet_api.database import migrations
 from geoimagenet_api import make_app
@@ -21,12 +22,10 @@ def reset_test_database():
     os.environ["GEOIMAGENET_API_VERBOSE_SQLALCHEMY"] = "false"
     connection_manager.reload_config()
 
-    migrations.ensure_database_exists()
+    db_url = connection_manager.engine.url
 
-    engine = connection_manager.engine
-    for table in engine.table_names():
-        if not table == "spatial_ref_sys":
-            engine.execute(f"DROP TABLE IF EXISTS {table} CASCADE;")
+    drop_database(db_url)
+    create_database(db_url, template="template_postgis")
 
     # run migrations and initiate base data
     migrations.init_database_data()
