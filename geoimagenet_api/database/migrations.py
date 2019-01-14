@@ -27,7 +27,7 @@ def ensure_database_exists():
     """If the database name given in the config doesn't exist, create it"""
     engine = connection_manager.engine
     if not database_exists(engine.url):
-        create_database(engine.url)
+        create_database(engine.url, template="template0")
         engine.execute("CREATE EXTENSION postgis;")
 
 
