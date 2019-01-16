@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from sqlalchemy_utils import drop_database, create_database
+from sqlalchemy_utils import drop_database, create_database, database_exists
 
 from geoimagenet_api.database import migrations
 from geoimagenet_api import make_app
@@ -24,7 +24,8 @@ def reset_test_database():
 
     db_url = connection_manager.engine.url
 
-    drop_database(db_url)
+    if database_exists(db_url):
+        drop_database(db_url)
     create_database(db_url, template="template_postgis")
 
     # run migrations and initiate base data

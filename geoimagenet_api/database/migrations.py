@@ -52,43 +52,54 @@ def try_insert(session, class_, **kwargs):
     return db_object
 
 
-def load_taxonomy():
-    here = Path(__file__).parent
+def write_taxonomy(json_path: Path):
+    """Writes taxonomy to the database from a json file.
 
+    First checks if the taxonomy name and version is in the taxonomy table.
+    If it's there, it stops.
+    If not, it writes the taxonomy and taxonomy_class items.
+
+    If any error is raised, the session is rolled back and nothing is written.
+    """
     with connection_manager.get_db_session() as session:
-        objets = here / "json_data" / "objets.json"
-        couverture = here / "json_data" / "couverture_de_sol.json"
 
-        def recurse_json(obj, parent_taxonomy=None):
-            if parent_taxonomy is None:
-                taxonomy = try_insert(
-                    session, Taxonomy, name=obj["name"], version=str(obj["version"])
-                )
-                taxonomy_id = taxonomy.id
-                parent_id = None
-            else:
-                taxonomy_id = parent_taxonomy.taxonomy_id
-                parent_id = parent_taxonomy.id
-
-            taxonomy_class = try_insert(
-                session,
-                TaxonomyClass,
-                taxonomy_id=taxonomy_id,
-                name=obj["name"],
-                parent_id=parent_id,
+        def recurse_json(obj, taxonomy_id, parent_id=None):
+            taxonomy_class = TaxonomyClass(
+                taxonomy_id=taxonomy_id, name=obj["name"], parent_id=parent_id
             )
+            session.add(taxonomy_class)
+            session.flush()
 
             if "value" in obj:
                 taxonomy_class.children = [
-                    recurse_json(o, taxonomy_class) for o in obj["value"]
+                    recurse_json(o, taxonomy_id, taxonomy_class.id)
+                    for o in obj["value"]
                 ]
 
             return taxonomy_class
 
-        recurse_json(json.load(objets.open()))
-        recurse_json(json.load(couverture.open()))
+        def taxonomy_exists(name, version):
+            query = session.query(Taxonomy).filter_by(name=name, version=version)
+            return query.scalar() is not None
 
-        session.commit()
+        data = json.loads(json_path.read_text())
+
+        name = data["name"]
+        version = str(data["version"])
+
+        if not taxonomy_exists(name, version):
+            taxonomy = Taxonomy(name=name, version=version)
+            session.add(taxonomy)
+            session.flush()
+            recurse_json(data, taxonomy.id)
+
+            session.commit()
+
+
+def load_taxonomies():
+    json_data = Path(__file__).parent / "json_data"
+    write_taxonomy(json_data / "objets.json")
+    write_taxonomy(json_data / "couverture_de_sol.json")
 
 
 def init_database_data():
@@ -104,7 +115,7 @@ def init_database_data():
     migrate()
     sys.argv = old_argv
 
-    load_taxonomy()
+    load_taxonomies()
 
 
 if __name__ == "__main__":
