@@ -39,7 +39,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                environment name: 'GIT_LOCAL_BRANCH', value: 'master'
+                environment name: 'GIT_LOCAL_BRANCH', value: 'release'
             }
             steps {
                 sh 'docker tag $LOCAL_IMAGE_NAME $TAGGED_IMAGE_NAME'
