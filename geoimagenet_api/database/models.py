@@ -30,7 +30,7 @@ class Annotation(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
-    geometry = Column(Geometry("GEOMETRY", srid=4326), nullable=False)
+    geometry = Column(Geometry("GEOMETRY", srid=3857), nullable=False)
     updated_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), nullable=False)
     image_name = Column(String, nullable=False)
@@ -52,7 +52,7 @@ class AnnotationLog(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     annotation_id = Column(Integer, nullable=False)
     annotator_id = Column(Integer, ForeignKey("person.id"))
-    geometry = Column(Geometry("GEOMETRY", srid=4326))
+    geometry = Column(Geometry("GEOMETRY", srid=3857))
     created_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"))
     image_name = Column(String)

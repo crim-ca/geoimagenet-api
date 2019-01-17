@@ -30,7 +30,7 @@ def test_annotation_log_triggers():
 
         annotation = Annotation(
             annotator_id=user_id,
-            geometry="SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
             taxonomy_class_id=1,
             image_name="my image",
         )
@@ -60,13 +60,13 @@ def test_annotation_log_triggers():
         assert log[1].description == 2  # UPDATE
 
         # update geometry
-        polygon_wkt = "SRID=4326;POLYGON((0 0,1 0,2 1,0 1,0 0))"
+        polygon_wkt = "SRID=3857;POLYGON((0 0,1 0,2 1,0 1,0 0))"
         annotation.geometry = polygon_wkt
         session.add(annotation)
         session.commit()
         log = session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()
 
-        wkt_geom = "SRID=4326;" + session.query(functions.ST_AsText(log[2].geometry)).scalar()
+        wkt_geom = "SRID=3857;" + session.query(functions.ST_AsText(log[2].geometry)).scalar()
         assert wkt_geom == polygon_wkt
         assert log[2].annotator_id is None
         assert log[2].released is None
@@ -108,7 +108,7 @@ def test_cant_update_released_annotation():
 
         annotation = Annotation(
             annotator_id=user_id,
-            geometry="SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
             taxonomy_class_id=1,
             image_name="my image",
             released=True,
@@ -127,7 +127,7 @@ def test_cant_update_released_annotation():
 
         with pytest.raises(InternalError):
             annotation = session.query(Annotation).filter_by(id=annotation_id).scalar()
-            polygon_wkt = "SRID=4326;POLYGON((0 0,1 0,2 1,0 1,0 0))"
+            polygon_wkt = "SRID=3857;POLYGON((0 0,1 0,2 1,0 1,0 0))"
             annotation.geometry = polygon_wkt
             session.add(annotation)
             session.commit()
@@ -165,7 +165,7 @@ def test_log_delete_annotation():
 
         annotation = Annotation(
             annotator_id=user_id,
-            geometry="SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
             taxonomy_class_id=1,
             image_name="my image",
         )
