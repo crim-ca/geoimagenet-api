@@ -36,3 +36,9 @@ $ init_database
 This command is designed to be idempotent. Unique constraints shouldn't allow duplicate data,
 but you should be careful when loading data into the database.
 Any required migrations will be applied by this command prior to inserting the data.
+
+To write data for testing purposes, its possible to run:
+
+``` bash
+$ init_database --testing
+``` 

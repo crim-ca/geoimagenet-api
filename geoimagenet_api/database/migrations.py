@@ -5,11 +5,12 @@ import sys
 import json
 from copy import copy
 
+from sqlalchemy.exc import InternalError
 from sqlalchemy_utils import database_exists, create_database
 import alembic.config
 
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.database.models import TaxonomyClass, Taxonomy
+from geoimagenet_api.database import models
 
 
 @contextmanager
@@ -64,7 +65,7 @@ def write_taxonomy(json_path: Path):
     with connection_manager.get_db_session() as session:
 
         def recurse_json(obj, taxonomy_id, parent_id=None):
-            taxonomy_class = TaxonomyClass(
+            taxonomy_class = models.TaxonomyClass(
                 taxonomy_id=taxonomy_id, name=obj["name"], parent_id=parent_id
             )
             session.add(taxonomy_class)
@@ -79,7 +80,7 @@ def write_taxonomy(json_path: Path):
             return taxonomy_class
 
         def taxonomy_exists(name, version):
-            query = session.query(Taxonomy).filter_by(name=name, version=version)
+            query = session.query(models.Taxonomy).filter_by(name=name, version=version)
             return query.scalar() is not None
 
         data = json.loads(json_path.read_text())
@@ -88,7 +89,7 @@ def write_taxonomy(json_path: Path):
         version = str(data["version"])
 
         if not taxonomy_exists(name, version):
-            taxonomy = Taxonomy(name=name, version=version)
+            taxonomy = models.Taxonomy(name=name, version=version)
             session.add(taxonomy)
             session.flush()
             recurse_json(data, taxonomy.id)
@@ -100,6 +101,16 @@ def load_taxonomies():
     json_data = Path(__file__).parent / "json_data"
     write_taxonomy(json_data / "objets.json")
     write_taxonomy(json_data / "couverture_de_sol.json")
+
+
+def load_testing_data():
+    with connection_manager.get_db_session() as session:
+        demo_user = models.Person(username="demo", name="Demo User")
+        session.add(demo_user)
+        try:
+            session.commit()
+        except InternalError:
+            session.rollback()
 
 
 def init_database_data():
@@ -116,6 +127,9 @@ def init_database_data():
     sys.argv = old_argv
 
     load_taxonomies()
+
+    if "--testing" in sys.argv:
+        load_testing_data()
 
 
 if __name__ == "__main__":
