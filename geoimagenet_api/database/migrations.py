@@ -5,7 +5,7 @@ import sys
 import json
 from copy import copy
 
-from sqlalchemy.exc import InternalError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy_utils import database_exists, create_database
 import alembic.config
 
@@ -109,7 +109,7 @@ def load_testing_data():
         session.add(demo_user)
         try:
             session.commit()
-        except InternalError:
+        except IntegrityError:
             session.rollback()
 
 
