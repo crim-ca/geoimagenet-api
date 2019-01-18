@@ -95,6 +95,12 @@ def test_taxonomy_search_all(client):
     assert len(r.json) >= 2
 
 
+def test_taxonomy_versions(client):
+    r = client.get(api_url(f"/taxonomy"))
+    assert isinstance(r.json[0]['version'], list)
+    assert len(r.json[0]['version']) >= 1
+
+
 def test_taxonomy_search_by_slug(client):
     query = {"name": "couverture-de-sol", "version": "1"}
     r = client.get(api_url(f"/taxonomy"), query_string=query)
