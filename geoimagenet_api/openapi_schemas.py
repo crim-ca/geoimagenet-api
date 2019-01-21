@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from datetime import datetime
 
 from dataclasses import dataclass, field
@@ -38,6 +38,19 @@ class Taxonomy:
     name: str
     slug: str
     version: str
+
+
+@dataclass
+class TaxonomyVersion:
+    taxonomy_id: int
+    version: str
+
+
+@dataclass
+class TaxonomyGroup:
+    name: str
+    slug: str
+    versions: List[TaxonomyVersion]
 
 
 @dataclass

@@ -179,7 +179,7 @@ paths:
           schema:
             type: string
         - name: version
-          description: The version of the taxonomy
+          description: The version of the taxonomy. `name` is required if version is provided.
           in: query
           schema:
             type: string
@@ -191,9 +191,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Taxonomy'
+                  $ref: '#/components/schemas/TaxonomyGroup'
         404:
           description: Not found
+          content:
+            application/json: {}
+        400:
+          description: Bad request
           content:
             application/json: {}
     post:
@@ -361,6 +365,32 @@ components:
           type: string
         slug:
           type: string
+        version:
+          type: string
+    TaxonomyGroup:
+      type: object
+      required:
+        - name
+        - slug
+        - versions
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxonomyVersion'
+    TaxonomyVersion:
+      type: object
+      required:
+        - taxonomy_id
+        - version
+      properties:
+        taxonomy_id:
+          type: integer
+          format: int64
         version:
           type: string
     Validation:
