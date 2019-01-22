@@ -5,7 +5,7 @@ Web platform API
 
 ### Configuration
 
-An example configuration file if located at: `geoimagenet_api/config/default.ini`
+An example configuration file is located at: `geoimagenet_api/config/default.ini`
 
 No other configuration parameters are used, and these are the defaults.
 

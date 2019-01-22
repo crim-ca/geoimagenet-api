@@ -1,0 +1,5 @@
+click
+loguru
+pyyaml
+dataclasses
+git+https://github.com/boundlessgeo/gsconfig#egg=gsconfig

@@ -1,0 +1,15 @@
+global:
+  delete_other_workspaces: false
+  overwrite_workspaces: false
+
+styles:
+  - name: RGB
+    path: ./styles/RGB.xml
+  - name: NRG
+    path: ./styles/NRG.xml
+
+workspaces:
+  - name: Pleiades
+    uri: pleiades
+    style: RGB
+    images_path: /pleiades
