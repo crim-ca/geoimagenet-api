@@ -167,14 +167,16 @@ def setup(geoserver_url: str, config: str, dry_run=False):
 
 @click.command()
 @click.option(
+    "-d",
     "--dry-run",
-    default=False,
+    is_flag=True,
     help="Only print actions to perform without changing the remote server.",
 )
 @click.option(
-    "--geoserver-url", "GeoServer instance where the GeoTIFF images are served from."
+    "--geoserver-url",
+    help="GeoServer instance where the GeoTIFF images are served from.",
 )
-@click.argument("--yaml-config", "Path to the yaml configuration file")
+@click.option("--yaml-config", help="Path to the yaml configuration file")
 def cli(dry_run, geoserver_url, yaml_config):
     """Main entry point for the cli."""
 
