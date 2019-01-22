@@ -11,5 +11,5 @@ sentry-sdk[flask]
 click
 loguru
 pyyaml
-git+https://github.com/boundlessgeo/gsconfig#egg=gsconfig
+https://github.com/boundlessgeo/gsconfig/archive/master.zip#egg=gsconfig
 
