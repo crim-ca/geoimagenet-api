@@ -16,6 +16,22 @@ Configuration parameters are loaded in this order of priority:
   - parameters in the `geoimagenet_api/config/default.ini file`
   
   
+### GeoServer Setup
+
+``` bash
+$ geoserver_setup GEOSERVER_URL CONFIG.YAML
+```
+
+This commands creates workspaces, stores, layers and styles
+described in a yaml file. 
+
+An example configuration file is located at: 
+`geoimagenet_api/geoserver_setup/config_example.yaml`
+
+Eventually, this command will be available through the rest api.
+Right now, it has to be triggered manually.
+
+  
 ### Migrations
 
 
