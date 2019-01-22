@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from typing import List
@@ -29,12 +30,14 @@ class Workspace:
 class GeoServerConfiguration:
     extensions = {".tif": "GeoTIFF"}
 
-    def __init__(self, geoserver_url, yaml_config, dry_run):
+    def __init__(self, geoserver_url, yaml_path, dry_run):
         self.geoserver_url = geoserver_url.rstrip("/")
         if not self.geoserver_url.endswith("/rest"):
             self.geoserver_url += "/rest"
 
-        self.yaml_config = yaml_config
+        self.yaml_path = yaml_path
+        self.yaml_config = yaml.safe_load(open(self.yaml_path))
+
         self.dry_run = dry_run
 
         self._catalog = None
@@ -48,6 +51,10 @@ class GeoServerConfiguration:
         self.create_workspaces(workspaces)
         self.create_styles(styles)
         self.create_stores(workspaces)
+
+    def get_absolute_path(self, path):
+        """Paths can be relative to the config.yaml file or absolute"""
+        return Path(self.yaml_path).parent / Path(path)
 
     def get_global_config(self, name):
         if "global" not in self.yaml_config:
@@ -105,7 +112,7 @@ class GeoServerConfiguration:
 
     def create_styles(self, styles: List[Style]):
         for style in styles:
-            name, path = style.name, Path(style.path)
+            name, path = style.name, self.get_absolute_path(style.path)
             if not path.exists():
                 logger.error(f"Path to style {name} doesn't exists: {path}")
                 sys.exit(1)
@@ -130,9 +137,9 @@ class GeoServerConfiguration:
             logger.info(f"Getting stores for workspace {workspace.name}")
             stores = self.catalog.get_stores(workspaces=workspace.name)
             stores_names = [s.name for s in stores]
-            images_path = workspace.images_path
+            images_path = self.get_absolute_path(workspace.images_path)
             if images_path:
-                for path in Path(images_path).glob("./*.*"):
+                for path in images_path.glob("./*.*"):
                     image_name = path.stem
                     if image_name in stores_names:
                         logger.warning(f"Store already exists: {image_name}")
@@ -158,7 +165,6 @@ class GeoServerConfiguration:
 
 def setup(geoserver_url: str, config: str, dry_run=False):
     logger.info(f"Loading config file.")
-    config = yaml.safe_load(open(config))
 
     geoserver_config = GeoServerConfiguration(geoserver_url, config, dry_run)
 
@@ -183,9 +189,14 @@ def cli(dry_run, geoserver_url, yaml_config):
     if not yaml_config:
         yaml_config = config.get("geoserver_yaml_config", str)
 
+    if not yaml_config:
+        yaml_config = Path(__file__).with_name('config.yaml')
+
+    yaml_config = Path(yaml_config)
+
     logger.info(f"Started with input file: {yaml_config}")
-    if not Path(yaml_config).exists():
-        logger.error("File doesn't exist, exiting.")
+    if not yaml_config.exists():
+        logger.error(f"File doesn't exist: {yaml_config}.")
         sys.exit(1)
 
     if not geoserver_url:
