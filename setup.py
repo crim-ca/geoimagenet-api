@@ -17,9 +17,11 @@ def read_setup_file(path) -> str:
 def read_requirements(path) -> List[str]:
     requirements = []
     for line in read_setup_file(path).splitlines():
-        search = re.search(r'(.+egg=)?(.+)', line)
+        search = re.search(r'(.+)?#egg=(.+)', line)
         if search:
-            requirements.append(search.group(2))
+            url = search.group(1)
+            package_name = search.group(2)
+            requirements.append(f"{package_name} @ {url}")
         else:
             requirements.append(line)
     return requirements
