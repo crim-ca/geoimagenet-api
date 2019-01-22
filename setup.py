@@ -1,4 +1,7 @@
+import re
 import sys
+from typing import List
+
 from setuptools import setup
 
 assert sys.version_info >= (3, 6, 0), "geoimagenet_api requires Python 3.6+"
@@ -9,6 +12,17 @@ HERE = Path(__file__).parent
 
 def read_setup_file(path) -> str:
     return open(HERE / path, encoding="utf8").read()
+
+
+def read_requirements(path) -> List[str]:
+    requirements = []
+    for line in read_setup_file(path).splitlines():
+        search = re.search(r'(.+egg=)?(.+)', line)
+        if search:
+            requirements.append(search.group(2))
+        else:
+            requirements.append(line)
+    return requirements
 
 
 __about__ = {}
@@ -37,8 +51,8 @@ setup(
     package_data=package_data,
     python_requires=">=3.6",
     zip_safe=False,
-    install_requires=read_setup_file("requirements.txt").split(),
-    tests_require=read_setup_file("requirements_dev.txt").split(),
+    install_requires=read_requirements("requirements.txt"),
+    tests_require=read_requirements("requirements_dev.txt"),
     test_suite="tests.tests",
     classifiers=[
         "Development Status :: 4 - Beta",
