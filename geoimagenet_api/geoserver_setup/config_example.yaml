@@ -1,3 +1,5 @@
+# Paths can be relative to this file or absolute
+
 global:
   delete_other_workspaces: false
   overwrite_workspaces: false
@@ -10,6 +12,11 @@ styles:
 
 workspaces:
   - name: Pleiades
-    uri: pleiades
+    uri: pleiades_uri
     style: RGB
     images_path: /pleiades
+  - name: Pleiades_layer_group
+    uri: pleiades_layer_group
+    style: RGB
+    is_layer_group_of_workspace: pleiades
+
