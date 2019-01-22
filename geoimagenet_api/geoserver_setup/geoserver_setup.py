@@ -9,6 +9,8 @@ import click
 import yaml
 from geoserver.catalog import Catalog
 
+from geoimagenet_api.config import config
+
 
 @dataclass
 class Style:
@@ -169,20 +171,22 @@ def setup(geoserver_url: str, config: str, dry_run=False):
     default=False,
     help="Only print actions to perform without changing the remote server.",
 )
-@click.argument("geoserver_url")
-@click.argument("config")
-def cli(dry_run, geoserver_url, config):
+@click.option(
+    "--geoserver-url", "GeoServer instance where the GeoTIFF images are served from."
+)
+@click.argument("--yaml-config", "Path to the yaml configuration file")
+def cli(dry_run, geoserver_url, yaml_config):
     """Main entry point for the cli."""
-    logger.info(f"Started with input file: {config}")
-    if not Path(config).exists():
+
+    if not yaml_config:
+        yaml_config = config.get("geoserver_yaml_config", str)
+
+    logger.info(f"Started with input file: {yaml_config}")
+    if not Path(yaml_config).exists():
         logger.error("File doesn't exist, exiting.")
         sys.exit(1)
 
-    setup(geoserver_url, config, dry_run)
+    if not geoserver_url:
+        geoserver_url = config.get("geoserver_datastore_url", str)
 
-
-if __name__ == "__main__":
-    # url = 'https://192.168.99.201/geoserver'
-    url = "http://192.168.99.201:8080/geoserver"
-    config = "./config_example.yaml"
-    setup(url, config)
+    setup(geoserver_url, yaml_config, dry_run)
