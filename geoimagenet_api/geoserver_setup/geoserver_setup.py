@@ -48,6 +48,9 @@ class GeoServerConfiguration:
         styles = [Style(**s) for s in self.yaml_config["styles"]]
         workspaces = [Workspace(**s) for s in self.yaml_config["workspaces"]]
 
+        logger.debug("Read workspaces: " + ", ".join(w.name for w in workspaces))
+        logger.debug("Read styles: " + ", ".join(s.name for s in styles))
+
         self.create_workspaces(workspaces)
         self.create_styles(styles)
         self.create_stores(workspaces)
@@ -80,6 +83,7 @@ class GeoServerConfiguration:
         return catalog.get_workspaces()
 
     def remove_workspaces(self):
+        logger.info(f"Removing workspaces")
         delete_other_workspaces = self.get_global_config("delete_other_workspaces")
         overwrite_workspaces = self.get_global_config("overwrite_workspaces")
 
@@ -101,6 +105,7 @@ class GeoServerConfiguration:
                         self.catalog.delete(workspace, recurse=True)
 
     def create_workspaces(self, workspaces: List[Workspace]):
+        logger.info(f"Creating workspaces")
         existing_workspaces = self.workspaces
         existing_workspaces_names = [w.name for w in existing_workspaces]
 
@@ -111,6 +116,7 @@ class GeoServerConfiguration:
                     self.catalog.create_workspace(name=w.name, uri=w.uri)
 
     def create_styles(self, styles: List[Style]):
+        logger.info(f"Creating styles")
         for style in styles:
             name, path = style.name, self.get_absolute_path(style.path)
             if not path.exists():
@@ -131,6 +137,7 @@ class GeoServerConfiguration:
                 )
 
     def create_stores(self, workspaces: List[Workspace]):
+        logger.info(f"Creating stores")
         existing_styles = {s.name: s for s in self.catalog.get_styles()}
 
         for workspace in workspaces:
@@ -138,8 +145,10 @@ class GeoServerConfiguration:
             stores = self.catalog.get_stores(workspaces=workspace.name)
             stores_names = [s.name for s in stores]
             images_path = self.get_absolute_path(workspace.images_path)
+            logger.debug(f"images_path: {images_path}")
             if images_path:
                 for path in images_path.glob("./*.*"):
+                    logger.debug(f"Found image: {path}")
                     image_name = path.stem
                     if image_name in stores_names:
                         logger.warning(f"Store already exists: {image_name}")
