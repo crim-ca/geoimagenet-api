@@ -1,9 +1,8 @@
-import os
 import sys
 from pathlib import Path
 from typing import List
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from loguru import logger
 import click
@@ -24,7 +23,8 @@ class Workspace:
     name: str
     uri: str
     style: str
-    images_path: str
+    images_path: str = field(default="")
+    is_layer_group_of_workspace: str = field(default="")
 
 
 class GeoServerConfiguration:
@@ -138,38 +138,78 @@ class GeoServerConfiguration:
 
     def create_stores(self, workspaces: List[Workspace]):
         logger.info(f"Creating stores")
-        existing_styles = {s.name: s for s in self.catalog.get_styles()}
 
         for workspace in workspaces:
-            logger.info(f"Getting stores for workspace {workspace.name}")
-            stores = self.catalog.get_stores(workspaces=workspace.name)
-            stores_names = [s.name for s in stores]
-            images_path = self.get_absolute_path(workspace.images_path)
-            logger.debug(f"images_path: {images_path}")
+            images_path = workspace.images_path
+            other_uri = workspace.is_layer_group_of_workspace
             if images_path:
-                for path in images_path.glob("./*.*"):
-                    logger.debug(f"Found image: {path}")
-                    image_name = path.stem
-                    if image_name in stores_names:
-                        logger.warning(f"Store already exists: {image_name}")
-                        continue
-                    type_ = self.extensions.get(path.suffix.lower())
-                    if type_ is not None:
-                        logger.warning(f"CREATE {type_} store: {image_name}")
-                        if not self.dry_run:
-                            layer_name = image_name
-                            self.catalog.create_coveragestore(
-                                image_name,
-                                workspace=workspace.name,
-                                path=str(path),
-                                type=type_,
-                                create_layer=True,
-                                layer_name=layer_name,
-                                source_name=layer_name,
-                            )
-                            layer = self.catalog.get_layer(layer_name)
-                            layer.default_style = existing_styles[workspace.style]
-                            self.catalog.save(layer)
+                self.create_coverage_store(workspace)
+            elif other_uri:
+                logger.info(
+                    f"Matching workspace '{workspace.name}' to uri: {other_uri}"
+                )
+                other_workspace = [w for w in workspaces if w.uri == other_uri]
+                if not other_workspace:
+                    logger.error(f"Couldn't find workspace uri: {other_uri}")
+                    sys.exit(1)
+                self.create_layergroup(workspace, other_workspace[0])
+
+    def create_layergroup(self, workspace, images_workspace):
+        existing_styles = self.get_styles()
+        existing_groups = self.catalog.get_layergroups(workspaces=workspace.name)
+        if existing_groups:
+            for group in existing_groups:
+                self.catalog.delete(group)
+        self.catalog.create_layergroup(
+            workspace.name,
+            layers=(),
+            styles=(existing_styles[workspace.style], ),
+            bounds=None,
+            mode="SINGLE",
+            abstract=None,
+            title=None,
+            workspace=None,
+        )
+
+    def create_coverage_store(self, workspace: Workspace):
+        images_path = self.get_absolute_path(workspace.images_path)
+        logger.debug(f"images_path: {images_path}")
+
+        existing_styles = self.get_styles()
+        stores = self.get_stores(workspace)
+        stores_names = [s.name for s in stores]
+
+        for path in images_path.glob("./*.*"):
+            logger.debug(f"Found image: {path}")
+            image_name = path.stem
+            if image_name in stores_names:
+                logger.warning(f"Store already exists: {image_name}")
+                continue
+            type_ = self.extensions.get(path.suffix.lower())
+            if type_ is not None:
+                logger.warning(f"CREATE {type_} store: {image_name}")
+                if not self.dry_run:
+                    layer_name = image_name
+                    self.catalog.create_coveragestore(
+                        image_name,
+                        workspace=workspace.name,
+                        path=str(path),
+                        type=type_,
+                        create_layer=True,
+                        layer_name=layer_name,
+                        source_name=layer_name,
+                    )
+                    layer = self.catalog.get_layer(layer_name)
+                    layer.default_style = existing_styles[workspace.style]
+                    self.catalog.save(layer)
+
+    def get_stores(self, workspace):
+        logger.info(f"Getting stores for workspace {workspace.name}")
+        stores = self.catalog.get_stores(workspaces=workspace.name)
+        return stores
+
+    def get_styles(self):
+        return {s.name: s for s in self.catalog.get_styles()}
 
 
 def setup(geoserver_url: str, config: str, dry_run=False):
@@ -199,7 +239,7 @@ def cli(dry_run, geoserver_url, yaml_config):
         yaml_config = config.get("geoserver_yaml_config", str)
 
     if not yaml_config:
-        yaml_config = Path(__file__).with_name('config.yaml')
+        yaml_config = Path(__file__).with_name("config.yaml")
 
     yaml_config = Path(yaml_config)
 
