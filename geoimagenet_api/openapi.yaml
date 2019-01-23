@@ -176,30 +176,6 @@ paths:
           description: Bad request
           content:
             application/json: {}
-    post:
-      summary: Add a taxonomy
-      tags:
-        - not implemented
-      parameters:
-        - name: name
-          description: The name of the taxonomy
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: version
-          description: The version of the taxonomy
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        201:
-          description: The taxonomy class created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Taxonomy'
 
   /taxonomy/{name_slug}/{version}:
     get:

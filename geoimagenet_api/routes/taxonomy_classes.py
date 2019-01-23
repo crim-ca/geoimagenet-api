@@ -41,14 +41,3 @@ def get(id, depth=-1):
     if not taxo:
         return "Taxonomy class id not found", 404
     return taxo
-
-
-def post(name, taxonomy_id):
-    with connection_manager.get_db_session() as session:
-        taxo = DBTaxonomyClass(name=name, taxonomy_id=taxonomy_id)
-        session.add(taxo)
-        try:
-            session.commit()
-        except IntegrityError:
-            return "A taxonomy class having this name and parent_id already exists", 409
-        return dataclass_from_object(TaxonomyClass, taxo)

@@ -65,14 +65,3 @@ def get_by_slug(name_slug, version):
                 version=version,
             )
     return "Taxonomy not found", 404
-
-
-def post(name, version):
-    with connection_manager.get_db_session() as session:
-        taxo = DBTaxonomy(name=name, version=version)
-        session.add(taxo)
-        try:
-            session.commit()
-        except IntegrityError:
-            return ("A taxonomy class having this name and version already exists", 409)
-        return dataclass_from_object(Taxonomy, taxo)
