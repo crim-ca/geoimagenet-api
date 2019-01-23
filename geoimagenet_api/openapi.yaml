@@ -308,9 +308,8 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AnnotationPut'
+              description: GeoJson annotation to be modified
+              $ref: '#/components/schemas/GeoJsonAnnotation'
       responses:
         204:
           description: No Content
@@ -322,17 +321,20 @@ paths:
       summary: Write an annotation to the database
       requestBody:
         content:
-          application/geojson:
+          application/json:
             schema:
               description: GeoJson annotation to be written to the database
-              type: object
+              $ref: '#/components/schemas/GeoJsonAnnotation'
       responses:
         201:
           description: The id of the created annotation
           content:
             application/json:
               schema:
-                type: object
+                description: List containing the database ids created
+                type: array
+                items:
+                  type: integer
 
 components:
   schemas:
@@ -350,7 +352,49 @@ components:
           type: string
         documetation_url:
           type: string
-
+    GeoJsonAnnotation:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - geometry
+        - properties
+      properties:
+        type:
+          type: string
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+        properties:
+          $ref: '#/components/schemas/AnnotationProperties'
+    Geometry:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+        coordinates:
+          type: object
+    AnnotationProperties:
+      type: object
+      additionalProperties: false
+      required:
+        - annotator_id
+        - taxonomy_class_id
+        - image_name
+      properties:
+        annotator_id:
+          type: integer
+        taxonomy_class_id:
+          type: integer
+        image_name:
+          type: streger
+        annotation_id:
+          type: integer
+        released:
+          type: boolean
     User:
       type: object
       required:
@@ -459,14 +503,3 @@ components:
         validator_id:
           type: integer
           format: int64
-    AnnotationPut:
-      type: object
-      required:
-        - id
-        - released
-      properties:
-        id:
-          type: integer
-          format: int64
-        released:
-          type: boolean
