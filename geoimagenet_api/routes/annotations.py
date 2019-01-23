@@ -1,46 +1,58 @@
 import json
 
 from flask import request
-import connexion
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import func
 
-from geoimagenet_api.openapi_schemas import AnnotationPut
+from geoimagenet_api.openapi_schemas import GeoJsonAnnotation, AnnotationProperties
 from geoimagenet_api.database.models import Annotation as DBAnnotation, Annotation
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import dataclass_from_object
 
 
 def put():
-    annotations = [
-        AnnotationPut(id=a["id"], released=a["released"]) for a in request.json
-    ]
+    _, geometry, properties = GeoJsonAnnotation(**request.json)
+    properties = AnnotationProperties(**properties)
+    if not properties.annotation_id:
+        return "Property 'annotation_id' is required", 400
+
     with connection_manager.get_db_session() as session:
-        ids = list(sorted([a.id for a in annotations]))
-        query = session.query(DBAnnotation).filter(DBAnnotation.id.in_(ids)).order_by(DBAnnotation.id)
-        if query.count() != len(annotations):
-            not_found = set([a.id for a in annotations]).difference([q.id for q in query])
-            return f"Ids not found: {', '.join(map(str, not_found))}", 404
+        annotation = session.query(DBAnnotation).filter_by(id=properties.annotation_id).first()
+        if not annotation:
+            return f"Annotation id not found: {properties.annotation_id}", 404
 
-        for anno, db_anno in zip(annotations, query):
-            db_anno.released = anno.released
+        annotation.taxonomy_class_id = properties.taxonomy_class_id
+        annotation.image_name = properties.image_name
+        annotation.annotator_id = properties.annotator_id
+        annotation.released = properties.released
+        try:
+            session.commit()
+        except IntegrityError as e:
+            return f"Error: {e}", 400
 
-        session.commit()
     return "Annotations updated", 204
 
 
 def post():
-    from sqlalchemy.sql import func
-
+    ids = []
     with connection_manager.get_db_session() as session:
-        for feature in request.json['features']:
-            geom_string = json.dumps(feature['geometry'])
-            s = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 4326)
-            geom = func.ST_Transform(s, 3857)
+        geometry = request.json['geometry']
+        properties = request.json['properties']
 
-            annotation = Annotation(
-                annotator_id=1,
-                geometry=geom,
-                taxonomy_class_id=1,
-                image_name="my image",
-            )
-            session.add(annotation)
-        session.commit()
+        geom_string = json.dumps(geometry)
+        geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
+
+        annotation = Annotation(
+            annotator_id=properties['annotator_id'],
+            geometry=geom,
+            taxonomy_class_id=properties['taxonomy_class_id'],
+            image_name=properties['image_name'],
+        )
+        session.add(annotation)
+        try:
+            session.commit()
+        except IntegrityError as e:
+            return f"Error: {e}", 400
+
+        ids.append(annotation.id)
+
+    return ids
