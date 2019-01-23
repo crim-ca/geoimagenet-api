@@ -252,6 +252,42 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Validation'
+
+  /annotations:
+    put:
+      summary: Update annotations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: GeoJson annotation to be modified
+              $ref: '#/components/schemas/GeoJsonAnnotation'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: Annotation not found
+          content:
+            application/json: {}
+    post:
+      summary: Write an annotation to the database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: GeoJson annotation to be written to the database
+              $ref: '#/components/schemas/GeoJsonAnnotation'
+      responses:
+        201:
+          description: The id of the created annotation
+          content:
+            application/json:
+              schema:
+                description: List containing the database ids created
+                type: array
+                items:
+                  type: integer
+
 components:
   schemas:
     ApiInfo:
@@ -268,7 +304,64 @@ components:
           type: string
         documetation_url:
           type: string
-
+    GeoJsonAnnotation:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - geometry
+        - properties
+      properties:
+        type:
+          type: string
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+        properties:
+          $ref: '#/components/schemas/AnnotationProperties'
+    Geometry:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+        coordinates:
+          oneOf:
+            - type: array
+              items:
+                type: number
+            - type: array
+              items:
+                type: array
+                items:
+                  type: number
+            - type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+    AnnotationProperties:
+      type: object
+      additionalProperties: false
+      required:
+        - annotator_id
+        - taxonomy_class_id
+        - image_name
+      properties:
+        annotator_id:
+          type: integer
+        taxonomy_class_id:
+          type: integer
+        image_name:
+          type: string
+        annotation_id:
+          type: integer
+        released:
+          type: boolean
     User:
       type: object
       required:

@@ -30,6 +30,7 @@ def reset_test_database():
 
     # run migrations and initiate base data
     migrations.init_database_data()
+    migrations.load_testing_data()
 
 
 @pytest.fixture(scope="module")
