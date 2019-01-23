@@ -1,6 +1,23 @@
 Changelog
 =========
 
+0.4.0 (2019-01-23)
+------------------
+
+New
+~~~
+- POST on /annotations accepts geojson. [David Caron]
+- Routes for PUT and POST on annotations. [David Caron]
+- GeoServer configuration: Create layer group along with workspace.
+  [David Caron]
+- Possibility to configure GeoServer from yaml file and command line.
+  [David Caron]
+- Add users corresponding to each role for testing frontend. [David
+  Caron]
+- Remove POST on /taxonomy. [David Caron]
+- Remove POST on /taxonomy_classes. [David Caron]
+
+
 0.3.0 (2019-01-21)
 ------------------
 
