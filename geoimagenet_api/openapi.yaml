@@ -346,7 +346,6 @@ components:
                     type: number
     AnnotationProperties:
       type: object
-      additionalProperties: false
       required:
         - annotator_id
         - taxonomy_class_id
