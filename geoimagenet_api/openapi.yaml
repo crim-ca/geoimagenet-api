@@ -319,17 +319,20 @@ paths:
           content:
             application/json: {}
     post:
-      summary: WFS mirror to GeoServer. Recieves an XML payload with user token and its replaced with the user id.
+      summary: Write an annotation to the database
       requestBody:
         content:
-          application/xml:
+          application/geojson:
             schema:
-              description: Refer to WFS documentation. The user token is replaced with the actual user id in the payload and the request is forwarded to GeoServer.
-              type: string
+              description: GeoJson annotation to be written to the database
+              type: object
       responses:
-        204:
-          # Todo:
-          description: The request was processed by GeoServer (TODO forward the response from GeoServer)
+        201:
+          description: The id of the created annotation
+          content:
+            application/json:
+              schema:
+                type: object
 
 components:
   schemas:

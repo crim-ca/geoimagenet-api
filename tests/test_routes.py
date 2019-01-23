@@ -186,3 +186,52 @@ def test_annotations_put(client):
 
         assert session.query(Annotation.released).filter_by(id=id_1).scalar()
         assert session.query(Annotation.released).filter_by(id=id_2).scalar()
+
+
+def test_annotation_post(client):
+    data = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"prop0": "value0"},
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [102.0, 0.0],
+                        [103.0, 1.0],
+                        [104.0, 0.0],
+                        [105.0, 1.0],
+                    ],
+                },
+                "properties": {"prop0": "value0", "prop1": 0.0},
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [100.0, 0.0],
+                            [101.0, 0.0],
+                            [101.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ]
+                    ],
+                },
+                "properties": {"prop0": "value0", "prop1": {"this": "that"}},
+            },
+        ],
+    }
+
+    r = client.post(
+        api_url(f"/annotations"), content_type="application/json", data=json.dumps(data)
+    )
+    with connection_manager.get_db_session() as session:
+        for a in session.query(Annotation):
+            print(a)

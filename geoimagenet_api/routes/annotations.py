@@ -1,8 +1,10 @@
+import json
+
 from flask import request
 import connexion
 
 from geoimagenet_api.openapi_schemas import AnnotationPut
-from geoimagenet_api.database.models import Annotation as DBAnnotation
+from geoimagenet_api.database.models import Annotation as DBAnnotation, Annotation
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.utils import dataclass_from_object
 
@@ -23,3 +25,22 @@ def put():
 
         session.commit()
     return "Annotations updated", 204
+
+
+def post():
+    from sqlalchemy.sql import func
+
+    with connection_manager.get_db_session() as session:
+        for feature in request.json['features']:
+            geom_string = json.dumps(feature['geometry'])
+            s = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 4326)
+            geom = func.ST_Transform(s, 3857)
+
+            annotation = Annotation(
+                annotator_id=1,
+                geometry=geom,
+                taxonomy_class_id=1,
+                image_name="my image",
+            )
+            session.add(annotation)
+        session.commit()
