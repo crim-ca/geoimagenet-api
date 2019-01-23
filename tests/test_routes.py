@@ -4,7 +4,10 @@ But the server is setup to validate every input and output using the openapi sch
 
 So if any json is not valid, it would raise an error.
 """
+import json
 
+from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.database.models import Annotation
 from tests.utils import api_url, random_user_name
 
 
@@ -140,3 +143,46 @@ def test_taxonomy_get_by_slug_not_found(client):
     version = "10"
     r = client.get(api_url(f"/taxonomy/{name_slug}/{version}"))
     assert r.status_code == 404
+
+
+def test_annotations_put_not_found(client):
+    data = [{"id": 1_234_567, "released": True}]
+
+    r = client.put(
+        api_url(f"/annotations"), content_type="application/json", data=json.dumps(data)
+    )
+    assert r.status_code == 404
+
+
+def test_annotations_put(client):
+    with connection_manager.get_db_session() as session:
+        annotation = Annotation(
+            annotator_id=1,
+            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            taxonomy_class_id=1,
+            image_name="my image",
+        )
+        session.add(annotation)
+        annotation2 = Annotation(
+            annotator_id=1,
+            geometry="SRID=3857;POLYGON((0 0,3 0,3 3,0 3,0 0))",
+            taxonomy_class_id=2,
+            image_name="my image",
+        )
+        session.add(annotation2)
+        session.commit()
+
+        id_1 = annotation.id
+        id_2 = annotation2.id
+
+        data = [{"id": id_1, "released": True}, {"id": id_2, "released": True}]
+
+        r = client.put(
+            api_url(f"/annotations"),
+            content_type="application/json",
+            data=json.dumps(data),
+        )
+        assert r.status_code == 204
+
+        assert session.query(Annotation.released).filter_by(id=id_1).scalar()
+        assert session.query(Annotation.released).filter_by(id=id_2).scalar()
