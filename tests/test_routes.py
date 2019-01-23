@@ -4,11 +4,47 @@ But the server is setup to validate every input and output using the openapi sch
 
 So if any json is not valid, it would raise an error.
 """
+import pytest
 import json
+
+from sqlalchemy import func
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Annotation
+from geoimagenet_api.openapi_schemas import AnnotationProperties
 from tests.utils import api_url, random_user_name
+
+
+test_coordinates = [
+    [100.0, 0.0],
+    [101.0, 0.0],
+    [101.0, 1.0],
+    [100.0, 1.0],
+    [100.0, 0.0],
+]
+
+wkt_string = {
+    "Point": "POINT(100 0)",
+    "LineString": "LINESTRING(100 0,101 0,101 1,100 1,100 0)",
+    "Polygon": "POLYGON((100 0,101 0,101 1,100 1,100 0))",
+}
+
+point = {"type": "Point", "coordinates": test_coordinates[0]}
+linestring = {"type": "LineString", "coordinates": test_coordinates}
+polygon = {"type": "Polygon", "coordinates": [test_coordinates]}
+
+
+@pytest.fixture(params=[point, linestring, polygon])
+def geojson_geometry(request):
+    return {
+        "type": "Feature",
+        "geometry": request.param,
+        "properties": {
+            "annotator_id": 1,
+            "taxonomy_class_id": 1,
+            "image_name": "my image name",
+        },
+    }
 
 
 def test_root(client):
@@ -145,93 +181,60 @@ def test_taxonomy_get_by_slug_not_found(client):
     assert r.status_code == 404
 
 
-def test_annotations_put_not_found(client):
-    data = [{"id": 1_234_567, "released": True}]
+def test_annotations_put_not_found(client, geojson_geometry):
+    geojson_geometry["properties"]["annotation_id"] = 1_234_567
 
     r = client.put(
-        api_url(f"/annotations"), content_type="application/json", data=json.dumps(data)
+        api_url(f"/annotations"),
+        content_type="application/json",
+        data=json.dumps(geojson_geometry),
     )
     assert r.status_code == 404
 
 
-def test_annotations_put(client):
+def test_annotations_put(client, geojson_geometry):
     with connection_manager.get_db_session() as session:
         annotation = Annotation(
             annotator_id=1,
             geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-            taxonomy_class_id=1,
-            image_name="my image",
-        )
-        session.add(annotation)
-        annotation2 = Annotation(
-            annotator_id=1,
-            geometry="SRID=3857;POLYGON((0 0,3 0,3 3,0 3,0 0))",
             taxonomy_class_id=2,
             image_name="my image",
         )
-        session.add(annotation2)
+        session.add(annotation)
         session.commit()
 
-        id_1 = annotation.id
-        id_2 = annotation2.id
+        annotation_id = annotation.id
+        geojson_geometry["properties"]["annotation_id"] = annotation_id
 
-        data = [{"id": id_1, "released": True}, {"id": id_2, "released": True}]
+        properties = AnnotationProperties(**geojson_geometry["properties"])
 
         r = client.put(
             api_url(f"/annotations"),
             content_type="application/json",
-            data=json.dumps(data),
+            data=json.dumps(geojson_geometry),
         )
         assert r.status_code == 204
 
-        assert session.query(Annotation.released).filter_by(id=id_1).scalar()
-        assert session.query(Annotation.released).filter_by(id=id_2).scalar()
+        annotation = session.query(Annotation).filter_by(id=annotation_id).one()
+        assert annotation.taxonomy_class_id == properties.taxonomy_class_id
+        assert annotation.image_name == properties.image_name
+        assert annotation.annotator_id == properties.annotator_id
+        assert annotation.released == properties.released
+
+        wkt = "SRID=3857;" + wkt_string[geojson_geometry['geometry']['type']]
+
+        wkt_geom = (
+            "SRID=3857;" + session.query(func.ST_AsText(annotation.geometry)).scalar()
+        )
+        assert wkt_geom == wkt
 
 
-def test_annotation_post(client):
-    data = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop0": "value0"},
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [
-                        [102.0, 0.0],
-                        [103.0, 1.0],
-                        [104.0, 0.0],
-                        [105.0, 1.0],
-                    ],
-                },
-                "properties": {"prop0": "value0", "prop1": 0.0},
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [
-                            [100.0, 0.0],
-                            [101.0, 0.0],
-                            [101.0, 1.0],
-                            [100.0, 1.0],
-                            [100.0, 0.0],
-                        ]
-                    ],
-                },
-                "properties": {"prop0": "value0", "prop1": {"this": "that"}},
-            },
-        ],
-    }
-
+def test_annotation_post(client, geojson_geometry):
     r = client.post(
-        api_url(f"/annotations"), content_type="application/json", data=json.dumps(data)
+        api_url(f"/annotations"),
+        content_type="application/json",
+        data=json.dumps(geojson_geometry),
     )
+    written_id = r.json[0]
     with connection_manager.get_db_session() as session:
-        for a in session.query(Annotation):
-            print(a)
+        assert session.query(Annotation.id).filter_by(id=written_id).one()
