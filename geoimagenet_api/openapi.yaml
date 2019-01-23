@@ -376,7 +376,22 @@ components:
         type:
           type: string
         coordinates:
-          type: object
+          oneOf:
+            - type: array
+              items:
+                type: number
+            - type: array
+              items:
+                type: array
+                items:
+                  type: number
+            - type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
     AnnotationProperties:
       type: object
       additionalProperties: false
@@ -390,7 +405,7 @@ components:
         taxonomy_class_id:
           type: integer
         image_name:
-          type: streger
+          type: string
         annotation_id:
           type: integer
         released:
