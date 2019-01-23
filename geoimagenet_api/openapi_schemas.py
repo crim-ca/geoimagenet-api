@@ -65,3 +65,9 @@ class Validation:
 class ValidationPost:
     annotation_ids: List[int]
     validator_id: int
+
+
+@dataclass
+class AnnotationPut:
+    id: int
+    released: bool

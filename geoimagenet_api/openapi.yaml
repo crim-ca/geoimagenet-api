@@ -300,6 +300,37 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Validation'
+
+  /annotations:
+    put:
+      summary: Update annotations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AnnotationPut'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: Annotation not found
+          content:
+            application/json: {}
+    post:
+      summary: WFS mirror to GeoServer. Recieves an XML payload with user token and its replaced with the user id.
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              description: Refer to WFS documentation. The user token is replaced with the actual user id in the payload and the request is forwarded to GeoServer.
+              type: string
+      responses:
+        204:
+          # Todo:
+          description: The request was processed by GeoServer (TODO forward the response from GeoServer)
+
 components:
   schemas:
     ApiInfo:
@@ -425,3 +456,14 @@ components:
         validator_id:
           type: integer
           format: int64
+    AnnotationPut:
+      type: object
+      required:
+        - id
+        - released
+      properties:
+        id:
+          type: integer
+          format: int64
+        released:
+          type: boolean
