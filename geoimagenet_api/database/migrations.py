@@ -105,8 +105,16 @@ def load_taxonomies():
 
 def load_testing_data():
     with connection_manager.get_db_session() as session:
-        demo_user = models.Person(username="demo", name="Demo User")
-        session.add(demo_user)
+
+        # add some Users
+        demo_admin = models.Person(username="admin", name="Demo admin")
+        session.add(demo_admin)
+        demo_observateur = models.Person(username="observateur", name="Demo observateur")
+        session.add(demo_observateur)
+        demo_annotateur = models.Person(username="annotateur", name="Demo annotateur")
+        session.add(demo_annotateur)
+        demo_validateur = models.Person(username="validateur", name="Demo validateur")
+        session.add(demo_validateur)
         try:
             session.commit()
         except IntegrityError:
