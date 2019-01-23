@@ -15,8 +15,4 @@ workspaces:
     uri: pleiades_uri
     style: RGB
     images_path: /pleiades
-  - name: Pleiades_layer_group
-    uri: pleiades_layer_group
-    style: RGB
-    is_layer_group_of_workspace: pleiades
-
+    layer_group_name: Pleiades_group

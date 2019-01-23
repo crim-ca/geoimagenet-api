@@ -24,7 +24,7 @@ class Workspace:
     uri: str
     style: str
     images_path: str = field(default="")
-    is_layer_group_of_workspace: str = field(default="")
+    layer_group_name: str = field(default="")
 
 
 class GeoServerConfiguration:
@@ -141,41 +141,16 @@ class GeoServerConfiguration:
 
         for workspace in workspaces:
             images_path = workspace.images_path
-            other_uri = workspace.is_layer_group_of_workspace
             if images_path:
                 self.create_coverage_store(workspace)
-            elif other_uri:
-                logger.info(
-                    f"Matching workspace '{workspace.name}' to uri: {other_uri}"
-                )
-                other_workspace = [w for w in workspaces if w.uri == other_uri]
-                if not other_workspace:
-                    logger.error(f"Couldn't find workspace uri: {other_uri}")
-                    sys.exit(1)
-                self.create_layergroup(workspace, other_workspace[0])
-
-    def create_layergroup(self, workspace, images_workspace):
-        existing_styles = self.get_styles()
-        existing_groups = self.catalog.get_layergroups(workspaces=workspace.name)
-        if existing_groups:
-            for group in existing_groups:
-                self.catalog.delete(group)
-        self.catalog.create_layergroup(
-            workspace.name,
-            layers=(),
-            styles=(existing_styles[workspace.style], ),
-            bounds=None,
-            mode="SINGLE",
-            abstract=None,
-            title=None,
-            workspace=None,
-        )
+            if workspace.layer_group_name:
+                self.create_layergroup(workspace)
 
     def create_coverage_store(self, workspace: Workspace):
         images_path = self.get_absolute_path(workspace.images_path)
         logger.debug(f"images_path: {images_path}")
 
-        existing_styles = self.get_styles()
+        existing_styles = self.get_styles_dict()
         stores = self.get_stores(workspace)
         stores_names = [s.name for s in stores]
 
@@ -203,12 +178,41 @@ class GeoServerConfiguration:
                     layer.default_style = existing_styles[workspace.style]
                     self.catalog.save(layer)
 
+    def create_layergroup(self, workspace):
+        existing_groups = self.catalog.get_layergroups(workspaces=workspace.name)
+        if existing_groups:
+            logger.debug(
+                f"Deleting existing layer group in workspace: {workspace.name}"
+            )
+            if not self.dry_run:
+                for group in existing_groups:
+                    self.catalog.delete(group)
+        layers = self.catalog.get_layers()
+        layer_names = [
+            layer.name
+            for layer in layers
+            if layer.name.startswith(workspace.name + ":")
+        ]
+        layer_group = self.catalog.create_layergroup(
+            workspace.layer_group_name,
+            layers=layer_names,
+            styles=(),
+            bounds=None,
+            mode="OPAQUE_CONTAINER",
+            abstract=None,
+            title=None,
+            workspace=workspace.name,
+        )
+        logger.warning(f"CREATE layer group: {workspace.layer_group_name}")
+        if not self.dry_run:
+            self.catalog.save(layer_group)
+
     def get_stores(self, workspace):
         logger.info(f"Getting stores for workspace {workspace.name}")
         stores = self.catalog.get_stores(workspaces=workspace.name)
         return stores
 
-    def get_styles(self):
+    def get_styles_dict(self):
         return {s.name: s for s in self.catalog.get_styles()}
 
 
