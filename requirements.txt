@@ -8,3 +8,8 @@ sqlalchemy-utils
 text-unidecode
 python-slugify
 sentry-sdk[flask]
+click
+loguru
+pyyaml
+https://github.com/boundlessgeo/gsconfig/archive/master.zip#egg=gsconfig
+

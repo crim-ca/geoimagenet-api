@@ -1,0 +1,18 @@
+# Paths can be relative to this file or absolute
+
+global:
+  delete_other_workspaces: false
+  overwrite_workspaces: false
+
+styles:
+  - name: RGB
+    path: ./styles/RGB.xml
+  - name: NRG
+    path: ./styles/NRG.xml
+
+workspaces:
+  - name: Pleiades
+    uri: pleiades_uri
+    style: RGB
+    images_path: /pleiades
+    layer_group_name: Pleiades_group
