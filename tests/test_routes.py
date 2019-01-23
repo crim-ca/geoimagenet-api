@@ -100,18 +100,18 @@ def test_taxonomy_search_all(client):
 
 def test_taxonomy_versions(client):
     r = client.get(api_url(f"/taxonomy"))
-    assert isinstance(r.json[0]['versions'], list)
-    assert len(r.json[0]['versions']) >= 1
+    assert isinstance(r.json[0]["versions"], list)
+    assert len(r.json[0]["versions"]) >= 1
 
 
 def test_taxonomy_versions_400_version_only(client):
-    query = {'version': '1'}
+    query = {"version": "1"}
     r = client.get(api_url(f"/taxonomy"), query_string=query)
     assert r.status_code == 400
 
 
 def test_taxonomy_versions_version_not_found(client):
-    query = {'name': 'Objets', 'version': '10'}
+    query = {"name": "Objets", "version": "10"}
     r = client.get(api_url(f"/taxonomy"), query_string=query)
     assert r.status_code == 404
     assert r.json == "Version not found"
