@@ -117,30 +117,6 @@ paths:
           description: Not found
           content:
             application/json: {}
-    post:
-      summary: Add a taxonomy class
-      tags:
-        - not implemented
-      parameters:
-        - name: name
-          description: The name of the taxonomy class
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: taxonomy_id
-          description: The id of the parent taxonomy class
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        201:
-          description: The taxonomy class created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxonomyClass'
 
   /taxonomy_classes/{id}:
     get:
