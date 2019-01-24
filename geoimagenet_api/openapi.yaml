@@ -266,7 +266,25 @@ paths:
         204:
           description: No Content
         404:
-          description: Annotation not found
+          description: Annotation id not found
+          content:
+            application/json: {}
+    delete:
+      summary: Dalete annotations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: List of ids to be deleted
+              type: array
+              items:
+                description: example 'annotation.32409'
+                type: string
+      responses:
+        204:
+          description: No Content
+        404:
+          description: Annotation id not found
           content:
             application/json: {}
     post:
