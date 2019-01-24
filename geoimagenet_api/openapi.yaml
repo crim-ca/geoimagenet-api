@@ -270,7 +270,7 @@ paths:
           content:
             application/json: {}
     delete:
-      summary: Dalete annotations
+      summary: Delete annotations
       requestBody:
         content:
           application/json:
