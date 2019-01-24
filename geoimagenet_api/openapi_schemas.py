@@ -72,7 +72,6 @@ class AnnotationProperties:
     annotator_id: int
     taxonomy_class_id: int
     image_name: str
-    annotation_id: int = field(default=None)
     released: bool = field(default=False)
 
 
@@ -87,3 +86,4 @@ class GeoJsonAnnotation:
     type: str
     geometry: Geometry
     properties: AnnotationProperties
+    id: str = field(default=None)

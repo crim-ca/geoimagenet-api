@@ -283,10 +283,8 @@ paths:
           content:
             application/json:
               schema:
-                description: List containing the database ids created
-                type: array
-                items:
-                  type: integer
+                description: The id of the created annotation
+                type: integer
 
 components:
   schemas:
@@ -306,13 +304,15 @@ components:
           type: string
     GeoJsonAnnotation:
       type: object
-      additionalProperties: false
       required:
         - type
         - geometry
         - properties
       properties:
         type:
+          type: string
+        id:
+          description: example 'annotation.32409'
           type: string
         geometry:
           $ref: '#/components/schemas/Geometry'
@@ -347,7 +347,6 @@ components:
     AnnotationProperties:
       type: object
       required:
-        - annotator_id
         - taxonomy_class_id
         - image_name
       properties:
@@ -357,8 +356,6 @@ components:
           type: integer
         image_name:
           type: string
-        annotation_id:
-          type: integer
         released:
           type: boolean
     User:
