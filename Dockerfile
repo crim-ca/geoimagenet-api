@@ -1,14 +1,15 @@
 FROM python:3.6-alpine
 LABEL Description="GeoImageNet API" Vendor="CRIM" Maintainer="david.caron@crim.ca"
 
-RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev
-
 WORKDIR /code
-
-RUN pip install --upgrade pip && pip install gunicorn
-
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+
+RUN apk update && \
+    apk add postgresql-libs && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev && \
+    pip install --upgrade pip gunicorn && \
+    pip install -r requirements.txt --no-cache-dir && \
+    apk --purge del .build-deps
 
 COPY . .
 
