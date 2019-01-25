@@ -46,7 +46,7 @@ pipeline {
                 sh 'docker push $TAGGED_IMAGE_NAME'
                 sh 'docker tag $LOCAL_IMAGE_NAME $LATEST_IMAGE_NAME'
                 sh 'docker push $LATEST_IMAGE_NAME'
-                sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh down && ./geoimagenet-compose.sh pull && ./geoimagenet-compose.sh up -d"'
+                sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh pull api && ./geoimagenet-compose.sh up --force-recreate -d api"'
                 slackSend channel: '#geoimagenet-dev', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
             }
         }
