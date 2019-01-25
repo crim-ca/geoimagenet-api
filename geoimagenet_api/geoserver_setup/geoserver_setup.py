@@ -154,7 +154,12 @@ class GeoServerConfiguration:
         stores = self.get_stores(workspace)
         stores_names = [s.name for s in stores]
 
-        for path in images_path.glob("./*.*"):
+        images = list(images_path.glob("./*.*"))
+
+        if not images:
+            logger.debug("No images found.")
+
+        for path in images:
             logger.debug(f"Found image: {path}")
             image_name = path.stem
             if image_name in stores_names:
