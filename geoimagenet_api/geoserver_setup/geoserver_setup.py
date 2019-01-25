@@ -169,7 +169,7 @@ class GeoServerConfiguration:
             if type_ is not None:
                 logger.warning(f"CREATE {type_} store: {image_name}")
                 if not self.dry_run:
-                    layer_name = image_name
+                    layer_name = workspace.style + '_' + image_name
                     self.catalog.create_coveragestore(
                         image_name,
                         workspace=workspace.name,
@@ -177,8 +177,9 @@ class GeoServerConfiguration:
                         type=type_,
                         create_layer=True,
                         layer_name=layer_name,
-                        source_name=layer_name,
+                        source_name=image_name,
                     )
+                    logger.warning(f"CREATE layer: {layer_name}")
                     layer = self.catalog.get_layer(layer_name)
                     layer.default_style = existing_styles[workspace.style]
                     self.catalog.save(layer)
