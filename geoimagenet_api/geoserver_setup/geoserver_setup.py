@@ -202,18 +202,19 @@ class GeoServerConfiguration:
             if layer.name.startswith(workspace.name + ":")
         ]
         bounds = (
-            "-20037508.342789244",
-            "-20048966.1040146",
-            "20037508.342789244",
-            "20048966.1040146",
+            "0",
+            "0",
+            "0",
+            "0",
             "EPSG:3857"
         )
+        styles = [workspace.style] * len(layer_names)
         layer_group = self.catalog.create_layergroup(
             workspace.layer_group_name,
             layers=layer_names,
-            styles=(),
+            styles=styles,
             bounds=bounds,
-            mode="OPAQUE_CONTAINER",
+            mode="SINGLE",
             abstract=None,
             title=None,
             workspace=workspace.name,
