@@ -50,6 +50,10 @@ pipeline {
                 slackSend channel: '#geoimagenet-dev', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
             }
         }
+        // stage('Clean') {
+            // Use this command to clean all geoimagenet images on jenkins
+        //     sh 'docker rmi $(docker images --format "{{.ID}}: {{.Repository}}" | grep geoimagenet | cut -c 1-12)'
+        // }
     }
     post {
        success {
