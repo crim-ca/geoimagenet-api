@@ -170,7 +170,7 @@ class GeoServerConfiguration:
                 logger.warning(f"CREATE {type_} store: {image_name}")
                 if not self.dry_run:
                     layer_name = workspace.style + '_' + image_name
-                    self.catalog.create_coveragestore(
+                    store = self.catalog.create_coveragestore(
                         image_name,
                         workspace=workspace.name,
                         path=str(path),
@@ -182,6 +182,8 @@ class GeoServerConfiguration:
                     logger.warning(f"CREATE layer: {layer_name}")
                     layer = self.catalog.get_layer(layer_name)
                     layer.default_style = existing_styles[workspace.style]
+                    store.projection = "EPSG:3857"
+                    self.catalog.save(store)
                     self.catalog.save(layer)
 
     def create_layergroup(self, workspace):
@@ -199,11 +201,18 @@ class GeoServerConfiguration:
             for layer in layers
             if layer.name.startswith(workspace.name + ":")
         ]
+        bounds = (
+            "-20037508.342789244",
+            "-20048966.1040146",
+            "20037508.342789244",
+            "20048966.1040146",
+            "EPSG:3857"
+        )
         layer_group = self.catalog.create_layergroup(
             workspace.layer_group_name,
             layers=layer_names,
             styles=(),
-            bounds=None,
+            bounds=bounds,
             mode="OPAQUE_CONTAINER",
             abstract=None,
             title=None,
@@ -262,3 +271,7 @@ def cli(dry_run, geoserver_url, yaml_config):
         geoserver_url = config.get("geoserver_datastore_url", str)
 
     setup(geoserver_url, yaml_config, dry_run)
+
+
+if __name__ == '__main__':
+    cli()
