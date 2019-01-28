@@ -9,7 +9,7 @@ servers:
 paths:
   /:
     get:
-      summary: General information about the api
+      summary: General information
       responses:
         200:
           description: OK
@@ -19,7 +19,7 @@ paths:
                 $ref: '#/components/schemas/ApiInfo'
   /users:
     get:
-      summary: Search users
+      summary: "Users: Search users"
       parameters:
         - name: username
           in: query
@@ -43,7 +43,7 @@ paths:
           content:
             application/json: {}
     post:
-      summary: Add a user
+      summary: "Users: Add a user"
       parameters:
         - name: username
           in: query
@@ -64,7 +64,7 @@ paths:
                 $ref: '#/components/schemas/User'
   /users/{username}:
     get:
-      summary: Get a user by username
+      summary: "Users: Get by username"
       parameters:
         - name: username
           in: path
@@ -84,7 +84,7 @@ paths:
             application/json: {}
   /taxonomy_classes:
     get:
-      summary: Search taxonomy class elements
+      summary: "Taxonomy classes: Search"
       parameters:
         - name: taxonomy_name
           in: query
@@ -104,6 +104,7 @@ paths:
           description: The depth of taxonomy class children to return. -1 means infinite and is the default.
           schema:
             type: integer
+            default: -1
       responses:
         200:
           description: OK
@@ -120,7 +121,7 @@ paths:
 
   /taxonomy_classes/{id}:
     get:
-      summary: Get a specific taxonomy class by id
+      summary: "Taxonomy classes: Get by id"
       parameters:
         - name: id
           in: path
@@ -133,6 +134,7 @@ paths:
           description: The depth of taxonomy class children to return. -1 means infinite and is the default.
           schema:
             type: integer
+            default: -1
       responses:
         200:
           description: OK
@@ -147,7 +149,7 @@ paths:
 
   /taxonomy:
     get:
-      summary: Search taxonomy elements
+      summary: "Taxonomy: Search"
       parameters:
         - name: name
           in: query
@@ -179,7 +181,7 @@ paths:
 
   /taxonomy/{name_slug}/{version}:
     get:
-      summary: 'Get a specific taxonomy by name slug and version'
+      summary: "Taxonomy: Get by name slug and version"
       description: 'Example of name slug for "Couverture de sol": couverture-de-sol'
       operationId: geoimagenet_api.routes.taxonomy.get_by_slug
       parameters:
@@ -207,61 +209,37 @@ paths:
           content:
             application/json: {}
 
-  /validations:
-    get:
-      summary: Search validations
-      tags:
-        - not implemented
-      parameters:
-        - name: annotation_id
-          in: query
-          description: The id of the annotation that was validated
-          schema:
-            type: integer
-        - name: validator_id
-          in: query
-          description: The id of the person that validated
-          schema:
-            type: integer
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Validation'
-        404:
-          description: Not found
-          content:
-            application/json: {}
+  /annotations:
     post:
-      summary: Validate annotations
-      tags:
-        - not implemented
+      summary: "Annotations: Add new"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ValidationPost'
+              description: GeoJson annotation to be written to the database
+              oneOf:
+                - $ref: '#/components/schemas/GeoJsonFeature'
+                - $ref: '#/components/schemas/GeoJsonFeatureCollection'
       responses:
         201:
-          description: The validations created
+          description: The ids of the created annotations
           content:
             application/json:
               schema:
+                description: The id of the created annotation
                 type: array
                 items:
-                  $ref: '#/components/schemas/Validation'
-
-  /annotations:
+                  type: integer
     put:
-      summary: Update annotations
+      summary: "Annotations: Update"
       requestBody:
         content:
           application/json:
             schema:
-              description: GeoJson annotation to be modified
-              $ref: '#/components/schemas/GeoJsonAnnotation'
+              description: List of GeoJson annotations to be modified
+              oneOf:
+                - $ref: '#/components/schemas/GeoJsonFeature'
+                - $ref: '#/components/schemas/GeoJsonFeatureCollection'
       responses:
         204:
           description: No Content
@@ -270,7 +248,7 @@ paths:
           content:
             application/json: {}
     delete:
-      summary: Delete annotations
+      summary: "Annotations: Delete"
       requestBody:
         content:
           application/json:
@@ -278,7 +256,7 @@ paths:
               description: List of ids to be deleted
               type: array
               items:
-                description: example 'annotation.32409'
+                example: 'annotation.32409'
                 type: string
       responses:
         204:
@@ -287,22 +265,6 @@ paths:
           description: Annotation id not found
           content:
             application/json: {}
-    post:
-      summary: Write an annotation to the database
-      requestBody:
-        content:
-          application/json:
-            schema:
-              description: GeoJson annotation to be written to the database
-              $ref: '#/components/schemas/GeoJsonAnnotation'
-      responses:
-        201:
-          description: The id of the created annotation
-          content:
-            application/json:
-              schema:
-                description: The id of the created annotation
-                type: integer
 
 components:
   schemas:
@@ -320,48 +282,96 @@ components:
           type: string
         documetation_url:
           type: string
-    GeoJsonAnnotation:
+    GeoJsonFeatureCollection:
       type: object
+      description: GeoJson Feature collection
+      required:
+        - type
+        - features
+      externalDocs:
+        url: https://tools.ietf.org/html/rfc7946#section-3.3
+      properties:
+        type:
+          type: string
+          enum:
+            - FeatureCollection
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeoJsonFeature'
+    GeoJsonFeature:
+      type: object
+      description: GeoJson Feature
       required:
         - type
         - geometry
-        - properties
+      externalDocs:
+        url: https://tools.ietf.org/html/rfc7946#section-3.2
       properties:
         type:
           type: string
+          enum:
+            - Feature
         id:
-          description: example 'annotation.32409'
           type: string
         geometry:
-          $ref: '#/components/schemas/Geometry'
+          oneOf:
+            - $ref: '#/components/schemas/Point'
+            - $ref: '#/components/schemas/LineString'
+            - $ref: '#/components/schemas/Polygon'
         properties:
           $ref: '#/components/schemas/AnnotationProperties'
-    Geometry:
+    Point:
       type: object
-      additionalProperties: false
-      required:
-        - type
-        - coordinates
+      description: GeoJson geometry
+      externalDocs:
+        url: http://geojson.org/geojson-spec.html#id2
       properties:
         type:
           type: string
+          enum:
+            - Point
         coordinates:
-          oneOf:
-            - type: array
-              items:
-                type: number
-            - type: array
-              items:
-                type: array
-                items:
-                  type: number
-            - type: array
-              items:
-                type: array
-                items:
-                  type: array
-                  items:
-                    type: number
+          $ref: '#/components/schemas/Point3D'
+    LineString:
+      type: object
+      description: GeoJson geometry
+      externalDocs:
+        url: http://geojson.org/geojson-spec.html#id3
+      properties:
+        type:
+          type: string
+          enum:
+            - LineString
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Point3D'
+    Polygon:
+      type: object
+      description: GeoJson geometry
+      externalDocs:
+        url: http://geojson.org/geojson-spec.html#id4
+      properties:
+        type:
+          type: string
+          enum:
+            - Polygon
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Point3D'
+    Point3D:
+      type: array
+      description: Point in 3D space
+      externalDocs:
+        url: http://geojson.org/geojson-spec.html#id2
+      minItems: 2
+      maxItems: 3
+      items:
+        type: number
     AnnotationProperties:
       type: object
       required:

@@ -10,39 +10,49 @@ from geoimagenet_api.database.models import Annotation as DBAnnotation, Annotati
 from geoimagenet_api.database.connection import connection_manager
 
 
+def _geojson_features_from_request(request):
+    if request.json['type'] == 'FeatureCollection':
+        features = request.json['features']
+    else:
+        features = [request.json]
+    return features
+
+
 def put():
-    properties = request.json['properties']
-    geometry = request.json['geometry']
-    properties = AnnotationProperties(
-        annotator_id=properties['annotator_id'],
-        taxonomy_class_id=properties['taxonomy_class_id'],
-        image_name=properties['image_name'],
-        released=properties.get('released', False),
-    )
-
-    if "id" not in request.json:
-        return "Property 'id' is required", 400
-
-    layer, id_ = request.json.get('id').split(".", 1)
-
-    try:
-        id_ = int(id_)
-    except ValueError:
-        return f"Annotation id not an int: {id_}", 400
-
     with connection_manager.get_db_session() as session:
-        annotation = session.query(DBAnnotation).filter_by(id=id_).first()
-        if not annotation:
-            return f"Annotation id not found: {id_}", 404
+        json_annotations = _geojson_features_from_request(request)
+        for json_annotation in json_annotations:
+            properties = json_annotation['properties']
+            geometry = json_annotation['geometry']
+            properties = AnnotationProperties(
+                annotator_id=properties['annotator_id'],
+                taxonomy_class_id=properties['taxonomy_class_id'],
+                image_name=properties['image_name'],
+                released=properties.get('released', False),
+            )
 
-        geom_string = json.dumps(geometry)
-        geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
+            if "id" not in json_annotation:
+                return "Property 'id' is required", 400
 
-        annotation.taxonomy_class_id = properties.taxonomy_class_id
-        annotation.image_name = properties.image_name
-        annotation.annotator_id = properties.annotator_id
-        annotation.released = properties.released
-        annotation.geometry = geom
+            layer, id_ = json_annotation.get('id').split(".", 1)
+
+            try:
+                id_ = int(id_)
+            except ValueError:
+                return f"Annotation id not an int: {id_}", 400
+
+            annotation = session.query(DBAnnotation).filter_by(id=id_).first()
+            if not annotation:
+                return f"Annotation id not found: {id_}", 404
+
+            geom_string = json.dumps(geometry)
+            geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
+
+            annotation.taxonomy_class_id = properties.taxonomy_class_id
+            annotation.image_name = properties.image_name
+            annotation.annotator_id = properties.annotator_id
+            annotation.released = properties.released
+            annotation.geometry = geom
 
         try:
             session.commit()
@@ -53,26 +63,32 @@ def put():
 
 
 def post():
+    written_annotations = []
+
     with connection_manager.get_db_session() as session:
-        geometry = request.json['geometry']
-        properties = request.json['properties']
+        features = _geojson_features_from_request(request)
+        for feature in features:
+            geometry = feature['geometry']
+            properties = feature['properties']
 
-        geom_string = json.dumps(geometry)
-        geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
+            geom_string = json.dumps(geometry)
+            geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
 
-        annotation = Annotation(
-            annotator_id=properties['annotator_id'],
-            geometry=geom,
-            taxonomy_class_id=properties['taxonomy_class_id'],
-            image_name=properties['image_name'],
-        )
-        session.add(annotation)
+            annotation = Annotation(
+                annotator_id=properties['annotator_id'],
+                geometry=geom,
+                taxonomy_class_id=properties['taxonomy_class_id'],
+                image_name=properties['image_name'],
+            )
+            session.add(annotation)
+            written_annotations.append(annotation)
+
         try:
             session.commit()
         except IntegrityError as e:
             return f"Error: {e}", 400
 
-        return annotation.id
+        return [a.id for a in written_annotations], 201
 
 
 def delete():

@@ -76,14 +76,14 @@ class AnnotationProperties:
 
 
 @dataclass
-class Geometry:
+class GeoJsonGeometry:
     type: str
     coordinates: List
 
 
 @dataclass
-class GeoJsonAnnotation:
+class GeoJsonFeature:
     type: str
-    geometry: Geometry
+    geometry: GeoJsonGeometry
     properties: AnnotationProperties
     id: str = field(default=None)

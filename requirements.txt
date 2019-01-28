@@ -1,5 +1,4 @@
 connexion
-swagger-ui-bundle
 dataclasses
 geoalchemy2
 alembic

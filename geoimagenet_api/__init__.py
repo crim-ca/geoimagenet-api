@@ -5,7 +5,7 @@ import sys
 import connexion
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from flask import redirect, request
+from flask import redirect, request, render_template
 
 from geoimagenet_api.__about__ import __version__, __author__, __email__
 from geoimagenet_api.utils import DataclassEncoder
@@ -34,7 +34,8 @@ if sentry_dsn:
 
 
 def make_app(validate_responses=False):
-    connexion_app = connexion.App(__name__, port=8080)
+    options = {"swagger_ui": False}
+    connexion_app = connexion.App(__name__, port=8080, options=options)
     connexion_app.add_api(
         "openapi.yaml",
         strict_validation=True,
@@ -47,6 +48,10 @@ def make_app(validate_responses=False):
     @connexion_app.app.route("/api/")
     def root():
         return redirect(request.url + "v1/")
+
+    @connexion_app.app.route("/api/v1/ui/")
+    def redoc():
+        return render_template("redoc.html")
 
     logger.info("App initialized")
 
