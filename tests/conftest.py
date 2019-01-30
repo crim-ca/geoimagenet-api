@@ -8,6 +8,18 @@ from geoimagenet_api import make_app
 from geoimagenet_api.database.connection import connection_manager
 
 
+@pytest.fixture
+def noisy_sqlalchemy(request):
+    os.environ["GEOIMAGENET_API_VERBOSE_SQLALCHEMY"] = "True"
+    connection_manager.reload_config()
+
+    def not_noizy():
+        os.environ["GEOIMAGENET_API_VERBOSE_SQLALCHEMY"] = "false"
+        connection_manager.reload_config()
+
+    request.addfinalizer(not_noizy)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def reset_test_database():
     """Reset the database to a brand new clean state.
