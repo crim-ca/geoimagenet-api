@@ -6,6 +6,7 @@ So if any json is not valid, it would raise an error.
 """
 import pytest
 import json
+import pp
 
 from sqlalchemy import func
 
@@ -90,6 +91,7 @@ def test_add_user(client):
 def test_taxonomy_class_depth_0(client):
     query = {"taxonomy_name": "Objets", "name": "Objets", "depth": "0"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
+    assert r.status_code == 200
     assert len(r.json) == 1
     assert len(r.json[0]["children"]) == 0
 
@@ -291,3 +293,38 @@ def test_annotation_delete_malformed(client):
         data=json.dumps([f"1234567"]),
     )
     assert r.status_code == 400
+
+
+def test_annotation_count_total(client):
+    with connection_manager.get_db_session() as session:
+        for user_id in [1, 1, 1, 2, 2, 3]:
+            annotation = Annotation(
+                annotator_id=user_id,
+                geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+                taxonomy_class_id=22,
+                image_name="my image",
+            )
+            session.add(annotation)
+        for taxonomy_class_id in [10, 10, 10, 11, 11]:
+            annotation = Annotation(
+                annotator_id=1,
+                geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+                taxonomy_class_id=taxonomy_class_id,
+                image_name="my image",
+            )
+            session.add(annotation)
+
+        session.commit()
+
+    query = {"taxonomy_name": "Objets", "name": "Objets"}
+    r = client.get(api_url("/taxonomy_classes"), query_string=query)
+
+    expected = {22: 6, 10: 3, 11: 2}
+
+    def recurse(obj):
+        if obj['id'] in expected:
+            assert obj["annotation_count"] == expected[obj['id']]
+        for child in obj['children']:
+            recurse(child)
+
+    recurse(r.json[0])

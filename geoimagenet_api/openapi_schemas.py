@@ -30,6 +30,7 @@ class TaxonomyClass:
     name: str
     taxonomy_id: int
     children: List["TaxonomyClass"] = field(default=Optional)
+    annotation_count: int = field(default=0)
 
 
 @dataclass
