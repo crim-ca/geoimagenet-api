@@ -1,5 +1,4 @@
 import json
-from typing import Dict
 
 from flask import request
 from sqlalchemy.exc import IntegrityError
