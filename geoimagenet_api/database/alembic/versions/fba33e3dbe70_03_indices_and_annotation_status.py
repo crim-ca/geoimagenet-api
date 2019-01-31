@@ -38,52 +38,6 @@ def upgrade():
     op.execute("drop trigger if exists annotation_update_check on annotation cascade;")
 
     # ---------
-    # Create indices
-    # ---------
-    op.create_index(
-        op.f("ix_annotation_annotator_id"), "annotation", ["annotator_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_annotation_status"), "annotation", ["status"], unique=False
-    )
-    op.create_index(
-        op.f("ix_annotation_log_status"), "annotation_log", ["status"], unique=False
-    )
-    op.create_index(
-        op.f("ix_annotation_taxonomy_class_id"),
-        "annotation",
-        ["taxonomy_class_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_annotation_log_annotation_id"),
-        "annotation_log",
-        ["annotation_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_annotation_log_annotator_id"),
-        "annotation_log",
-        ["annotator_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_annotation_log_taxonomy_class_id"),
-        "annotation_log",
-        ["taxonomy_class_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_taxonomy_class_name"), "taxonomy_class", ["name"], unique=False
-    )
-    op.create_index(
-        op.f("ix_taxonomy_class_parent_id"),
-        "taxonomy_class",
-        ["parent_id"],
-        unique=False,
-    )
-
-    # ---------
     # Create enums
     # ---------
     annotation_status_enum = postgresql.ENUM(*statuses, name="annotation_status_enum")
@@ -187,6 +141,52 @@ def upgrade():
         """
     op.execute(trigger_delete)
 
+    # ---------
+    # Create indices
+    # ---------
+    op.create_index(
+        op.f("ix_annotation_annotator_id"), "annotation", ["annotator_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_annotation_status"), "annotation", ["status"], unique=False
+    )
+    op.create_index(
+        op.f("ix_annotation_log_status"), "annotation_log", ["status"], unique=False
+    )
+    op.create_index(
+        op.f("ix_annotation_taxonomy_class_id"),
+        "annotation",
+        ["taxonomy_class_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_annotation_log_annotation_id"),
+        "annotation_log",
+        ["annotation_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_annotation_log_annotator_id"),
+        "annotation_log",
+        ["annotator_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_annotation_log_taxonomy_class_id"),
+        "annotation_log",
+        ["taxonomy_class_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_taxonomy_class_name"), "taxonomy_class", ["name"], unique=False
+    )
+    op.create_index(
+        op.f("ix_taxonomy_class_parent_id"),
+        "taxonomy_class",
+        ["parent_id"],
+        unique=False,
+    )
+
 
 def downgrade():
     # ---------
@@ -217,7 +217,7 @@ def downgrade():
     # ---------
     op.add_column(
         "annotation",
-        released=sa.Column(
+        sa.Column(
             "released",
             sa.BOOLEAN(),
             server_default=sa.text("false"),
