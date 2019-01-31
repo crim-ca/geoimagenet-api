@@ -1,6 +1,37 @@
 Changelog
 =========
 
+0.5.0 (2019-01-31)
+------------------
+
+New
+~~~
+- DELETE on /annotations. [David Caron]
+
+Changes
+~~~~~~~
+- Add route: /annotations/release to release a taxonomy class and...
+  [David Caron]
+
+  its children for the current user (todo: get user id from token)
+- Migrations: [David Caron]
+
+  - add indices
+  - change annotation log description to enum
+  - add annotation status enum
+  - modify logging triggers accordingly
+- Get on /taxonomy_classes returns the number of annotations for each
+  class. [David Caron]
+- PUSH and PUT on /annotations can take a FeatureCollection or a single
+  Feature. [David Caron]
+
+- Api ui is rendered using ReDoc (handles oneOf, etc.)
+- Cleanup of GeoJson description in openapi
+- Reduce docker image size by 50%: 150Mb. [David Caron]
+- Don't raise an error when there are additionalProperties
+  in GeoJson objects. [David Caron]
+
+
 0.4.0 (2019-01-23)
 ------------------
 
