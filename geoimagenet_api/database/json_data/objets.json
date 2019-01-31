@@ -2,15 +2,15 @@
 	"version": 1,
 	"name": "Objets",
 	"value": [{
-		"name": "Batiment résidentiel",
+		"name": "Bâtiment résidentiel",
 		"value": [{
 			"name": "Unifamilial"
 		},
 		{
-			"name": "Unifamiliale détaché"
+			"name": "Unifamilial détaché"
 		},
 		{
-			"name": "Unifamiliale jumelé"
+			"name": "Unifamilial jumelé"
 		},
 		{
 			"name": "Multifamiliale"
@@ -23,7 +23,7 @@
 		}]
 	},
 	{
-		"name": "Batiment commercial et service",
+		"name": "Bâtiment commercial et service",
 		"value": [{
 			"name": "Centre commercial"
 		},
@@ -50,9 +50,9 @@
 		}]
 	},
 	{
-		"name": "Batiment de service et d'utilité publique (équipements collectifs)",
+		"name": "Bâtiment de service et d'utilité publique (équipements collectifs)",
 		"value": [{
-			"name": "Édifice gouvennemental"
+			"name": "Édifice gouvernemental"
 		},
 		{
 			"name": "Hôtel de ville"
@@ -106,7 +106,7 @@
 			"name": "Observatoire"
 		},
 		{
-			"name": "Chateau d'eau"
+			"name": "Château d'eau"
 		},
 		{
 			"name": "Bassin de rétention"
@@ -136,7 +136,7 @@
 			"name": "Piste d'athlétisme"
 		},
 		{
-			"name": "Terrain à vocation multiples"
+			"name": "Terrain à vocation multiple"
 		},
 		{
 			"name": "Terrain de volley-ball"
@@ -158,7 +158,7 @@
 		}]
 	},
 	{
-		"name": "Batiment ou infrastructure industriel",
+		"name": "Bâtiment ou infrastructure industriel",
 		"value": [{
 			"name": "Usine d'extraction (carrière, sablière, gravière)"
 		},
@@ -194,7 +194,7 @@
 		}]
 	},
 	{
-		"name": "Autre objets bâtis (mobilier urbain)",
+		"name": "Autres objets bâtis (mobilier urbain)",
 		"value": [{
 			"name": "Clôture"
 		},
@@ -202,7 +202,7 @@
 			"name": "Lampadaire"
 		},
 		{
-			"name": "Troittoir"
+			"name": "Trottoir"
 		},
 		{
 			"name": "Haie"
@@ -340,13 +340,13 @@
 			"name": "Bateau de marchandise"
 		},
 		{
-			"name": "Porte contenaires"
+			"name": "Porte-conteneurs"
 		},
 		{
 			"name": "Pétrolier/méthanier"
 		},
 		{
-			"name": "Avion type cesna"
+			"name": "Avion type cessna"
 		},
 		{
 			"name": "Avion de ligne"
@@ -370,7 +370,7 @@
 			"name": "Tour (dédiée)"
 		},
 		{
-			"name": "Antenne de communication (sur toît)"
+			"name": "Antenne de communication (sur toit)"
 		},
 		{
 			"name": "Station de réception satellite (grandes paraboles)"
@@ -406,7 +406,7 @@
 			"name": "Transformateur d'électricité, poste électrique"
 		},
 		{
-			"name": "Puit de pétrole/gaz"
+			"name": "Puits de pétrole/gaz"
 		},
 		{
 			"name": "Raffinerie"
@@ -467,7 +467,7 @@
 		}]
 	},
 	{
-		"name": "Batiments agricoles",
+		"name": "Bâtiments agricoles",
 		"value": [{
 			"name": "Grange, entrepôt, hangar"
 		},
@@ -493,7 +493,7 @@
 	{
 		"name": "Arbres (en divers milieux)",
 		"value": [{
-			"name": "Arbre feuillus (Deciduous tree)"
+			"name": "Arbre feuillu (Deciduous tree)"
 		},
 		{
 			"name": "Arbre conifère (Evergreen Forest Land )"
@@ -586,28 +586,28 @@
 			"name": "Roofedge - avec panneau solaire"
 		},
 		{
-			"name": "Toît plat"
+			"name": "Toit plat"
 		},
 		{
-			"name": "Toît plat < 10 % obstruction"
+			"name": "Toit plat < 10 % obstruction"
 		},
 		{
-			"name": "Toît plat  10 - 30% obstruction"
+			"name": "Toit plat  10 - 30% obstruction"
 		},
 		{
-			"name": "Toît plat > 30 % obstruction"
+			"name": "Toit plat > 30 % obstruction"
 		},
 		{
-			"name": "Toît 2 pentes"
+			"name": "Toit 2 pentes"
 		},
 		{
-			"name": "Toît 4 pentes"
+			"name": "Toit 4 pentes"
 		},
 		{
-			"name": "Toît complexe"
+			"name": "Toit complexe"
 		},
 		{
-			"name": "Toît convexe"
+			"name": "Toit convexe"
 		}]
 	}]
 }
