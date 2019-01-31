@@ -88,6 +88,13 @@ def test_add_user(client):
     assert r.json["username"] == username and r.json["name"] == full_name
 
 
+def test_taxonomy_class_sluggified_name(client):
+    query = {"taxonomy_name": "couverture-de-sol", "name": "Residential"}
+    r = client.get(api_url("/taxonomy_classes"), query_string=query)
+    assert r.status_code == 200
+    assert len(r.json) == 1
+
+
 def test_taxonomy_class_depth_0(client):
     query = {"taxonomy_name": "Objets", "name": "Objets", "depth": "0"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
