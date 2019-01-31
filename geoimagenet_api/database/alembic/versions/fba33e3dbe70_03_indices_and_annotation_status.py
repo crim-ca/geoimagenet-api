@@ -50,6 +50,7 @@ def upgrade():
     op.drop_column("annotation_log", "released")
     op.drop_column("annotation_log", "description")
     op.drop_table("annotation_log_description")
+    op.execute("truncate table annotation_log")
     op.add_column(
         "annotation_log",
         sa.Column(
