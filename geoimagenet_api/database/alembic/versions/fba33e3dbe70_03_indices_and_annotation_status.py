@@ -25,40 +25,21 @@ annotation_log_descriptions = ("insert", "update", "delete")
 
 
 def upgrade():
-    # create enum type manually
-    annotation_status_enum = postgresql.ENUM(*statuses, name="annotation_status_enum")
-    annotation_status_enum.create(op.get_bind())
-
-    annotation_log_operation_enum = postgresql.ENUM(
-        *annotation_log_descriptions, name="annotation_log_operation_enum"
-    )
-    annotation_log_operation_enum.create(op.get_bind())
-
-    op.add_column(
-        "annotation",
-        sa.Column(
-            "status",
-            sa.Enum(*statuses, name="annotation_status_enum"),
-            nullable=False,
-            server_default="new",
-        ),
-    )
-    op.add_column(
-        "annotation_log",
-        sa.Column("status", sa.Enum(*statuses, name="annotation_status_enum")),
-    )
+    # ---------
+    # Drop
+    # ---------
+    op.drop_column("annotation", "released")
     op.drop_column("annotation_log", "released")
     op.drop_column("annotation_log", "description")
     op.drop_table("annotation_log_description")
+    # delete every annotation logs
     op.execute("truncate table annotation_log")
-    op.add_column(
-        "annotation_log",
-        sa.Column(
-            "operation",
-            sa.Enum(*annotation_log_descriptions, name="annotation_log_operation_enum"),
-            nullable=False,
-        ),
-    )
+    # delete trigger that prevented updating a released annotation
+    op.execute("drop trigger if exists annotation_update_check on annotation cascade;")
+
+    # ---------
+    # Create indices
+    # ---------
     op.create_index(
         op.f("ix_annotation_annotator_id"), "annotation", ["annotator_id"], unique=False
     )
@@ -74,7 +55,6 @@ def upgrade():
         ["taxonomy_class_id"],
         unique=False,
     )
-    op.drop_column("annotation", "released")
     op.create_index(
         op.f("ix_annotation_log_annotation_id"),
         "annotation_log",
@@ -103,10 +83,45 @@ def upgrade():
         unique=False,
     )
 
-    # delete trigger that prevented updating a released annotation
-    op.execute("drop trigger if exists annotation_update_check on annotation cascade;")
+    # ---------
+    # Create enums
+    # ---------
+    annotation_status_enum = postgresql.ENUM(*statuses, name="annotation_status_enum")
+    annotation_status_enum.create(op.get_bind())
 
-    # update logging trigger
+    annotation_log_operation_enum = postgresql.ENUM(
+        *annotation_log_descriptions, name="annotation_log_operation_enum"
+    )
+    annotation_log_operation_enum.create(op.get_bind())
+
+    # ---------
+    # Add columns
+    # ---------
+    op.add_column(
+        "annotation",
+        sa.Column(
+            "status",
+            sa.Enum(*statuses, name="annotation_status_enum"),
+            nullable=False,
+            server_default="new",
+        ),
+    )
+    op.add_column(
+        "annotation_log",
+        sa.Column("status", sa.Enum(*statuses, name="annotation_status_enum")),
+    )
+    op.add_column(
+        "annotation_log",
+        sa.Column(
+            "operation",
+            sa.Enum(*annotation_log_descriptions, name="annotation_log_operation_enum"),
+            nullable=False,
+        ),
+    )
+
+    # ---------
+    # Modify triggers
+    # ---------
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
 
     trigger = """
@@ -147,7 +162,9 @@ def upgrade():
         """
     op.execute(trigger)
 
-    op.execute("drop trigger if exists log_annotation_action_delete on annotation cascade;")
+    op.execute(
+        "drop trigger if exists log_annotation_action_delete on annotation cascade;"
+    )
 
     trigger_delete = """
             CREATE OR REPLACE FUNCTION annotation_delete_event() RETURNS trigger AS $$ 
@@ -172,6 +189,9 @@ def upgrade():
 
 
 def downgrade():
+    # ---------
+    # Drop
+    # ---------
     op.drop_index(op.f("ix_taxonomy_class_parent_id"), table_name="taxonomy_class")
     op.drop_index(op.f("ix_taxonomy_class_name"), table_name="taxonomy_class")
     op.drop_index(
@@ -179,27 +199,52 @@ def downgrade():
     )
     op.drop_index(op.f("ix_annotation_log_annotator_id"), table_name="annotation_log")
     op.drop_index(op.f("ix_annotation_log_annotation_id"), table_name="annotation_log")
-    released = sa.Column(
-        "released",
-        sa.BOOLEAN(),
-        server_default=sa.text("false"),
-        autoincrement=False,
-        nullable=False,
-    )
-    op.add_column("annotation", released)
-    op.add_column("annotation_log", sa.Column("released", sa.BOOLEAN()))
     op.drop_index(op.f("ix_annotation_taxonomy_class_id"), table_name="annotation")
     op.drop_index(op.f("ix_annotation_status"), table_name="annotation")
     op.drop_index(op.f("ix_annotation_annotator_id"), table_name="annotation")
+
+    # drop columns
     op.drop_column("annotation", "status")
     op.drop_column("annotation_log", "status")
+    op.drop_column("annotation_log", "operation")
 
     # drop enum type
     op.execute("DROP TYPE annotation_status_enum;")
+    op.execute("DROP TYPE annotation_log_operation_enum;")
 
+    # ---------
+    # Add columns back
+    # ---------
+    op.add_column(
+        "annotation",
+        released=sa.Column(
+            "released",
+            sa.BOOLEAN(),
+            server_default=sa.text("false"),
+            autoincrement=False,
+            nullable=False,
+        ),
+    )
+    op.add_column("annotation_log", sa.Column("released", sa.BOOLEAN()))
+    op.create_table(
+        "annotation_log_description",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
+    )
+    op.add_column(
+        "annotation_log",
+        sa.Column("description", sa.Integer(), server_default="1", nullable=True),
+    )
+
+    # ---------
+    # Triggers
+    # ---------
     # Note: we don't bother adding the trigger that prevented a released annotation being updated
 
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
+    op.execute("drop trigger if exists log_annotation_action_delete on annotation cascade;")
 
     import sys
 
@@ -212,15 +257,3 @@ def downgrade():
     op.execute(trigger_annotation_save)
     op.execute(trigger_delete)
 
-    op.create_table(
-        "annotation_log_description",
-        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
-    )
-    op.drop_column("annotation_log", "operation")
-    op.add_column(
-        "annotation_log",
-        sa.Column("description", sa.Integer(), server_default="1", nullable=True),
-    )
