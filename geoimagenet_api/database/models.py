@@ -1,3 +1,4 @@
+import enum
 from sqlalchemy import (
     Column,
     Integer,
@@ -8,11 +9,11 @@ from sqlalchemy import (
     Boolean,
     UniqueConstraint,
 )
+from sqlalchemy import Enum
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import expression
 from geoalchemy2 import Geometry
-
 
 Base = declarative_base()
 
@@ -25,40 +26,56 @@ class Person(Base):
     name = Column(String, nullable=False)
 
 
+class AnnotationStatus(enum.Enum):
+    new = 1
+    released = 2
+    validated = 3
+    rejected = 4
+    deleted = 5
+
+
 class Annotation(Base):
     __tablename__ = "annotation"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
+    annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False, index=True)
     geometry = Column(Geometry("GEOMETRY", srid=3857), nullable=False)
     updated_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
-    taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), nullable=False)
+    taxonomy_class_id = Column(
+        Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
+    )
     image_name = Column(String, nullable=False)
-    released = Column(
-        Boolean, default=False, server_default=expression.false(), nullable=False
+    status = Column(
+        Enum(AnnotationStatus, name="annotation_status_enum"),
+        nullable=False,
+        index=True,
+        server_default=AnnotationStatus.new.name,
     )
 
 
-class AnnotationLogDescription(Base):
-    __tablename__ = "annotation_log_description"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False, unique=True)
+class AnnotationLogOperation(enum.Enum):
+    insert = 1
+    update = 2
+    delete = 3
 
 
 class AnnotationLog(Base):
     __tablename__ = "annotation_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    annotation_id = Column(Integer, nullable=False)
-    annotator_id = Column(Integer, ForeignKey("person.id"))
+    annotation_id = Column(Integer, nullable=False, index=True)
+    annotator_id = Column(Integer, ForeignKey("person.id"), index=True)
     geometry = Column(Geometry("GEOMETRY", srid=3857))
     created_at = Column(DateTime, server_default=text("NOW()"))
-    taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"))
+    taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     image_name = Column(String)
-    released = Column(Boolean)
-    description = Column(
-        Integer, ForeignKey("annotation_log_description.id"), server_default="1"
+    status = Column(
+        Enum(AnnotationStatus, name="annotation_status_enum"),
+        index=True,
+    )
+    operation = Column(
+        Enum(AnnotationLogOperation, name="annotation_log_operation_enum"),
+        index=True,
     )
 
 
@@ -98,11 +115,14 @@ class TaxonomyClass(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     taxonomy_id = Column(Integer, ForeignKey("taxonomy.id"), nullable=False)
-    parent_id = Column(Integer, ForeignKey("taxonomy_class.id"))
+    parent_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     children = relationship(
-        "TaxonomyClass", backref=backref("parent", remote_side=[id]), join_depth=10, lazy='joined'
+        "TaxonomyClass",
+        backref=backref("parent", remote_side=[id]),
+        join_depth=10,
+        lazy="joined",
     )
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, index=True)
     __table_args__ = (UniqueConstraint("parent_id", "name", name="uc_taxonomy_class"),)
 
 
