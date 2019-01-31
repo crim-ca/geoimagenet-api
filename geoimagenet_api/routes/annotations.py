@@ -57,7 +57,7 @@ def put():
             annotation.taxonomy_class_id = properties.taxonomy_class_id
             annotation.image_name = properties.image_name
             annotation.annotator_id = properties.annotator_id
-            annotation.released = properties.released
+            annotation.status = properties.status
             annotation.geometry = geom
 
         try:
