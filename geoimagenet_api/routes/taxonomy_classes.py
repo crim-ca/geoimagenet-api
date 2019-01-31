@@ -39,6 +39,7 @@ def get(id, depth=-1):
         )
     if not taxo:
         return "Taxonomy class id not found", 404
+    taxo = taxo[0]  # The id is unique
     return taxo
 
 
