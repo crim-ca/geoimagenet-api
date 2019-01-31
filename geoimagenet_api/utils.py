@@ -49,3 +49,8 @@ def _dataclass_to_dict(obj):
     if dataclasses.is_dataclass(obj):
         obj = dataclasses.asdict(obj, dict_factory=dict_factory)
     return obj
+
+
+def get_logged_user(request):
+    # todo: use the id of the currently logged in user
+    return 1

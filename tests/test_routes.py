@@ -11,7 +11,7 @@ import pp
 from sqlalchemy import func
 
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.database.models import Annotation
+from geoimagenet_api.database.models import Annotation, AnnotationStatus
 from geoimagenet_api.openapi_schemas import AnnotationProperties
 from tests.utils import api_url, random_user_name
 
@@ -213,7 +213,7 @@ def test_annotations_put(client, any_geojson):
         session.commit()
 
         annotation_id = annotation.id
-        if any_geojson['type'] == "FeatureCollection":
+        if any_geojson["type"] == "FeatureCollection":
             first_feature = any_geojson["features"][0]
             first_feature["id"] = f"annotation.{annotation_id}"
             properties = AnnotationProperties(**first_feature["properties"])
@@ -233,7 +233,7 @@ def test_annotations_put(client, any_geojson):
         assert annotation.taxonomy_class_id == properties.taxonomy_class_id
         assert annotation.image_name == properties.image_name
         assert annotation.annotator_id == properties.annotator_id
-        assert annotation.released == properties.released
+        assert annotation.status.name == properties.status
 
         wkt = "SRID=3857;" + wkt_string[first_feature["geometry"]["type"]]
 
@@ -241,6 +241,61 @@ def test_annotations_put(client, any_geojson):
             "SRID=3857;" + session.query(func.ST_AsText(annotation.geometry)).scalar()
         )
         assert wkt_geom == wkt
+
+
+def test_annotations_release(client):
+    """
+    Taxonomy classes tree:
+    1
+    --2
+      --3
+    --9
+
+    """
+    with connection_manager.get_db_session() as session:
+        for class_ in [1, 2, 3, 9]:
+            annotation = Annotation(
+                annotator_id=1,
+                geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+                taxonomy_class_id=class_,
+                image_name="my image",
+            )
+            session.add(annotation)
+            session.commit()
+
+        def assert_status(class_id, status):
+            assert (
+                session.query(Annotation.status)
+                .filter_by(taxonomy_class_id=class_id)
+                .first()
+                .status
+                == status
+            )
+
+        assert_status(1, AnnotationStatus.new)
+        assert_status(2, AnnotationStatus.new)
+        assert_status(3, AnnotationStatus.new)
+        assert_status(9, AnnotationStatus.new)
+
+        query = {"taxonomy_class_id": 2}
+
+        r = client.post(api_url(f"/annotations/release"), query_string=query)
+        assert r.status_code == 204
+
+        assert_status(1, AnnotationStatus.new)
+        assert_status(2, AnnotationStatus.released)
+        assert_status(3, AnnotationStatus.released)
+        assert_status(9, AnnotationStatus.new)
+
+        query = {"taxonomy_class_id": 1}
+
+        r = client.post(api_url(f"/annotations/release"), query_string=query)
+        assert r.status_code == 204
+
+        assert_status(1, AnnotationStatus.released)
+        assert_status(2, AnnotationStatus.released)
+        assert_status(3, AnnotationStatus.released)
+        assert_status(9, AnnotationStatus.released)
 
 
 def test_annotation_post(client, any_geojson):
@@ -322,9 +377,9 @@ def test_annotation_count_total(client):
     expected = {22: 6, 10: 3, 11: 2}
 
     def recurse(obj):
-        if obj['id'] in expected:
-            assert obj["annotation_count"] == expected[obj['id']]
-        for child in obj['children']:
+        if obj["id"] in expected:
+            assert obj["annotation_count"] == expected[obj["id"]]
+        for child in obj["children"]:
             recurse(child)
 
     recurse(r.json[0])

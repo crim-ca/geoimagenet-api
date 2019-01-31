@@ -1,17 +1,24 @@
 import json
 
 from flask import request
+from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 
-from geoimagenet_api.openapi_schemas import AnnotationProperties
-from geoimagenet_api.database.models import Annotation as DBAnnotation, Annotation
+from geoimagenet_api.openapi_schemas import AnnotationProperties, TaxonomyClass
+from geoimagenet_api.database.models import (
+    Annotation as DBAnnotation,
+    AnnotationStatus,
+    TaxonomyClass as DBTaxonomyClass,
+)
 from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.routes.taxonomy_classes import flatten_taxonomy_ids
+from geoimagenet_api.utils import get_logged_user
 
 
 def _geojson_features_from_request(request):
-    if request.json['type'] == 'FeatureCollection':
-        features = request.json['features']
+    if request.json["type"] == "FeatureCollection":
+        features = request.json["features"]
     else:
         features = [request.json]
     return features
@@ -21,19 +28,19 @@ def put():
     with connection_manager.get_db_session() as session:
         json_annotations = _geojson_features_from_request(request)
         for json_annotation in json_annotations:
-            properties = json_annotation['properties']
-            geometry = json_annotation['geometry']
+            properties = json_annotation["properties"]
+            geometry = json_annotation["geometry"]
             properties = AnnotationProperties(
-                annotator_id=properties['annotator_id'],
-                taxonomy_class_id=properties['taxonomy_class_id'],
-                image_name=properties['image_name'],
-                released=properties.get('released', False),
+                annotator_id=properties["annotator_id"],
+                taxonomy_class_id=properties["taxonomy_class_id"],
+                image_name=properties["image_name"],
+                status=properties.get("status", AnnotationStatus.new),
             )
 
             if "id" not in json_annotation:
                 return "Property 'id' is required", 400
 
-            layer, id_ = json_annotation.get('id').split(".", 1)
+            layer, id_ = json_annotation.get("id").split(".", 1)
 
             try:
                 id_ = int(id_)
@@ -67,17 +74,17 @@ def post():
     with connection_manager.get_db_session() as session:
         features = _geojson_features_from_request(request)
         for feature in features:
-            geometry = feature['geometry']
-            properties = feature['properties']
+            geometry = feature["geometry"]
+            properties = feature["properties"]
 
             geom_string = json.dumps(geometry)
             geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
 
-            annotation = Annotation(
-                annotator_id=properties['annotator_id'],
+            annotation = DBAnnotation(
+                annotator_id=properties["annotator_id"],
                 geometry=geom,
-                taxonomy_class_id=properties['taxonomy_class_id'],
-                image_name=properties['image_name'],
+                taxonomy_class_id=properties["taxonomy_class_id"],
+                image_name=properties["image_name"],
             )
             session.add(annotation)
             written_annotations.append(annotation)
