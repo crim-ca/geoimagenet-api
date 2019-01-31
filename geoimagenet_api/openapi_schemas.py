@@ -1,11 +1,9 @@
-from typing import List, Dict
+from typing import List
 from datetime import datetime
 
 from dataclasses import dataclass, field
 
-
-class Optional:
-    pass
+from geoimagenet_api.database.models import AnnotationStatus
 
 
 @dataclass
@@ -73,7 +71,7 @@ class AnnotationProperties:
     annotator_id: int
     taxonomy_class_id: int
     image_name: str
-    released: bool = field(default=False)
+    status: str = field(default=AnnotationStatus.new.name)
 
 
 @dataclass
