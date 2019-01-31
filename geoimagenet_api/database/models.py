@@ -28,10 +28,12 @@ class Person(Base):
 
 class AnnotationStatus(enum.Enum):
     new = 1
-    released = 2
-    validated = 3
-    rejected = 4
-    deleted = 5
+    pre_released = 2
+    released = 3
+    review = 4
+    validated = 5
+    rejected = 6
+    deleted = 7
 
 
 class Annotation(Base):

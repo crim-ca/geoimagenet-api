@@ -19,7 +19,7 @@ down_revision = "c83f405af323"
 branch_labels = None
 depends_on = None
 
-statuses = ("new", "released", "validated", "rejected", "deleted")
+statuses = ("new", "pre_released", "released", "review", "validated", "rejected", "deleted")
 
 annotation_log_descriptions = ("insert", "update", "delete")
 
