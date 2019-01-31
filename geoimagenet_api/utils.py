@@ -52,3 +52,18 @@ def _dataclass_to_dict(obj):
 def get_logged_user(request):
     # todo: use the id of the currently logged in user
     return 1
+
+
+class DictSkipNone(dict):
+    """A dictionary identical to `dict` but ignores (skips) any None values."""
+
+    def __init__(self, *args, **kwargs):
+        self.update(*args, **kwargs)
+
+    def __setitem__(self, key, val):
+        if val is not None:
+            dict.__setitem__(self, key, val)
+
+    def update(self, *args, **kwargs):
+        for k, v in dict(*args, **kwargs).items():
+            self[k] = v
