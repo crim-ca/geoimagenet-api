@@ -1,11 +1,12 @@
 """GeoImageNet API to support the web mapping platform"""
 import logging
 import sys
+from pathlib import Path
 
 import connexion
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from flask import redirect, request, render_template
+from flask import redirect, request, render_template, Response
 
 from geoimagenet_api.__about__ import __version__, __author__, __email__
 from geoimagenet_api.utils import DataclassEncoder
@@ -52,6 +53,11 @@ def make_app(validate_responses=False):
     @connexion_app.app.route("/api/v1/ui/")
     def redoc():
         return render_template("redoc.html")
+
+    @connexion_app.app.route("/api/v1/changelog/")
+    def changelog():
+        changes = Path(__file__).with_name("CHANGELOG.rst").read_text()
+        return Response(changes, mimetype='text/plain')
 
     logger.info("App initialized")
 

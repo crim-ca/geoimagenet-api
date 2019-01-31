@@ -32,6 +32,7 @@ exec(read_setup_file(Path("geoimagenet_api", "__about__.py")), __about__)
 
 package_data = {
     "geoimagenet_api": [
+        "CHANGELOG.rst",
         "openapi.yaml",
         "database/alembic.ini",
         "database/alembic/*",

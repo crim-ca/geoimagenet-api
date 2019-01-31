@@ -13,6 +13,7 @@ class ApiInfo:
     authors: str
     email: str
     documetation_url: str
+    changelog_url: str
 
 
 @dataclass

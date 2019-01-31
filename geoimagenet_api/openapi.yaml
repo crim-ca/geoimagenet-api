@@ -304,6 +304,8 @@ components:
           type: string
         documetation_url:
           type: string
+        changelog_url:
+          type: string
     GeoJsonFeatureCollection:
       type: object
       description: GeoJson Feature collection
