@@ -27,7 +27,7 @@ class TaxonomyClass:
     id: int
     name: str
     taxonomy_id: int
-    children: List["TaxonomyClass"] = field(default=Optional)
+    children: List["TaxonomyClass"] = field(default_factory=list)
     annotation_count: int = field(default=0)
 
 
