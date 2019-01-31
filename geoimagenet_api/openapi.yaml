@@ -402,8 +402,8 @@ components:
           type: integer
         image_name:
           type: string
-        released:
-          type: boolean
+        status:
+          type: string
     User:
       type: object
       required:
