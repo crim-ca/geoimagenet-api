@@ -5,6 +5,10 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 
 
 def dataclass_from_object(data_cls, source_obj, depth=0):
+    """Return a dataclass by matching property names in the source_obj.
+
+    If depth is negative, its considered infinite.
+    """
     fields = [f.name for f in dataclasses.fields(data_cls)]
     common_fields = [f for f in dir(source_obj) if f in fields]
     properties = {}
@@ -16,7 +20,7 @@ def dataclass_from_object(data_cls, source_obj, depth=0):
             and isinstance(value[0], type(source_obj))
         ):
             # recursive data type
-            if depth > 0:
+            if depth != 0:
                 value = [dataclass_from_object(data_cls, v, depth - 1) for v in value]
             else:
                 value = []
