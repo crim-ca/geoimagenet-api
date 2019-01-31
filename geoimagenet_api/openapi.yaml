@@ -118,6 +118,10 @@ paths:
           description: Not found
           content:
             application/json: {}
+        400:
+          description: Bad request
+          content:
+            application/json: {}
 
   /taxonomy_classes/{id}:
     get:
