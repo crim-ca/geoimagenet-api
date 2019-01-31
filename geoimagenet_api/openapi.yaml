@@ -209,6 +209,24 @@ paths:
           content:
             application/json: {}
 
+
+  /annotations/release:
+    post:
+      summary: "Annotations: Release annotation by taxonomy class"
+      operationId: geoimagenet_api.routes.annotations.release
+      parameters:
+        - name: taxonomy_class_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: No Content
+        404:
+          description: Taxonomy Class id not found.
+          content:
+            application/json: {}
   /annotations:
     post:
       summary: "Annotations: Add new"

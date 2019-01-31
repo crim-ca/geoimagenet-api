@@ -110,3 +110,29 @@ def delete():
         query.delete(False)
         session.commit()
     return "Success", 204
+
+
+def release(taxonomy_class_id):
+    logged_user = get_logged_user(request)
+
+    with connection_manager.get_db_session() as session:
+        taxo = session.query(DBTaxonomyClass).filter_by(id=taxonomy_class_id).all()
+        if not taxo:
+            return f"Taxonomy class id not found: {taxonomy_class_id}", 404
+        taxo_ids = flatten_taxonomy_ids(taxo)
+        (
+            session.query(DBAnnotation)
+            .filter(
+                and_(
+                    DBAnnotation.taxonomy_class_id.in_(taxo_ids),
+                    DBAnnotation.annotator_id == logged_user,
+                )
+            )
+            .update(
+                {DBAnnotation.status: AnnotationStatus.released},
+                synchronize_session=False,
+            )
+        )
+        session.commit()
+
+    return "No Content", 204
