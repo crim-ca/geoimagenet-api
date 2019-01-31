@@ -87,6 +87,7 @@ paths:
       summary: "Taxonomy classes: Search"
       parameters:
         - name: taxonomy_name
+          description: Full name or sluggified name of the taxonomy
           in: query
           required: true
           schema:
@@ -96,6 +97,7 @@ paths:
           schema:
             type: integer
         - name: name
+          description: Name of the taxonomy class
           in: query
           schema:
             type: string

@@ -1,5 +1,6 @@
 from typing import List, Union, Dict
 
+from slugify import slugify
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func
 
@@ -15,10 +16,12 @@ from geoimagenet_api.utils import dataclass_from_object, DictSkipNone
 
 def search(taxonomy_name, id=None, name=None, depth=-1):
     with connection_manager.get_db_session() as session:
-        try:
-            taxonomy = session.query(DBTaxonomy).filter_by(name=taxonomy_name).one()
-        except NoResultFound:
-            return f"Taxonomy not found: {taxonomy_name}", 404
+        for t in session.query(DBTaxonomy):
+            if taxonomy_name in (t.name, slugify(t.name)):
+                taxonomy = t
+                break
+        else:
+            return f"Taxonomy name or slug not found: {taxonomy_name}", 404
 
         filter_by = DictSkipNone(id=id, name=name)
         if not len(filter_by):
