@@ -175,7 +175,7 @@ def test_taxonomy_versions_version_not_found(client):
     query = {"name": "Objets", "version": "10"}
     r = client.get(api_url(f"/taxonomy"), query_string=query)
     assert r.status_code == 404
-    assert r.json == "Version not found"
+    assert "Version not found" in r.json
 
 
 def test_taxonomy_search_by_slug(client):
@@ -197,6 +197,7 @@ def test_taxonomy_get_by_slug(client):
     version = "1"
     r = client.get(api_url(f"/taxonomy/{name_slug}/{version}"))
     assert r.json["name"] == "Couverture de sol"
+    assert r.json['taxonomy_class_root_id'] == 205
 
 
 def test_taxonomy_get_by_slug_not_found(client):

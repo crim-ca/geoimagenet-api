@@ -462,6 +462,9 @@ components:
           type: string
         version:
           type: string
+        taxonomy_class_root_id:
+          type: integer
+          format: int64
     TaxonomyGroup:
       type: object
       required:

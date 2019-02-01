@@ -62,10 +62,16 @@ def search(name=None, version=None):
 
 def get_by_slug(name_slug, version):
     for taxonomy in aggregated_taxonomies():
-        ids, taxonomy_name, taxonomy_versions = taxonomy
+        ids, taxonomy_name, taxonomy_class_root_ids, taxonomy_versions = taxonomy
         if slugify(taxonomy_name) == name_slug and version in taxonomy_versions:
-            taxonomy_id = ids[taxonomy_versions.index(version)]
+            index = taxonomy_versions.index(version)
+            taxonomy_id = ids[index]
+            taxonomy_class_root = taxonomy_class_root_ids[index]
             return Taxonomy(
-                id=taxonomy_id, name=taxonomy.name, slug=name_slug, version=version
+                id=taxonomy_id,
+                name=taxonomy.name,
+                slug=name_slug,
+                version=version,
+                taxonomy_class_root_id=taxonomy_class_root,
             )
     return "Taxonomy not found", 404

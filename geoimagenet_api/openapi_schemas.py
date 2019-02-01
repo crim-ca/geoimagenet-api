@@ -38,6 +38,7 @@ class Taxonomy:
     name: str
     slug: str
     version: str
+    taxonomy_class_root_id: int
 
 
 @dataclass
