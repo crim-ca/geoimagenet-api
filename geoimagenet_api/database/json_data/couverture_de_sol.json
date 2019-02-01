@@ -12,10 +12,10 @@
 				"name": "Densité moyenne"
 			},
 			{
-				"name": "Densité élevé"
+				"name": "Densité élevée"
 			},
 			{
-				"name": "Parc de maisons mobile"
+				"name": "Parc de maisons mobiles"
 			}]
 		},
 		{
@@ -118,7 +118,7 @@
 	{
 		"name": "Water",
 		"value": [{
-			"name": "Streamsconsidéré comme objet ou comme zone d'occupation du sol selon l'échelle de cartographie"
+			"name": "Streams considéré comme objet ou comme zone d'occupation du sol selon l'échelle de cartographie"
 		},
 		{
 			"name": "Lakes"
