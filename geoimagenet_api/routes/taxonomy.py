@@ -23,6 +23,7 @@ def aggregated_taxonomies():
             .join(DBTaxonomyClass)
             .filter(DBTaxonomyClass.parent_id == None)
             .group_by(DBTaxonomy.name)
+            .order_by(DBTaxonomy.name)
         )
         return query.all()
 
