@@ -43,6 +43,7 @@ class Taxonomy:
 @dataclass
 class TaxonomyVersion:
     taxonomy_id: int
+    taxonomy_class_root_id: int
     version: str
 
 

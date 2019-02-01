@@ -486,6 +486,9 @@ components:
         taxonomy_id:
           type: integer
           format: int64
+        taxonomy_class_root_id:
+          type: integer
+          format: int64
         version:
           type: string
     Validation:
