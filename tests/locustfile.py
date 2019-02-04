@@ -13,6 +13,10 @@ def classes(l):
     l.client.get("/taxonomy_classes/1", params={"depth": 10}, verify=False)
 
 
+def classes_search(l):
+    l.client.get("/taxonomy_classes", params={"taxonomy_name": "Objets", "id": 1, "depth": 10}, verify=False)
+
+
 def classes_depth_0(l):
     l.client.get("/taxonomy_classes/1", params={"depth": 0}, verify=False)
 
@@ -53,7 +57,8 @@ class UserBehavior(TaskSet):
         # add_annotation_geojson: 1,
         # add_annotation_xml: 1,
         # classes: 1,
-        classes_depth_0: 1
+        classes_search: 1,
+        # classes_depth_0: 1
     }
 
 

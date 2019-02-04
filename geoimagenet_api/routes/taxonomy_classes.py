@@ -28,7 +28,9 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
             return "Please provide one of: id, name", 400
         filter_by["taxonomy_id"] = taxonomy.id
 
-        taxo = query_taxonomy_classes_with_depth(session, filter_by, depth)
+        taxo_root = query_taxonomy_tree(session, taxonomy_id=taxonomy.id)
+        taxo = [dataclass_from_object(TaxonomyClass, t, depth=depth) for t in taxo_root]
+        insert_annotation_count(session, taxo)
 
     if not taxo:
         return "No taxonomy class found", 404
@@ -101,3 +103,25 @@ def query_taxonomy_classes_with_depth(
     taxo = [dataclass_from_object(TaxonomyClass, t, depth=depth) for t in taxo]
     insert_annotation_count(session, taxo)
     return taxo
+
+
+def query_taxonomy_tree(session, taxonomy_id: int) -> List[TaxonomyClass]:
+    fields = [DBTaxonomyClass.id, DBTaxonomyClass.name, DBTaxonomyClass.parent_id]
+    seen_classes = {}
+    from collections import defaultdict
+    missing_parents = defaultdict(list)
+    for taxo in session.query(*fields).filter_by(taxonomy_id=taxonomy_id):
+        taxonomy_class = TaxonomyClass(id=taxo.id, name=taxo.name, taxonomy_id=taxonomy_id)
+        seen_classes[taxo.id] = taxonomy_class
+
+        if taxo.id in missing_parents:
+            for child in missing_parents[taxo.id]:
+                taxo.children.append(child)
+
+        if taxo.parent_id in seen_classes:
+            seen_classes[taxo.parent_id].children.append(taxonomy_class)
+        else:
+            missing_parents[taxo.parent_id].append(taxonomy_class)
+
+    root = missing_parents[None]
+    return root
