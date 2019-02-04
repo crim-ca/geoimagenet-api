@@ -214,8 +214,80 @@ paths:
           description: Not found
           content:
             application/json: {}
-
-
+  /batches:
+    get:
+      summary: "Batches: Search"
+      parameters:
+        - name: taxonomy_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Batch'
+    post:
+      summary: "Batches: Create an annotation batch for a taxonomy"
+      parameters:
+        - name: taxonomy_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        201:
+          description: "The batch has been successfully created."
+          content:
+            application/json:
+              schema:
+                description: The id of the created batch.
+                type: integer
+  /batches/{id}:
+    get:
+      summary: "Batches: Get by id"
+      parameters:
+        - name: id
+          in: path
+          description: The id of the batch
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: '#/components/schemas/Batch'
+  /batches/{id}/{role}:
+    get:
+      summary: "Batches: Get by id"
+      operationId: geoimagenet_api.routes.batches.get_batch_annotations_by_role
+      parameters:
+        - name: id
+          in: path
+          description: The id of the batch
+          required: true
+          schema:
+            type: integer
+        - name: role
+          in: path
+          description: The id of the batch
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: '#/components/schemas/GeoJsonFeatureCollection'
   /annotations/release:
     post:
       summary: "Annotations: Release annotation by taxonomy class"
@@ -281,7 +353,7 @@ paths:
           content:
             application/json:
               schema:
-                description: The id of the created annotation
+                description: The ids of the created annotations
                 type: array
                 items:
                   type: integer
