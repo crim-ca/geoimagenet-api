@@ -217,11 +217,6 @@ paths:
   /batches:
     get:
       summary: "Batches: Search"
-      parameters:
-        - name: taxonomy_id
-          in: query
-          schema:
-            type: integer
       responses:
         200:
           description: OK
@@ -264,10 +259,14 @@ paths:
             application/json:
               schema:
                 type: '#/components/schemas/Batch'
-  /batches/{id}/{role}:
+        404:
+          description: Batch id not found
+          content:
+            application/json: {}
+  /batches/{id}/items/{role}:
     get:
       summary: "Batches: Get by id"
-      operationId: geoimagenet_api.routes.batches.get_batch_annotations_by_role
+      operationId: geoimagenet_api.routes.batches.get_batch_items_by_role
       parameters:
         - name: id
           in: path
@@ -288,6 +287,10 @@ paths:
             application/json:
               schema:
                 type: '#/components/schemas/GeoJsonFeatureCollection'
+        404:
+          description: No batch items found
+          content:
+            application/json: {}
   /annotations/release:
     post:
       summary: "Annotations: Release annotation by taxonomy class"
