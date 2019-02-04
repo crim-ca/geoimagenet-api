@@ -3,3 +3,4 @@ black
 pp-ez
 pytest-icdiff
 gitchangelog
+pytest-cov
