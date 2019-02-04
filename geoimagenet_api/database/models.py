@@ -71,10 +71,7 @@ class AnnotationLog(Base):
     created_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     image_name = Column(String)
-    status = Column(
-        Enum(AnnotationStatus, name="annotation_status_enum"),
-        index=True,
-    )
+    status = Column(Enum(AnnotationStatus, name="annotation_status_enum"), index=True)
     operation = Column(
         Enum(AnnotationLogOperation, name="annotation_log_operation_enum"),
         index=True,
@@ -86,6 +83,7 @@ class Batch(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
+    created_by = Column(Integer, ForeignKey("person.id"), index=True)
     validation_rules_id = Column(
         Integer, ForeignKey("validation_rules.id"), nullable=False
     )
@@ -98,10 +96,10 @@ class BatchItem(Base):
     __tablename__ = "batch_item"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    batch_id = Column(Integer, ForeignKey("batch.id"), nullable=False)
+    batch_id = Column(Integer, ForeignKey("batch.id"), nullable=False, index=True)
     batch = relationship("Batch", back_populates="batch_items")
     annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
-    role = Column(String, nullable=False)
+    role = Column(String, nullable=False, index=True)
 
 
 class ValidationRules(Base):
