@@ -63,6 +63,13 @@ class Validation:
 
 
 @dataclass
+class Batch:
+    id: int
+    created_by: int
+    created_at: datetime
+
+
+@dataclass
 class ValidationPost:
     annotation_ids: List[int]
     validator_id: int

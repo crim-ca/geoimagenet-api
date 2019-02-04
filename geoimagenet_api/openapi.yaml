@@ -675,3 +675,18 @@ components:
         validator_id:
           type: integer
           format: int64
+    Batch:
+      type: object
+      required:
+        - id
+        - created_at
+        - created_by
+      properties:
+        id:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: integer
