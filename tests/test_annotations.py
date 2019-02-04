@@ -44,6 +44,7 @@ def test_annotation_log_triggers():
         assert len(log) == 1
         assert log[0].taxonomy_class_id == annotation.taxonomy_class_id
         assert log[0].image_name == annotation.image_name
+        assert log[0].status == AnnotationStatus.new
         assert log[0].operation == AnnotationLogOperation.insert
 
         # update image_name

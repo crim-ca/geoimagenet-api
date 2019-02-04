@@ -101,7 +101,7 @@ def upgrade():
                              WHEN OLD.image_name = NEW.image_name THEN NULL 
                              ELSE NEW.image_name 
                         END,
-                        CASE WHEN tg_op = 'INSERT' THEN NEW.status 
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.status::annotation_status_enum
                              WHEN OLD.status = NEW.status THEN NULL 
                              ELSE NEW.status 
                         END,
