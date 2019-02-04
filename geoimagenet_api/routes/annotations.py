@@ -1,4 +1,5 @@
 import json
+from typing import Tuple, Dict, Union
 
 from flask import request
 from sqlalchemy import and_
@@ -15,8 +16,11 @@ from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.routes.taxonomy_classes import flatten_taxonomy_ids
 from geoimagenet_api.utils import get_logged_user
 
+DEFAULT_SRID = 3857
 
-def _geojson_features_from_request(request):
+
+def _geojson_features_from_request(request) -> Tuple[Dict, Union[Dict, None]]:
+    """Basic helper function to support a FeatureCollection and a single feature."""
     if request.json["type"] == "FeatureCollection":
         features = request.json["features"]
     else:
@@ -24,7 +28,18 @@ def _geojson_features_from_request(request):
     return features
 
 
-def put():
+def _serialize_geometry(geometry: Dict, crs: int):
+    """Takes a dict geojson geometry, and prepares it to  be written to the db.
+
+    It transforms the geometry into the DEFAULT_CRS if necessary."""
+    geom_string = json.dumps(geometry)
+    geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), crs)
+    if crs != DEFAULT_SRID:
+        geom = func.ST_Transform(geom, DEFAULT_SRID)
+    return geom
+
+
+def put(srid=DEFAULT_SRID):
     with connection_manager.get_db_session() as session:
         json_annotations = _geojson_features_from_request(request)
         for json_annotation in json_annotations:
@@ -51,8 +66,7 @@ def put():
             if not annotation:
                 return f"Annotation id not found: {id_}", 404
 
-            geom_string = json.dumps(geometry)
-            geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
+            geom = _serialize_geometry(geometry, srid)
 
             annotation.taxonomy_class_id = properties.taxonomy_class_id
             annotation.image_name = properties.image_name
@@ -68,7 +82,7 @@ def put():
     return "Annotations updated", 204
 
 
-def post():
+def post(srid=DEFAULT_SRID):
     written_annotations = []
 
     with connection_manager.get_db_session() as session:
@@ -77,8 +91,7 @@ def post():
             geometry = feature["geometry"]
             properties = feature["properties"]
 
-            geom_string = json.dumps(geometry)
-            geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), 3857)
+            geom = _serialize_geometry(geometry, srid)
 
             annotation = DBAnnotation(
                 annotator_id=properties["annotator_id"],

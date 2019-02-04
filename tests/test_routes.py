@@ -218,6 +218,65 @@ def test_annotations_put_not_found(client, geojson_geometry):
     assert r.status_code == 404
 
 
+def test_annotations_post_srid(client, any_geojson):
+    from_srid = 4326
+    query = {"srid": from_srid}
+    r = client.post(
+        api_url(f"/annotations"),
+        content_type="application/json",
+        data=json.dumps(any_geojson),
+        query_string=query,
+    )
+    written_ids = r.json
+    assert r.status_code == 201
+    with connection_manager.get_db_session() as session:
+        annotation = session.query(Annotation).filter_by(id=written_ids[0]).one()
+        geom = session.query(func.ST_AsText(annotation.geometry)).scalar()
+
+        geometry_type = geom[:geom.find("(")].title().replace("string", "String")
+        initial_coordinates = wkt_string[geometry_type]
+        transformed = func.ST_AsText(func.ST_Transform(func.ST_GeomFromText(initial_coordinates, from_srid), 3857))
+        expected = session.query(transformed).scalar()
+        assert expected == geom
+
+
+def test_annotations_put_srid(client, any_geojson):
+    with connection_manager.get_db_session() as session:
+        annotation = Annotation(
+            annotator_id=1,
+            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            taxonomy_class_id=2,
+            image_name="my image",
+        )
+        session.add(annotation)
+        session.commit()
+
+        annotation_id = annotation.id
+        if any_geojson["type"] == "FeatureCollection":
+            any_geojson["features"][0]["id"] = f"annotation.{annotation_id}"
+        else:
+            any_geojson["id"] = f"annotation.{annotation_id}"
+
+        from_srid = 4326
+        query = {"srid": from_srid}
+        r = client.put(
+            api_url(f"/annotations"),
+            content_type="application/json",
+            data=json.dumps(any_geojson),
+            query_string=query,
+        )
+        assert r.status_code == 204
+
+        annotation = session.query(Annotation).filter_by(id=annotation_id).one()
+        geom = session.query(func.ST_AsText(annotation.geometry)).scalar()
+
+        geometry_type = geom[:geom.find("(")].title().replace("string", "String")
+        initial_coordinates = wkt_string[geometry_type]
+        transformed = func.ST_AsText(func.ST_Transform(func.ST_GeomFromText(initial_coordinates, from_srid), 3857))
+        expected = session.query(transformed).scalar()
+        assert expected == geom
+
+
 def test_annotations_put(client, any_geojson):
     with connection_manager.get_db_session() as session:
         annotation = Annotation(

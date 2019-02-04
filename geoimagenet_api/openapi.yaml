@@ -236,11 +236,19 @@ paths:
   /annotations:
     post:
       summary: "Annotations: Add new"
+      parameters:
+        - name: srid
+          description: Valid SRID integer parameter (it must exist in the spatial_ref_sys table)
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 3857
       requestBody:
         content:
           application/json:
             schema:
-              description: GeoJson annotation to be written to the database
+              description: GeoJson annotation to be written to the database. The default CRS is EPSG:3857.
               oneOf:
                 - $ref: '#/components/schemas/GeoJsonFeature'
                 - $ref: '#/components/schemas/GeoJsonFeatureCollection'
@@ -256,11 +264,19 @@ paths:
                   type: integer
     put:
       summary: "Annotations: Update"
+      parameters:
+        - name: srid
+          description: Valid SRID integer parameter (it must exist in the spatial_ref_sys table)
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 3857
       requestBody:
         content:
           application/json:
             schema:
-              description: List of GeoJson annotations to be modified
+              description: List of GeoJson annotations to be modified. The default CRS is EPSG:3857.
               oneOf:
                 - $ref: '#/components/schemas/GeoJsonFeature'
                 - $ref: '#/components/schemas/GeoJsonFeatureCollection'
