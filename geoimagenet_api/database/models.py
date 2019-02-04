@@ -74,6 +74,7 @@ class AnnotationLog(Base):
     status = Column(Enum(AnnotationStatus, name="annotation_status_enum"), index=True)
     operation = Column(
         Enum(AnnotationLogOperation, name="annotation_log_operation_enum"),
+        nullable=False,
         index=True,
     )
 
