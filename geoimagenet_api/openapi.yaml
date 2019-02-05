@@ -258,7 +258,7 @@ paths:
           content:
             application/json:
               schema:
-                type: '#/components/schemas/Batch'
+                $ref: '#/components/schemas/Batch'
         404:
           description: Batch id not found
           content:
