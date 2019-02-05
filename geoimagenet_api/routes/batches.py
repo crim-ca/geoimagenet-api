@@ -80,7 +80,7 @@ def post(taxonomy_id):
 
     with connection_manager.get_db_session() as session:
         batch_items = []
-        other_batches_count = None
+        other_batches_count = {}
 
         user = get_logged_user(request=request)
         val_id = session.query(DBValidationRules.id).filter_by(nb_validators=1, consensus=True).scalar()
@@ -94,7 +94,7 @@ def post(taxonomy_id):
         if other_batches_ids.first():
             query = (
                 session.query(DBBatchItem.annotation_id, DBBatchItem.role)
-                .filter_by(DBBatchItem.batch_id.in_(other_batches_ids))
+                .filter(DBBatchItem.batch_id.in_(other_batches_ids))
                 .distinct()
             )
             batch_items += [
@@ -104,7 +104,7 @@ def post(taxonomy_id):
 
             other_batches_annotation_ids = (
                 session.query(DBBatchItem.annotation_id)
-                .filter_by(DBBatchItem.batch_id.in_(other_batches_ids))
+                .filter(DBBatchItem.batch_id.in_(other_batches_ids))
                 .distinct()
             )
 
@@ -112,7 +112,7 @@ def post(taxonomy_id):
                 session.query(
                     DBAnnotation.taxonomy_class_id, func.count(DBAnnotation.id)
                 )
-                .filter_by(DBAnnotation.id.in_(other_batches_annotation_ids))
+                .filter(DBAnnotation.id.in_(other_batches_annotation_ids))
                 .group_by(DBAnnotation.taxonomy_class_id)
             )
 
@@ -135,8 +135,8 @@ def post(taxonomy_id):
 
         for taxonomy_class_id, annotation_ids in query:
             start = 0
-            if other_batches_count is not None:
-                start = other_batches_count[taxonomy_class_id]
+            if other_batches_count:
+                start = other_batches_count.get(taxonomy_class_id, 0)
 
             for n, annotation_id in enumerate(annotation_ids, start=start):
                 testing = n % testing_ratio == (testing_ratio - 1)
