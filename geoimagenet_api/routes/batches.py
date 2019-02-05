@@ -1,10 +1,11 @@
 import json
 
-import connexion
 from flask import request
+from geoimagenet_api.routes.taxonomy_classes import get_all_taxonomy_classes_ids
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy import func
 
-from geoimagenet_api.openapi_schemas import Batch, BatchItems
+from geoimagenet_api.openapi_schemas import Batch
 from geoimagenet_api.database.models import (
     Batch as DBBatch,
     BatchItem as DBBatchItem,
@@ -64,21 +65,86 @@ def get_batch_items(id, role):
         )
         result = []
         for row in query:
-            result.append({
-                "taxonomy_class_id": row.taxonomy_class_id,
-                "taxonomy_class_name": row.taxonomy_class_name,
-                "geometries": json.loads(row.geometries),
-            })
+            result.append(
+                {
+                    "taxonomy_class_id": row.taxonomy_class_id,
+                    "taxonomy_class_name": row.taxonomy_class_name,
+                    "geometries": json.loads(row.geometries),
+                }
+            )
         return result
 
 
 def post(taxonomy_id):
+    testing_ratio = 10  # one in 10
+
     with connection_manager.get_db_session() as session:
+        batch_items = []
+        other_batches_count = None
+
         user = get_logged_user(request=request)
-        batch = DBBatch(created_by=user)
+        batch = DBBatch(created_by=user, taxonomy_id=taxonomy_id)
         session.add(batch)
         session.flush()
+        batch_id = batch.id
 
-        # todo: calculate 10% test and 90% training
+        other_batches_ids = session.query(DBBatch.id).filter_by(taxonomy_id=taxonomy_id)
+        other_batches_annotation_ids = None
+        if other_batches_ids.first():
+            query = (
+                session.query(DBBatchItem.annotation_id, DBBatchItem.role)
+                .filter_by(DBBatchItem.batch_id.in_(other_batches_ids))
+                .distinct()
+            )
+            batch_items += [
+                DBBatchItem(batch_id=batch_id, annotation_id=id_, role=role)
+                for id_, role in query
+            ]
 
-        return batch.id, 201
+            other_batches_annotation_ids = (
+                session.query(DBBatchItem.annotation_id)
+                .filter_by(DBBatchItem.batch_id.in_(other_batches_ids))
+                .distinct()
+            )
+
+            query = (
+                session.query(
+                    DBAnnotation.taxonomy_class_id, func.count(DBAnnotation.id)
+                )
+                .filter_by(DBAnnotation.id.in_(other_batches_annotation_ids))
+                .group_by(DBAnnotation.taxonomy_class_id)
+            )
+
+            for taxonomy_class_id, count in query:
+                other_batches_count[taxonomy_class_id] = count
+
+        ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
+
+        query = (
+            session.query(
+                DBAnnotation.taxonomy_class_id,
+                func.array_agg(aggregate_order_by(DBAnnotation.id, func.random())),
+            )
+            .group_by(DBAnnotation.taxonomy_class_id)
+            .filter(DBAnnotation.taxonomy_class_id.in_(ids))
+        )
+
+        if other_batches_annotation_ids is not None:
+            query = query.filter(~DBAnnotation.id.in_(other_batches_annotation_ids))
+
+        for taxonomy_class_id, annotation_ids in query:
+            start = 0
+            if other_batches_count is not None:
+                start = other_batches_count[taxonomy_class_id]
+
+            for n, annotation_id in enumerate(annotation_ids, start=start):
+                testing = n % testing_ratio == (testing_ratio - 1)
+                role = "testing" if testing else "training"
+                item = DBBatchItem(
+                    batch_id=batch_id, annotation_id=annotation_id, role=role
+                )
+                batch_items.append(item)
+        session.bulk_save_objects(batch_items)
+        session.commit()
+
+        return batch_id, 201
