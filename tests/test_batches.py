@@ -37,8 +37,8 @@ def insert_validated_annotations(request):
             session.commit()
 
         delete_annotations()
-        session.add_all([make_annotation(3, "validated") for _ in range(20)])
-        session.add_all([make_annotation(9, "validated") for _ in range(15)])
+        session.bulk_save_objects([make_annotation(3, "validated") for _ in range(20)])
+        session.bulk_save_objects([make_annotation(9, "validated") for _ in range(15)])
         session.commit()
 
         request.addfinalizer(delete_annotations)
@@ -62,7 +62,7 @@ def basic_batch(request, insert_validated_annotations):
                 item = BatchItem(batch_id=batch.id, annotation_id=id_, role=role)
                 batch_items.append(item)
 
-        session.add_all(batch_items)
+        session.bulk_save_objects(batch_items)
         session.commit()
 
         def delete_batch():
