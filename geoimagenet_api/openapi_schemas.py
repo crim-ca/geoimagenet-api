@@ -37,13 +37,13 @@ class Taxonomy:
     name: str
     slug: str
     version: str
-    taxonomy_class_root_id: int
+    root_taxonomy_class_id: int
 
 
 @dataclass
 class TaxonomyVersion:
     taxonomy_id: int
-    taxonomy_class_root_id: int
+    root_taxonomy_class_id: int
     version: str
 
 

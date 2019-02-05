@@ -614,7 +614,7 @@ components:
           type: string
         version:
           type: string
-        taxonomy_class_root_id:
+        root_taxonomy_class_id:
           type: integer
           format: int64
     TaxonomyGroup:
@@ -641,7 +641,7 @@ components:
         taxonomy_id:
           type: integer
           format: int64
-        taxonomy_class_root_id:
+        root_taxonomy_class_id:
           type: integer
           format: int64
         version:

@@ -17,7 +17,7 @@ def aggregated_taxonomies():
             session.query(
                 func.array_agg(DBTaxonomy.id),
                 DBTaxonomy.name,
-                func.array_agg(DBTaxonomyClass.id.label("taxonomy_class_root_id")),
+                func.array_agg(DBTaxonomyClass.id.label("root_taxonomy_class_id")),
                 func.array_agg(DBTaxonomy.version),
             )
             .join(DBTaxonomyClass)
@@ -34,8 +34,8 @@ def search(name=None, version=None):
 
     taxonomy_list = []
     for taxonomy in aggregated_taxonomies():
-        ids, taxonomy_name, taxonomy_class_root_ids, taxonomy_versions = taxonomy
-        taxonomy_group = list(zip(ids, taxonomy_class_root_ids, taxonomy_versions))
+        ids, taxonomy_name, root_taxonomy_class_ids, taxonomy_versions = taxonomy
+        taxonomy_group = list(zip(ids, root_taxonomy_class_ids, taxonomy_versions))
         if name is not None:
             if name not in (taxonomy_name, slugify(taxonomy_name)):
                 continue
@@ -47,7 +47,7 @@ def search(name=None, version=None):
                 return f"Version not found name={name} version={version}", 404
 
         versions = [
-            TaxonomyVersion(taxonomy_id=i, taxonomy_class_root_id=c, version=v)
+            TaxonomyVersion(taxonomy_id=i, root_taxonomy_class_id=c, version=v)
             for i, c, v in taxonomy_group
         ]
         taxonomy = TaxonomyGroup(
@@ -63,16 +63,16 @@ def search(name=None, version=None):
 
 def get_by_slug(name_slug, version):
     for taxonomy in aggregated_taxonomies():
-        ids, taxonomy_name, taxonomy_class_root_ids, taxonomy_versions = taxonomy
+        ids, taxonomy_name, root_taxonomy_class_ids, taxonomy_versions = taxonomy
         if slugify(taxonomy_name) == name_slug and version in taxonomy_versions:
             index = taxonomy_versions.index(version)
             taxonomy_id = ids[index]
-            taxonomy_class_root = taxonomy_class_root_ids[index]
+            taxonomy_class_root = root_taxonomy_class_ids[index]
             return Taxonomy(
                 id=taxonomy_id,
                 name=taxonomy.name,
                 slug=name_slug,
                 version=version,
-                taxonomy_class_root_id=taxonomy_class_root,
+                root_taxonomy_class_id=taxonomy_class_root,
             )
     return "Taxonomy not found", 404

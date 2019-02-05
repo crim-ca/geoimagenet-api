@@ -15,10 +15,10 @@ def test_taxonomy_versions(client):
 def test_taxonomy_root_id(client):
     query = {"name": "Objets", "version": "1"}
     r = client.get(api_url(f"/taxonomy"), query_string=query)
-    assert r.json[0]["versions"][0]["taxonomy_class_root_id"] == 1
+    assert r.json[0]["versions"][0]["root_taxonomy_class_id"] == 1
     query = {"name": "Couverture de sol", "version": "1"}
     r = client.get(api_url(f"/taxonomy"), query_string=query)
-    assert r.json[0]["versions"][0]["taxonomy_class_root_id"] == 205
+    assert r.json[0]["versions"][0]["root_taxonomy_class_id"] == 205
 
 
 def test_taxonomy_versions_400_version_only(client):
@@ -53,7 +53,7 @@ def test_taxonomy_get_by_slug(client):
     version = "1"
     r = client.get(api_url(f"/taxonomy/{name_slug}/{version}"))
     assert r.json["name"] == "Couverture de sol"
-    assert r.json['taxonomy_class_root_id'] == 205
+    assert r.json['root_taxonomy_class_id'] == 205
 
 
 def test_taxonomy_get_by_slug_not_found(client):
