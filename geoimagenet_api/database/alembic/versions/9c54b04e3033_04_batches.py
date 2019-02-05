@@ -9,12 +9,19 @@ from alembic import op
 import sqlalchemy as sa
 import geoalchemy2
 
-
 # revision identifiers, used by Alembic.
+from sqlalchemy import table, column, and_
+
 revision = '9c54b04e3033'
 down_revision = 'fba33e3dbe70'
 branch_labels = None
 depends_on = None
+
+validation_rules_table = table(
+    "validation_rules",
+    column("nb_validators", sa.String),
+    column("consensus", sa.Boolean),
+)
 
 
 def upgrade():
@@ -29,7 +36,11 @@ def upgrade():
     op.drop_constraint('batch_item_batch_id_fkey', 'batch_item', type_='foreignkey')
     op.create_foreign_key('batch_item_batch_id_fkey', 'batch_item', 'batch', ['batch_id'], ['id'], ondelete='CASCADE')
     op.create_foreign_key('batch_taxonomy_id_fkey', 'batch', 'taxonomy', ['taxonomy_id'], ['id'], ondelete='CASCADE')
-    # ### end Alembic commands ###
+
+    op.bulk_insert(
+        validation_rules_table,
+        [{"nb_validators": "1", "consensus": True}],
+    )
 
 
 def downgrade():
@@ -44,4 +55,10 @@ def downgrade():
     op.drop_column('batch', 'created_by')
     op.drop_column('batch', 'taxonomy_id')
     op.drop_index(op.f('ix_annotation_log_operation'), table_name='annotation_log')
-    # ### end Alembic commands ###
+
+    op.execute(
+        validation_rules_table
+        .delete()
+        .where(and_(validation_rules_table.c.nb_validators == 1,
+                    validation_rules_table.c.consensus))
+    )
