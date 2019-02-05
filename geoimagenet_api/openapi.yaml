@@ -233,6 +233,29 @@ paths:
           description: Taxonomy Class id not found.
           content:
             application/json: {}
+  /annotations/{taxonomy_class_id}/counts:
+    get:
+      summary: "Annotations: Count annotations per taxonomy class"
+      operationId: geoimagenet_api.routes.annotations.counts
+      parameters:
+        - name: taxonomy_class_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Annotations count
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnnotationCounts'
+        404:
+          description: Taxonomy Class id not found.
+          content:
+            application/json: {}
   /annotations:
     post:
       summary: "Annotations: Add new"
@@ -427,7 +450,17 @@ components:
         image_name:
           type: string
         status:
-          type: string
+          $ref: '#components/schemas/AnnotationStatuses'
+    AnnotationStatuses:
+      type: string
+      enum:
+        - new
+        - pre_released
+        - released
+        - review
+        - validated
+        - rejected
+        - deleted
     User:
       type: object
       required:
@@ -461,6 +494,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaxonomyClass'
+    AnnotationCounts:
+      type: object
+      required:
+        - taxonomy_class_id
+        - counts
+      properties:
+        taxonomy_class_id:
+          type: integer
+          format: int64
+        counts:
+          $ref: '#/components/schemas/AnnotationCount'
+    AnnotationCount:
+      type: object
+      properties:
+        new:
+          type: integer
+        pre_released:
+          type: integer
+        released:
+          type: integer
+        review:
+          type: integer
+        validated:
+          type: integer
+        rejected:
+          type: integer
+        deleted:
+          type: integer
     Taxonomy:
       type: object
       required:
