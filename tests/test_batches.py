@@ -21,7 +21,7 @@ def make_annotation(taxonomy_class, status):
     return annotation
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def insert_validated_annotations(request):
     """
     Taxonomy classes tree:
@@ -44,13 +44,13 @@ def insert_validated_annotations(request):
         request.addfinalizer(delete_annotations)
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def basic_batch(request, insert_validated_annotations):
     with connection_manager.get_db_session() as session:
         val = ValidationRules(nb_validators=1, consensus=True)
         session.add(val)
         session.flush()
-        batch = Batch(created_by=1, validation_rules_id=val.id)
+        batch = Batch(created_by=1, taxonomy_id=1, validation_rules_id=val.id)
         session.add(batch)
         session.flush()
         ids_3 = session.query(Annotation.id).filter_by(taxonomy_class_id=3)
