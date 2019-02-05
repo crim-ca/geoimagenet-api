@@ -43,7 +43,7 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
         if depth == 0:
             taxo = dataclass_from_object(TaxonomyClass, taxonomy_class)
         else:
-            taxo = get_taxonomy_tree(
+            taxo = get_taxonomy_classes_tree(
                 session, taxonomy_id=taxonomy.id, taxonomy_class_id=id
             )
 
@@ -65,13 +65,17 @@ def get(id, depth=-1):
             return "Taxonomy class id not found", 404
         if depth == 0:
             return dataclass_from_object(TaxonomyClass, taxonomy_class)
-        taxo = get_taxonomy_tree(
+        taxo = get_taxonomy_classes_tree(
             session, taxonomy_id=taxonomy_class.taxonomy_id, taxonomy_class_id=id
         )
     return taxo
 
 
-def flatten_taxonomy_ids(taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]) -> List[int]:
+def get_all_taxonomy_classes_ids(session, taxonomy_id: int) -> List[int]:
+    return flatten_taxonomy_classes_ids([get_taxonomy_classes_tree(session, taxonomy_id)])
+
+
+def flatten_taxonomy_classes_ids(taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]) -> List[int]:
     """make a list of all the taxonomy_class ids from nested objects"""
 
     def get_queried_ids(obj):
@@ -83,7 +87,7 @@ def flatten_taxonomy_ids(taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]
     return queried_taxo_ids
 
 
-def get_taxonomy_tree(
+def get_taxonomy_classes_tree(
     session, taxonomy_id: int, taxonomy_class_id: int = None
 ) -> TaxonomyClass:
     """Builds the taxonomy_class tree.

@@ -99,9 +99,9 @@ class BatchItem(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     batch_id = Column(Integer, ForeignKey("batch.id", ondelete='CASCADE'), nullable=False, index=True)
-    batch = relationship("Batch", back_populates="batch_items")
     annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
     role = Column(String, nullable=False, index=True)
+    batch = relationship("Batch", back_populates="batch_items")
 
 
 class ValidationRules(Base):

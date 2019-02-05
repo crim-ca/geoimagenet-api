@@ -19,8 +19,8 @@ from geoimagenet_api.database.models import (
 )
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.routes.taxonomy_classes import (
-    flatten_taxonomy_ids,
-    get_taxonomy_tree,
+    flatten_taxonomy_classes_ids,
+    get_taxonomy_classes_tree,
 )
 from geoimagenet_api.utils import get_logged_user
 
@@ -140,7 +140,7 @@ def release(taxonomy_class_id):
         taxo = session.query(DBTaxonomyClass).filter_by(id=taxonomy_class_id).all()
         if not taxo:
             return f"Taxonomy class id not found: {taxonomy_class_id}", 404
-        taxo_ids = flatten_taxonomy_ids(taxo)
+        taxo_ids = flatten_taxonomy_classes_ids(taxo)
         (
             session.query(DBAnnotation)
             .filter(
@@ -176,14 +176,14 @@ def counts(taxonomy_class_id):
         if not taxonomy_class:
             return "Taxonomy class id not found", 404
 
-        taxo = get_taxonomy_tree(
+        taxo = get_taxonomy_classes_tree(
             session,
             taxonomy_id=taxonomy_class.taxonomy_id,
             taxonomy_class_id=taxonomy_class_id,
         )
 
         # Get annotation count only for these taxonomy class ids
-        queried_taxo_ids = flatten_taxonomy_ids([taxo])
+        queried_taxo_ids = flatten_taxonomy_classes_ids([taxo])
 
         annotation_counts_query = (
             session.query(
