@@ -2,6 +2,7 @@ import json
 from collections import defaultdict
 from typing import Tuple, Dict, Union
 
+import dataclasses
 from flask import request
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
@@ -9,8 +10,7 @@ from sqlalchemy.sql import func
 
 from geoimagenet_api.openapi_schemas import (
     AnnotationProperties,
-    AnnotationCounts,
-    AnnotationCount,
+    AnnotationCountPerStatus,
 )
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
@@ -196,7 +196,7 @@ def counts(taxonomy_class_id):
             .group_by(DBAnnotation.status)
         )
         # build dictionary of annotation count per taxonomy_class_id
-        annotation_count_dict = defaultdict(AnnotationCount)
+        annotation_count_dict = defaultdict(AnnotationCountPerStatus)
 
         for taxonomy_class_id, status, count in annotation_counts_query:
             setattr(annotation_count_dict[taxonomy_class_id], status.name, count)
@@ -209,10 +209,6 @@ def counts(taxonomy_class_id):
 
         recurse_add_counts(taxo)
 
-        # Build return object
-        annotation_counts = [
-            AnnotationCounts(taxo_id, counts)
-            for taxo_id, counts in annotation_count_dict.items()
-        ]
-
-        return annotation_counts
+        # No validation is made by `connexion` for this returned
+        # value due to the dynamic property name
+        return {str(k): dataclasses.asdict(v) for k, v in annotation_count_dict.items()}

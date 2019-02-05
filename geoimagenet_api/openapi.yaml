@@ -344,9 +344,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AnnotationCounts'
+                $ref: '#/components/schemas/AnnotationCounts'
         404:
           description: Taxonomy Class id not found.
           content:
@@ -607,17 +605,12 @@ components:
             $ref: '#/components/schemas/TaxonomyClass'
     AnnotationCounts:
       type: object
-      required:
-        - taxonomy_class_id
-        - counts
-      properties:
-        taxonomy_class_id:
-          type: integer
-          format: int64
-        counts:
-          $ref: '#/components/schemas/AnnotationCount'
-    AnnotationCount:
+      description: A dictionnary of type `Dict[str, AnnotationCountPerStatus]` where the keys are the taxonomy_class_id.
+      additionalProperties:
+        $ref: '#/components/schemas/AnnotationCountPerStatus'
+    AnnotationCountPerStatus:
       type: object
+      description: An object containing annotation counts per status.
       properties:
         new:
           type: integer

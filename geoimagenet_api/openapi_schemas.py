@@ -76,7 +76,7 @@ class ValidationPost:
 
 
 @dataclass
-class AnnotationCount:
+class AnnotationCountPerStatus:
     new: int = field(default=0)
     pre_released: int = field(default=0)
     released: int = field(default=0)
@@ -86,7 +86,7 @@ class AnnotationCount:
     deleted: int = field(default=0)
 
     def __add__(self, other):
-        return AnnotationCount(
+        return AnnotationCountPerStatus(
             new=self.new + other.new,
             pre_released=self.pre_released + other.pre_released,
             released=self.released + other.released,
@@ -105,12 +105,6 @@ class AnnotationCount:
         self.rejected += other.rejected
         self.deleted += other.deleted
         return self
-
-
-@dataclass
-class AnnotationCounts:
-    taxonomy_class_id: int
-    counts: AnnotationCount
 
 
 @dataclass

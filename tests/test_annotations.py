@@ -433,9 +433,7 @@ def test_annotation_count(client):
 
     def assert_count(taxonomy_class_id, status, expected):
         r = get_counts(taxonomy_class_id)
-        counts = [t for t in r if t["taxonomy_class_id"] == taxonomy_class_id][0][
-            "counts"
-        ]
+        counts = r[str(taxonomy_class_id)]
         assert counts[status] == expected
 
     with connection_manager.get_db_session() as session:
