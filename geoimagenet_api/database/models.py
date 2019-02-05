@@ -89,7 +89,7 @@ class Batch(Base):
         Integer, ForeignKey("validation_rules.id"), nullable=False
     )
     batch_items = relationship(
-        "BatchItem", back_populates="batch", cascade="all, delete, delete-orphan"
+        "BatchItem", back_populates="batch", passive_deletes=True
     )
 
 
@@ -97,7 +97,7 @@ class BatchItem(Base):
     __tablename__ = "batch_item"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    batch_id = Column(Integer, ForeignKey("batch.id"), nullable=False, index=True)
+    batch_id = Column(Integer, ForeignKey("batch.id", ondelete='CASCADE'), nullable=False, index=True)
     batch = relationship("Batch", back_populates="batch_items")
     annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
     role = Column(String, nullable=False, index=True)
