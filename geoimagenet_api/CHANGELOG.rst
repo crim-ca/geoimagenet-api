@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.7.0 (2019-02-05)
+------------------
+
+Changes
+~~~~~~~
+- Change the format of the annotation counts to... [David Caron]
+
+  {
+    1: {'new': 10, ...}
+    2: {'new': 20, ...}
+  }
+
+
 0.6.0 (2019-02-05)
 ------------------
 
