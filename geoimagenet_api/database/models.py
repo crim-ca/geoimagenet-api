@@ -85,6 +85,7 @@ class Batch(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     created_by = Column(Integer, ForeignKey("person.id"), index=True)
+    taxonomy_id = Column(Integer, ForeignKey("taxonomy.id"), nullable=False)
     validation_rules_id = Column(
         Integer, ForeignKey("validation_rules.id"), nullable=False
     )
