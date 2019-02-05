@@ -48,7 +48,7 @@ def get_batch_items(id, role):
         max_decimal_digits = 15
         option_add_short_crs = 2
         geometry = func.ST_AsGeoJSON(
-            func.ST_Collect(func.ST_Envelope(DBAnnotation.geometry)),
+            func.ST_Collect(DBAnnotation.geometry),
             max_decimal_digits,
             option_add_short_crs,
         ).label("geometries")
