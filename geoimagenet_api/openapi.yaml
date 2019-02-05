@@ -263,10 +263,10 @@ paths:
           description: Batch id not found
           content:
             application/json: {}
-  /batches/{id}/items/{role}:
+  /batches/{id}/items/training:
     get:
-      summary: "Batches: Get by id"
-      operationId: geoimagenet_api.routes.batches.get_batch_items_by_role
+      summary: "Batches: Get training bounding boxes"
+      operationId: geoimagenet_api.routes.batches.get_batch_items_training
       parameters:
         - name: id
           in: path
@@ -274,19 +274,39 @@ paths:
           required: true
           schema:
             type: integer
-        - name: role
-          in: path
-          description: The id of the batch
-          required: true
-          schema:
-            type: string
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                type: '#/components/schemas/GeoJsonFeatureCollection'
+                type: array
+                items:
+                  $ref: '#/components/schemas/BatchItems'
+        404:
+          description: No batch items found
+          content:
+            application/json: {}
+  /batches/{id}/items/testing:
+    get:
+      summary: "Batches: Get testing bounding boxes"
+      operationId: geoimagenet_api.routes.batches.get_batch_items_testing
+      parameters:
+        - name: id
+          in: path
+          description: The id of the batch
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BatchItems'
         404:
           description: No batch items found
           content:
@@ -424,7 +444,7 @@ components:
           type: string
     GeoJsonFeatureCollection:
       type: object
-      description: GeoJson Feature collection
+      description: GeoJson FeatureCollection
       required:
         - type
         - features
@@ -463,9 +483,9 @@ components:
           $ref: '#/components/schemas/AnnotationProperties'
     Point:
       type: object
-      description: GeoJson geometry
+      description: GeoJson Point
       externalDocs:
-        url: http://geojson.org/geojson-spec.html#id2
+        url: https://tools.ietf.org/html/rfc7946#appendix-A.1
       properties:
         type:
           type: string
@@ -475,9 +495,9 @@ components:
           $ref: '#/components/schemas/Point3D'
     LineString:
       type: object
-      description: GeoJson geometry
+      description: GeoJson LineString
       externalDocs:
-        url: http://geojson.org/geojson-spec.html#id3
+        url: https://tools.ietf.org/html/rfc7946#appendix-A.2
       properties:
         type:
           type: string
@@ -489,9 +509,9 @@ components:
             $ref: '#/components/schemas/Point3D'
     Polygon:
       type: object
-      description: GeoJson geometry
+      description: GeoJson Polygon
       externalDocs:
-        url: http://geojson.org/geojson-spec.html#id4
+        url: https://tools.ietf.org/html/rfc7946#appendix-A.3
       properties:
         type:
           type: string
@@ -503,11 +523,27 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Point3D'
+    MultiPolygon:
+      type: object
+      description: GeoJson MultiPolygon
+      externalDocs:
+        url: https://tools.ietf.org/html/rfc7946#appendix-A.6
+      properties:
+        type:
+          type: string
+          enum:
+            - MultiPolygon
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Point3D'
     Point3D:
       type: array
       description: Point in 3D space
-      externalDocs:
-        url: http://geojson.org/geojson-spec.html#id2
       minItems: 2
       maxItems: 3
       items:
@@ -693,3 +729,12 @@ components:
           format: date-time
         created_by:
           type: integer
+    BatchItems:
+      type: object
+      properties:
+        taxonomy_class_id:
+          type: integer
+        taxonomy_class_name:
+          type: string
+        geometries:
+          $ref: '#/components/schemas/MultiPolygon'

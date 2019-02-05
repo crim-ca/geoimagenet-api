@@ -133,3 +133,22 @@ class GeoJsonFeature:
     geometry: GeoJsonGeometry
     properties: AnnotationProperties
     id: str = field(default=None)
+
+
+@dataclass
+class GeoJsonFeatureCollection:
+    features: List[GeoJsonFeature]
+    type: str = field(default="FeatureCollection")
+
+
+@dataclass
+class MultiPolygon:
+    coordinates: List[List[List[List[float]]]]
+    type: str = field(default="MultiPolygon")
+
+
+@dataclass
+class BatchItems:
+    taxonomy_class_id: int
+    taxonomy_class_name: str
+    geometries: MultiPolygon
