@@ -39,7 +39,7 @@ class _ConnectionManager:
             convert_unicode=True,
             echo=verbose_sqlalchemy,
             pool_size=20,
-            max_overflow=0,
+            max_overflow=10,
         )
         self._session_maker = scoped_session(
             sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
