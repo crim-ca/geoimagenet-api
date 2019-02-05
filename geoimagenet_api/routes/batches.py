@@ -11,7 +11,7 @@ from geoimagenet_api.database.models import (
     BatchItem as DBBatchItem,
     Annotation as DBAnnotation,
     TaxonomyClass as DBTaxonomyClass,
-)
+    ValidationRules as DBValidationRules)
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.utils import dataclass_from_object, get_logged_user
 
@@ -83,7 +83,8 @@ def post(taxonomy_id):
         other_batches_count = None
 
         user = get_logged_user(request=request)
-        batch = DBBatch(created_by=user, taxonomy_id=taxonomy_id)
+        val_id = session.query(DBValidationRules.id).filter_by(nb_validators=1, consensus=True).scalar()
+        batch = DBBatch(created_by=user, taxonomy_id=taxonomy_id, validation_rules_id=val_id)
         session.add(batch)
         session.flush()
         batch_id = batch.id

@@ -47,10 +47,8 @@ def insert_validated_annotations(request):
 @pytest.fixture(scope='module')
 def basic_batch(request, insert_validated_annotations):
     with connection_manager.get_db_session() as session:
-        val = ValidationRules(nb_validators=1, consensus=True)
-        session.add(val)
-        session.flush()
-        batch = Batch(created_by=1, taxonomy_id=1, validation_rules_id=val.id)
+        val_id = session.query(ValidationRules.id).filter_by(nb_validators=1, consensus=True).scalar()
+        batch = Batch(created_by=1, taxonomy_id=1, validation_rules_id=val_id)
         session.add(batch)
         session.flush()
         ids_3 = session.query(Annotation.id).filter_by(taxonomy_class_id=3)
