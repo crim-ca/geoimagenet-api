@@ -436,3 +436,70 @@ def test_annotation_count_total(client):
             recurse(child)
 
     recurse(r.json[0])
+
+
+def insert_annotation(session, taxonomy_class, status):
+    annotation = Annotation(
+        annotator_id=1,
+        geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+        taxonomy_class_id=taxonomy_class,
+        image_name="my image",
+        status=status,
+    )
+    session.add(annotation)
+    session.commit()
+    return annotation.id
+
+
+def test_annotation_count(client):
+    """
+    Taxonomy classes tree:
+    1
+    --2
+      --3
+    --9
+
+    """
+
+    def get_counts(taxonomy_class_id):
+        r = client.get(api_url(f"/annotations/{taxonomy_class_id}/counts"))
+        assert r.status_code == 200
+        return r.json
+
+    def assert_count(taxonomy_class_id, status, expected):
+        r = get_counts(taxonomy_class_id)
+        counts = [t for t in r if t["taxonomy_class_id"] == taxonomy_class_id][0][
+            "counts"
+        ]
+        assert counts[status] == expected
+
+    with connection_manager.get_db_session() as session:
+
+        def add(taxonomy_class_id, status):
+            insert_annotation(session, taxonomy_class_id, status)
+
+        add(3, "released")
+        add(3, "released")
+        add(9, "validated")
+        add(9, "rejected")
+        add(1, "deleted")
+
+        add(3, "review")
+        add(3, "review")
+        add(9, "review")
+        add(1, "review")
+        add(2, "review")
+
+        assert_count(3, "released", 2)
+        assert_count(1, "released", 2)
+        assert_count(1, "new", 0)
+        assert_count(1, "pre_released", 0)
+        assert_count(1, "review", 5)
+        assert_count(2, "review", 3)
+        assert_count(1, "validated", 1)
+        assert_count(9, "validated", 1)
+        assert_count(2, "validated", 0)
+        assert_count(1, "rejected", 1)
+        assert_count(9, "rejected", 1)
+        assert_count(2, "rejected", 0)
+        assert_count(1, "deleted", 1)

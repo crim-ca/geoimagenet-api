@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from typing import Tuple, Dict, Union
 
 from flask import request
@@ -6,14 +7,21 @@ from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 
-from geoimagenet_api.openapi_schemas import AnnotationProperties, TaxonomyClass
+from geoimagenet_api.openapi_schemas import (
+    AnnotationProperties,
+    AnnotationCounts,
+    AnnotationCount,
+)
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
     AnnotationStatus,
     TaxonomyClass as DBTaxonomyClass,
 )
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.routes.taxonomy_classes import flatten_taxonomy_ids
+from geoimagenet_api.routes.taxonomy_classes import (
+    flatten_taxonomy_ids,
+    get_taxonomy_tree,
+)
 from geoimagenet_api.utils import get_logged_user
 
 DEFAULT_SRID = 3857
@@ -149,3 +157,62 @@ def release(taxonomy_class_id):
         session.commit()
 
     return "No Content", 204
+
+
+def counts(taxonomy_class_id):
+    """Get annotation count per annotation status for a specific taxonomy class and its children.
+    """
+    with connection_manager.get_db_session() as session:
+
+        # Get the taxonomy tree corresponding to this taxonomy_class_id
+
+        taxonomy_class = (
+            session.query(
+                DBTaxonomyClass.id, DBTaxonomyClass.name, DBTaxonomyClass.taxonomy_id
+            )
+            .filter_by(id=taxonomy_class_id)
+            .first()
+        )
+        if not taxonomy_class:
+            return "Taxonomy class id not found", 404
+
+        taxo = get_taxonomy_tree(
+            session,
+            taxonomy_id=taxonomy_class.taxonomy_id,
+            taxonomy_class_id=taxonomy_class_id,
+        )
+
+        # Get annotation count only for these taxonomy class ids
+        queried_taxo_ids = flatten_taxonomy_ids(taxo)
+
+        annotation_counts_query = (
+            session.query(
+                DBAnnotation.taxonomy_class_id,
+                DBAnnotation.status,
+                func.count(DBAnnotation.id).label("annotation_count"),
+            )
+            .filter(DBAnnotation.taxonomy_class_id.in_(queried_taxo_ids))
+            .group_by(DBAnnotation.taxonomy_class_id)
+            .group_by(DBAnnotation.status)
+        )
+        # build dictionary of annotation count per taxonomy_class_id
+        annotation_count_dict = defaultdict(AnnotationCount)
+
+        for taxonomy_class_id, status, count in annotation_counts_query:
+            setattr(annotation_count_dict[taxonomy_class_id], status.name, count)
+
+        # add annotation count to parent objects
+        def recurse_add_counts(obj):
+            for o in obj.children:
+                annotation_count_dict[obj.id] += recurse_add_counts(o)
+            return annotation_count_dict[obj.id]
+
+        recurse_add_counts(taxo)
+
+        # Build return object
+        annotation_counts = [
+            AnnotationCounts(taxo_id, counts)
+            for taxo_id, counts in annotation_count_dict.items()
+        ]
+
+        return annotation_counts

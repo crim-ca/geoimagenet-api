@@ -29,7 +29,6 @@ class TaxonomyClass:
     name: str
     taxonomy_id: int
     children: List["TaxonomyClass"] = field(default_factory=list)
-    annotation_count: int = field(default=0)
 
 
 @dataclass
@@ -67,6 +66,44 @@ class Validation:
 class ValidationPost:
     annotation_ids: List[int]
     validator_id: int
+
+
+@dataclass
+class AnnotationCount:
+    new: int = field(default=0)
+    pre_released: int = field(default=0)
+    released: int = field(default=0)
+    review: int = field(default=0)
+    validated: int = field(default=0)
+    rejected: int = field(default=0)
+    deleted: int = field(default=0)
+
+    def __add__(self, other):
+        return AnnotationCount(
+            new=self.new + other.new,
+            pre_released=self.pre_released + other.pre_released,
+            released=self.released + other.released,
+            review=self.review + other.review,
+            validated=self.validated + other.validated,
+            rejected=self.rejected + other.rejected,
+            deleted=self.deleted + other.deleted,
+        )
+
+    def __iadd__(self, other):
+        self.new += other.new
+        self.pre_released += other.pre_released
+        self.released += other.released
+        self.review += other.review
+        self.validated += other.validated
+        self.rejected += other.rejected
+        self.deleted += other.deleted
+        return self
+
+
+@dataclass
+class AnnotationCounts:
+    taxonomy_class_id: int
+    counts: AnnotationCount
 
 
 @dataclass
