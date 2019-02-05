@@ -183,7 +183,7 @@ def counts(taxonomy_class_id):
         )
 
         # Get annotation count only for these taxonomy class ids
-        queried_taxo_ids = flatten_taxonomy_ids(taxo)
+        queried_taxo_ids = flatten_taxonomy_ids([taxo])
 
         annotation_counts_query = (
             session.query(

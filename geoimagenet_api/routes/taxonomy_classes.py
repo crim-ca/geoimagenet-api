@@ -23,9 +23,9 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
             return "Please provide one of: id, name", 400
         if name and not id:
             id = (
-                session.query(DBTaxonomy.id)
+                session.query(DBTaxonomyClass.id)
                 .filter_by(taxonomy_id=taxonomy.id, name=name)
-                .first()
+                .scalar()
             )
             if not id:
                 return f"Taxonomy class name not found: {name}", 404
@@ -49,7 +49,7 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
 
     if not taxo:
         return "No taxonomy class found", 404
-    return taxo
+    return [taxo]
 
 
 def get(id, depth=-1):
@@ -71,7 +71,7 @@ def get(id, depth=-1):
     return taxo
 
 
-def flatten_taxonomy_ids(taxo: Union[TaxonomyClass, DBTaxonomyClass]) -> List[int]:
+def flatten_taxonomy_ids(taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]) -> List[int]:
     """make a list of all the taxonomy_class ids from nested objects"""
 
     def get_queried_ids(obj):
@@ -79,7 +79,7 @@ def flatten_taxonomy_ids(taxo: Union[TaxonomyClass, DBTaxonomyClass]) -> List[in
         for child in obj.children:
             yield from get_queried_ids(child)
 
-    queried_taxo_ids = list(set(id_ for id_ in get_queried_ids(taxo)))
+    queried_taxo_ids = list(set(id_ for t in taxo for id_ in get_queried_ids(t)))
     return queried_taxo_ids
 
 
