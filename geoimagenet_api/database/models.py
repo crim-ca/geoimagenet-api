@@ -71,13 +71,9 @@ class AnnotationLog(Base):
     created_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     image_name = Column(String)
-    status = Column(
-        Enum(AnnotationStatus, name="annotation_status_enum"),
-        index=True,
-    )
+    status = Column(Enum(AnnotationStatus, name="annotation_status_enum"), index=True)
     operation = Column(
-        Enum(AnnotationLogOperation, name="annotation_log_operation_enum"),
-        index=True,
+        Enum(AnnotationLogOperation, name="annotation_log_operation_enum"), index=True
     )
 
 
@@ -119,10 +115,7 @@ class TaxonomyClass(Base):
     taxonomy_id = Column(Integer, ForeignKey("taxonomy.id"), nullable=False)
     parent_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     children = relationship(
-        "TaxonomyClass",
-        backref=backref("parent", remote_side=[id]),
-        join_depth=10,
-        lazy="joined",
+        "TaxonomyClass", backref=backref("parent", remote_side=[id])
     )
     name = Column(String, nullable=False, index=True)
     __table_args__ = (UniqueConstraint("parent_id", "name", name="uc_taxonomy_class"),)
