@@ -559,7 +559,7 @@ components:
         image_name:
           type: string
         status:
-          $ref: '#components/schemas/AnnotationStatuses'
+          $ref: '#/components/schemas/AnnotationStatuses'
     AnnotationStatuses:
       type: string
       enum:
