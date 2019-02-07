@@ -1,31 +1,38 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<StyledLayerDescriptor version="1.0.0"
-                       xsi:schemaLocation="http://www.opengis.net/sld StyledLayerDescriptor.xsd"
-                       xmlns="http://www.opengis.net/sld"
-                       xmlns:ogc="http://www.opengis.net/ogc"
-                       xmlns:xlink="http://www.w3.org/1999/xlink"
-                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <NamedLayer>
-        <Name>NRG</Name>
-        <UserStyle>
-            <Title>NRG channels</Title>
-            <FeatureTypeStyle>
-                <Rule>
-                    <RasterSymbolizer>
-                        <ChannelSelection>
-                            <RedChannel>
-                                <SourceChannelName>4</SourceChannelName>
-                            </RedChannel>
-                            <GreenChannel>
-                                <SourceChannelName>1</SourceChannelName>
-                            </GreenChannel>
-                            <BlueChannel>
-                                <SourceChannelName>2</SourceChannelName>
-                            </BlueChannel>
-                        </ChannelSelection>
-                    </RasterSymbolizer>
-                </Rule>
-            </FeatureTypeStyle>
-        </UserStyle>
-    </NamedLayer>
-</StyledLayerDescriptor>
+<?xml version="1.0" encoding="UTF-8"?><sld:StyledLayerDescriptor xmlns="http://www.opengis.net/sld" xmlns:sld="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" version="1.0.0">
+<sld:NamedLayer>
+  <sld:Name>Default Styler</sld:Name>
+  <sld:UserStyle>
+    <sld:Name>Default Styler</sld:Name>
+    <sld:Title>NRG channels</sld:Title>
+    <sld:FeatureTypeStyle>
+      <sld:Name>name</sld:Name>
+      <sld:Rule>
+        <MaxScaleDenominator>1000000</MaxScaleDenominator>
+        <sld:RasterSymbolizer>
+          <sld:ChannelSelection>
+            <sld:RedChannel>
+              <sld:SourceChannelName>4</sld:SourceChannelName>
+              <sld:ContrastEnhancement>
+                <sld:GammaValue>1.0</sld:GammaValue>
+              </sld:ContrastEnhancement>
+            </sld:RedChannel>
+            <sld:GreenChannel>
+              <sld:SourceChannelName>1</sld:SourceChannelName>
+              <sld:ContrastEnhancement>
+                <sld:GammaValue>1.0</sld:GammaValue>
+              </sld:ContrastEnhancement>
+            </sld:GreenChannel>
+            <sld:BlueChannel>
+              <sld:SourceChannelName>2</sld:SourceChannelName>
+              <sld:ContrastEnhancement>
+                <sld:GammaValue>1.0</sld:GammaValue>
+              </sld:ContrastEnhancement>
+            </sld:BlueChannel>
+          </sld:ChannelSelection>
+          <sld:ContrastEnhancement/>
+        </sld:RasterSymbolizer>
+      </sld:Rule>
+    </sld:FeatureTypeStyle>
+  </sld:UserStyle>
+</sld:NamedLayer>
+</sld:StyledLayerDescriptor>
