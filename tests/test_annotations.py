@@ -1,7 +1,6 @@
 import json
 
 import pytest
-import pp
 from geoalchemy2 import functions
 from sqlalchemy import func
 
@@ -296,61 +295,6 @@ def test_annotations_put(client, any_geojson):
         assert wkt_geom == wkt
 
 
-def test_annotations_release(client):
-    """
-    Taxonomy classes tree:
-    1
-    --2
-      --3
-    --9
-
-    """
-    with connection_manager.get_db_session() as session:
-        for class_ in [1, 2, 3, 9]:
-            annotation = Annotation(
-                annotator_id=1,
-                geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-                taxonomy_class_id=class_,
-                image_name="my image",
-            )
-            session.add(annotation)
-            session.commit()
-
-        def assert_status(class_id, status):
-            assert (
-                session.query(Annotation.status)
-                .filter_by(taxonomy_class_id=class_id)
-                .first()
-                .status
-                == status
-            )
-
-        assert_status(1, AnnotationStatus.new)
-        assert_status(2, AnnotationStatus.new)
-        assert_status(3, AnnotationStatus.new)
-        assert_status(9, AnnotationStatus.new)
-
-        query = {"taxonomy_class_id": 2}
-
-        r = client.post(api_url(f"/annotations/release"), query_string=query)
-        assert r.status_code == 204
-
-        assert_status(1, AnnotationStatus.new)
-        assert_status(2, AnnotationStatus.released)
-        assert_status(3, AnnotationStatus.released)
-        assert_status(9, AnnotationStatus.new)
-
-        query = {"taxonomy_class_id": 1}
-
-        r = client.post(api_url(f"/annotations/release"), query_string=query)
-        assert r.status_code == 204
-
-        assert_status(1, AnnotationStatus.released)
-        assert_status(2, AnnotationStatus.released)
-        assert_status(3, AnnotationStatus.released)
-        assert_status(9, AnnotationStatus.released)
-
-
 def test_annotation_post(client, any_geojson):
     r = client.post(
         api_url(f"/annotations"),
@@ -361,28 +305,6 @@ def test_annotation_post(client, any_geojson):
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
         assert session.query(Annotation.id).filter_by(id=written_ids[0]).one()
-
-
-def test_annotation_delete(client):
-    with connection_manager.get_db_session() as session:
-        annotation = Annotation(
-            annotator_id=1,
-            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-            taxonomy_class_id=2,
-            image_name="my image",
-        )
-        session.add(annotation)
-        session.commit()
-
-        annotation_id = annotation.id
-
-    client.delete(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps([f"annotation.{annotation_id}"]),
-    )
-    with connection_manager.get_db_session() as session:
-        assert not session.query(Annotation.id).filter_by(id=annotation_id).first()
 
 
 def test_annotation_delete_not_found(client):
