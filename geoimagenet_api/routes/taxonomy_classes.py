@@ -113,7 +113,12 @@ def get_taxonomy_classes_tree(
     missing_parents = defaultdict(list)
 
     query_fields = [DBTaxonomyClass.id, DBTaxonomyClass.name, DBTaxonomyClass.parent_id]
-    for taxo in session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id):
+    taxonomy_query = session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id)
+
+    if not taxonomy_query.first():
+        raise ValueError(f"Couldn't find any taxonomy class having taxonomy id of {taxonomy_id}")
+
+    for taxo in taxonomy_query:
         taxonomy_class = TaxonomyClass(
             id=taxo.id, name=taxo.name, taxonomy_id=taxonomy_id
         )
