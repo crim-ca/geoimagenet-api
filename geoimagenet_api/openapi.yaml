@@ -399,7 +399,7 @@ paths:
           content:
             application/json: {}
 
-  /annotations/{taxonomy_class_id}/counts:
+  /annotations/counts/{taxonomy_class_id}:
     get:
       summary: "Annotations: Count annotations per taxonomy class"
       operationId: geoimagenet_api.routes.annotations.counts
