@@ -330,12 +330,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnnotationUpdateStatus'
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
       responses:
         204:
           description: No Content
         404:
           description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
           content:
             application/json: {}
 
@@ -350,12 +354,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnnotationUpdateStatus'
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
       responses:
         204:
           description: No Content
         404:
           description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
           content:
             application/json: {}
 
@@ -370,12 +378,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnnotationUpdateStatus'
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
       responses:
         204:
           description: No Content
         404:
           description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
           content:
             application/json: {}
 
@@ -390,12 +402,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnnotationUpdateStatus'
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
       responses:
         204:
           description: No Content
         404:
           description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
           content:
             application/json: {}
 
@@ -608,20 +624,37 @@ components:
       items:
         type: number
 
-    AnnotationUpdateStatus:
+    AnnotationStatusUpdate:
       type: object
       description: Request body to update the status of an annotation.
+      oneOf:
+        - $ref: '#/components/schemas/AnnotationStatusUpdateIds'
+        - $ref: '#/components/schemas/AnnotationStatusUpdateTaxonomyClass'
+
+    AnnotationStatusUpdateIds:
+      type: object
+      description: Request body to update the status of an annotation.
+      required:
+        - annotation_ids
       properties:
         annotation_ids:
           type: array
           items:
-            type: integer
-            format: int64
+            type: string
+
+    AnnotationStatusUpdateTaxonomyClass:
+      type: object
+      description: Request body to update the status of an annotation.
+      required:
+        - taxonomy_class_id
+      properties:
         taxonomy_class_id:
           type: integer
           format: int64
         with_taxonomy_children:
           type: boolean
+          description: If true, the taxonomy_class_id will also include its children.
+          default: true
 
     AnnotationProperties:
       type: object

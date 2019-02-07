@@ -116,6 +116,13 @@ class AnnotationProperties:
 
 
 @dataclass
+class AnnotationStatusUpdate:
+    annotation_ids: List[str] = field(default=None)
+    taxonomy_class_id: int = field(default=None)
+    with_taxonomy_children: bool = field(default=True)
+
+
+@dataclass
 class GeoJsonGeometry:
     type: str
     coordinates: List
