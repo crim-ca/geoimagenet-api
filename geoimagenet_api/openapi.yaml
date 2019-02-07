@@ -17,6 +17,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiInfo'
+
   /users:
     get:
       summary: "Users: Search users"
@@ -62,6 +63,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
   /users/{username}:
     get:
       summary: "Users: Get by username"
@@ -82,6 +84,7 @@ paths:
           description: Not found
           content:
             application/json: {}
+
   /taxonomy_classes:
     get:
       summary: "Taxonomy classes: Search"
@@ -214,6 +217,7 @@ paths:
           description: Not found
           content:
             application/json: {}
+
   /batches:
     get:
       summary: "Batches: Search"
@@ -242,6 +246,7 @@ paths:
               schema:
                 description: The id of the created batch.
                 type: integer
+
   /batches/{id}:
     get:
       summary: "Batches: Get by id"
@@ -263,6 +268,7 @@ paths:
           description: Batch id not found
           content:
             application/json: {}
+
   /batches/{id}/items/training:
     get:
       summary: "Batches: Get training bounding boxes"
@@ -287,6 +293,7 @@ paths:
           description: No batch items found
           content:
             application/json: {}
+
   /batches/{id}/items/testing:
     get:
       summary: "Batches: Get testing bounding boxes"
@@ -311,6 +318,7 @@ paths:
           description: No batch items found
           content:
             application/json: {}
+
   /annotations/release:
     post:
       summary: "Annotations: Release annotation by taxonomy class"
@@ -349,6 +357,7 @@ paths:
           description: Taxonomy Class id not found.
           content:
             application/json: {}
+
   /annotations:
     post:
       summary: "Annotations: Add new"
@@ -440,6 +449,7 @@ components:
           type: string
         changelog_url:
           type: string
+
     GeoJsonFeatureCollection:
       type: object
       description: GeoJson FeatureCollection
@@ -457,6 +467,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GeoJsonFeature'
+
     GeoJsonFeature:
       type: object
       description: GeoJson Feature
@@ -479,6 +490,7 @@ components:
             - $ref: '#/components/schemas/Polygon'
         properties:
           $ref: '#/components/schemas/AnnotationProperties'
+
     Point:
       type: object
       description: GeoJson Point
@@ -491,6 +503,7 @@ components:
             - Point
         coordinates:
           $ref: '#/components/schemas/Point3D'
+
     LineString:
       type: object
       description: GeoJson LineString
@@ -505,6 +518,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Point3D'
+
     Polygon:
       type: object
       description: GeoJson Polygon
@@ -521,6 +535,7 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Point3D'
+
     MultiPolygon:
       type: object
       description: GeoJson MultiPolygon
@@ -539,6 +554,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Point3D'
+
     Point3D:
       type: array
       description: Point in 3D space
@@ -560,6 +576,7 @@ components:
           type: string
         status:
           $ref: '#/components/schemas/AnnotationStatuses'
+
     AnnotationStatuses:
       type: string
       enum:
@@ -584,6 +601,7 @@ components:
           type: string
         name:
           type: string
+
     TaxonomyClass:
       type: object
       required:
@@ -603,11 +621,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaxonomyClass'
+
     AnnotationCounts:
       type: object
       description: A dictionnary of type `Dict[str, AnnotationCountPerStatus]` where the keys are the taxonomy_class_id.
       additionalProperties:
         $ref: '#/components/schemas/AnnotationCountPerStatus'
+
     AnnotationCountPerStatus:
       type: object
       description: An object containing annotation counts per status.
@@ -626,6 +646,7 @@ components:
           type: integer
         deleted:
           type: integer
+
     Taxonomy:
       type: object
       required:
@@ -646,6 +667,7 @@ components:
         root_taxonomy_class_id:
           type: integer
           format: int64
+
     TaxonomyGroup:
       type: object
       required:
@@ -661,6 +683,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaxonomyVersion'
+
     TaxonomyVersion:
       type: object
       required:
@@ -675,6 +698,7 @@ components:
           format: int64
         version:
           type: string
+
     Validation:
       type: object
       required:
@@ -694,6 +718,7 @@ components:
         created_at:
           type: string
           format: date-time
+
     ValidationPost:
       type: object
       required:
@@ -707,6 +732,7 @@ components:
         validator_id:
           type: integer
           format: int64
+
     Batch:
       type: object
       required:
@@ -722,6 +748,7 @@ components:
           format: date-time
         created_by:
           type: integer
+
     BatchItems:
       type: object
       properties:
