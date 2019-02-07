@@ -320,22 +320,85 @@ paths:
             application/json: {}
 
   /annotations/release:
-    post:
-      summary: "Annotations: Release annotation by taxonomy class"
-      operationId: geoimagenet_api.routes.annotations.release
-      parameters:
-        - name: taxonomy_class_id
-          in: query
-          required: true
-          schema:
-            type: integer
+    put:
+      summary: "Annotations: Release annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_release
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationUpdateStatus'
       responses:
         204:
           description: No Content
         404:
-          description: Taxonomy Class id not found.
+          description: One of the provided ids were not not found.
           content:
             application/json: {}
+
+  /annotations/validate:
+    put:
+      summary: "Annotations: Validate annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_validate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationUpdateStatus'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+
+  /annotations/reject:
+    put:
+      summary: "Annotations: Reject annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_reject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationUpdateStatus'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+
+  /annotations/delete:
+    put:
+      summary: "Annotations: Delete annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationUpdateStatus'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+
   /annotations/{taxonomy_class_id}/counts:
     get:
       summary: "Annotations: Count annotations per taxonomy class"
@@ -562,6 +625,22 @@ components:
       maxItems: 3
       items:
         type: number
+
+    AnnotationUpdateStatus:
+      type: object
+      description: Request body to update the status of an annotation.
+      properties:
+        annotation_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+        taxonomy_class_id:
+          type: integer
+          format: int64
+        with_taxonomy_children:
+          type: boolean
+
     AnnotationProperties:
       type: object
       required:
