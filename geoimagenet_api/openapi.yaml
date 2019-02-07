@@ -475,24 +475,6 @@ paths:
           description: Annotation id not found
           content:
             application/json: {}
-    delete:
-      summary: "Annotations: Delete"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              description: List of ids to be deleted
-              type: array
-              items:
-                example: 'annotation.32409'
-                type: string
-      responses:
-        204:
-          description: No Content
-        404:
-          description: Annotation id not found
-          content:
-            application/json: {}
 
 components:
   schemas:
