@@ -11,9 +11,9 @@ from alembic import op
 import sqlalchemy as sa
 import geoalchemy2
 
-# revision identifiers, used by Alembic.
 from sqlalchemy.dialects import postgresql
 
+# revision identifiers, used by Alembic.
 revision = "fba33e3dbe70"
 down_revision = "c83f405af323"
 branch_labels = None
