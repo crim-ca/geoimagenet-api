@@ -148,6 +148,11 @@ class Taxonomy(Base):
     __table_args__ = (UniqueConstraint("name", "version", name="uc_taxonomy"),)
 
 
+class ValidationValue(enum.Enum):
+    validated = 1
+    rejected = 2
+
+
 class ValidationEvent(Base):
     __tablename__ = "validation_event"
 
@@ -155,6 +160,9 @@ class ValidationEvent(Base):
     annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
     validator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
     validator = relationship("Person")
+    validation_value = Column(
+        Enum(ValidationValue, name="validation_value_enum"), nullable=False, index=True
+    )
     created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
 
 

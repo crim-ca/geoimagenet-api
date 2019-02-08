@@ -1,0 +1,27 @@
+"""05_validation_value
+
+Revision ID: dd4da5361979
+Revises: 9c54b04e3033
+Create Date: 2019-02-08 11:25:38.404528
+
+"""
+from alembic import op
+import sqlalchemy as sa
+import geoalchemy2
+
+
+# revision identifiers, used by Alembic.
+revision = 'dd4da5361979'
+down_revision = '9c54b04e3033'
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    op.add_column('validation_event', sa.Column('validation_value', sa.Enum('validated', 'rejected', name='validation_value_enum'), nullable=False))
+    op.create_index(op.f('ix_validation_event_validation_value'), 'validation_event', ['validation_value'], unique=False)
+
+
+def downgrade():
+    op.drop_index(op.f('ix_validation_event_validation_value'), table_name='validation_event')
+    op.drop_column('validation_event', 'validation_value')
