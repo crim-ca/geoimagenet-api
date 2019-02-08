@@ -638,6 +638,9 @@ components:
       properties:
         annotation_ids:
           type: array
+          description: >-
+                       "ids must be a list of string like: ['annotation.1234', 'annotation.1235', ...]"
+                       "This is the standard OpenLayers format."
           items:
             type: string
 
