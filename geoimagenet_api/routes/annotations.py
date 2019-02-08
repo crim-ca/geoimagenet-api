@@ -195,8 +195,16 @@ def _update_status(
                 return "Status update refused. This transition is not allowed", 403
 
         else:
-            if not session.query(DBTaxonomyClass).filter_by(id=update_info.taxonomy_class_id).first():
-                return f"Taxonomy class id not found {update_info.taxonomy_class_id}", 404
+            taxonomy_id = (
+                session.query(DBTaxonomyClass.taxonomy_id)
+                .filter_by(id=update_info.taxonomy_class_id)
+                .scalar()
+            )
+            if not taxonomy_id:
+                return (
+                    f"Taxonomy class id not found {update_info.taxonomy_class_id}",
+                    404,
+                )
             if update_info.with_taxonomy_children:
                 taxonomy_ids = get_all_taxonomy_classes_ids(
                     session, taxonomy_id, update_info.taxonomy_class_id
