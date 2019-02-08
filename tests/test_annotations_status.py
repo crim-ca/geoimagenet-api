@@ -92,15 +92,9 @@ def post_annotation_ids(client, action, ids, expected_code=204):
 
 
 def test_delete_by_id(cleanup_annotations, client):
-    ids = insert_annotations(
-        (1, 2, AnnotationStatus.new),
-        (1, 1, AnnotationStatus.new),
-    )
+    ids = insert_annotations((1, 2, AnnotationStatus.new), (1, 1, AnnotationStatus.new))
     post_annotation_ids(client, "delete", ids)
-    expected = [
-        AnnotationStatus.deleted,
-        AnnotationStatus.deleted,
-    ]
+    expected = [AnnotationStatus.deleted, AnnotationStatus.deleted]
     assert_statuses(ids, expected)
 
 
@@ -146,15 +140,9 @@ def test_delete_by_taxonomy_class_no_recursion(cleanup_annotations, client):
 
 
 def test_release_by_id(cleanup_annotations, client):
-    ids = insert_annotations(
-        (1, 2, AnnotationStatus.new),
-        (1, 1, AnnotationStatus.new),
-    )
+    ids = insert_annotations((1, 2, AnnotationStatus.new), (1, 1, AnnotationStatus.new))
     post_annotation_ids(client, "release", ids)
-    expected = [
-        AnnotationStatus.released,
-        AnnotationStatus.released,
-    ]
+    expected = [AnnotationStatus.released, AnnotationStatus.released]
     assert_statuses(ids, expected)
 
 
@@ -201,14 +189,10 @@ def test_release_by_taxonomy_class_no_recursion(cleanup_annotations, client):
 
 def test_reject_by_id(cleanup_annotations, client):
     ids = insert_annotations(
-        (1, 2, AnnotationStatus.released),
-        (2, 1, AnnotationStatus.released),
+        (1, 2, AnnotationStatus.released), (2, 1, AnnotationStatus.released)
     )
     post_annotation_ids(client, "reject", ids)
-    expected = [
-        AnnotationStatus.rejected,
-        AnnotationStatus.rejected,
-    ]
+    expected = [AnnotationStatus.rejected, AnnotationStatus.rejected]
     assert_statuses(ids, expected)
 
 
@@ -257,14 +241,10 @@ def test_reject_by_taxonomy_class_no_recursion(cleanup_annotations, client):
 
 def test_validate_by_id(cleanup_annotations, client):
     ids = insert_annotations(
-        (1, 2, AnnotationStatus.released),
-        (2, 1, AnnotationStatus.released),
+        (1, 2, AnnotationStatus.released), (2, 1, AnnotationStatus.released)
     )
     post_annotation_ids(client, "validate", ids)
-    expected = [
-        AnnotationStatus.validated,
-        AnnotationStatus.validated,
-    ]
+    expected = [AnnotationStatus.validated, AnnotationStatus.validated]
     assert_statuses(ids, expected)
 
 
@@ -313,15 +293,11 @@ def test_validate_by_taxonomy_class_no_recursion(cleanup_annotations, client):
 
 def test_action_by_id_not_allowed(cleanup_annotations, client):
     ids = insert_annotations(
-        (1, 2, AnnotationStatus.rejected),
-        (1, 2, AnnotationStatus.validated),
+        (1, 2, AnnotationStatus.rejected), (1, 2, AnnotationStatus.validated)
     )
 
     post_annotation_ids(client, "delete", ids, expected_code=403)
-    expected = [
-        AnnotationStatus.rejected,
-        AnnotationStatus.validated,
-    ]
+    expected = [AnnotationStatus.rejected, AnnotationStatus.validated]
     assert_statuses(ids, expected)
 
     post_annotation_ids(client, "release", ids, expected_code=403)
@@ -336,14 +312,10 @@ def test_action_by_id_not_allowed(cleanup_annotations, client):
 
 def test_action_by_id_allowed_same_state(cleanup_annotations, client):
     ids = insert_annotations(
-        (1, 2, AnnotationStatus.released),
-        (1, 2, AnnotationStatus.released),
+        (1, 2, AnnotationStatus.released), (1, 2, AnnotationStatus.released)
     )
     post_annotation_ids(client, "release", ids, expected_code=204)
-    expected = [
-        AnnotationStatus.released,
-        AnnotationStatus.released,
-    ]
+    expected = [AnnotationStatus.released, AnnotationStatus.released]
     assert_statuses(ids, expected)
 
 
