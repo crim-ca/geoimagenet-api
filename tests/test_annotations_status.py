@@ -5,7 +5,7 @@ from geoimagenet_api.database.models import (
     Annotation,
     AnnotationStatus,
     ValidationEvent,
-)
+    ValidationValue)
 from tests.utils import api_url
 
 image_name_to_cleanup = "testing_annotation_status"
@@ -327,9 +327,24 @@ def test_validate_write_validation_in_database(cleanup_annotations, client):
 
     with connection_manager.get_db_session() as session:
         for id in ids:
-            assert (
-                session.query(ValidationEvent.validator_id)
-                .filter_by(annotation_id=id)
-                .scalar()
-                == 1
+            validation = (
+                session.query(ValidationEvent).filter_by(annotation_id=id).scalar()
             )
+            assert validation.validator_id == 1
+            assert validation.validation_value == ValidationValue.validated
+
+
+def test_validate_write_rejection_in_database(cleanup_annotations, client):
+    ids = insert_annotations(
+        (2, 2, AnnotationStatus.released), (2, 1, AnnotationStatus.released)
+    )
+    post_annotation_ids(client, "reject", ids)
+
+    with connection_manager.get_db_session() as session:
+        for id in ids:
+            validation = (
+                session.query(ValidationEvent).filter_by(annotation_id=id).scalar()
+            )
+            assert validation.validator_id == 1
+            assert validation.validation_value == ValidationValue.rejected
+
