@@ -1,5 +1,3 @@
-from sqlalchemy.exc import IntegrityError
-
 from geoimagenet_api.openapi_schemas import User
 from geoimagenet_api.database.models import Person
 from geoimagenet_api.database.connection import connection_manager
@@ -24,14 +22,3 @@ def get(username):
         if not user:
             return "username not found", 404
         return user
-
-
-def post(username, name):
-    with connection_manager.get_db_session() as session:
-        person = Person(username=username, name=name)
-        session.add(person)
-        try:
-            session.commit()
-        except IntegrityError:
-            return "A user with this username already exists", 409
-        return dataclass_from_object(User, person)

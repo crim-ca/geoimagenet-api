@@ -43,26 +43,6 @@ paths:
           description: Not found
           content:
             application/json: {}
-    post:
-      summary: "Users: Add a user"
-      parameters:
-        - name: username
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: name
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        201:
-          description: The person created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
 
   /users/{username}:
     get:
