@@ -18,7 +18,7 @@ def search(username=None, name=None):
 def get(username):
     with connection_manager.get_db_session() as session:
         person = session.query(Person).filter_by(username=username).first()
+        if not person:
+            return "Username not found", 404
         user = dataclass_from_object(User, person)
-        if not user:
-            return "username not found", 404
         return user
