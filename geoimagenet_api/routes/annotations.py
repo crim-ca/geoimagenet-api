@@ -126,21 +126,6 @@ def post(srid=DEFAULT_SRID):
         return [a.id for a in written_annotations], 201
 
 
-def delete():
-    try:
-        ids = [int(i.split(".", 1)[1]) for i in request.json]
-    except (ValueError, IndexError):
-        return f"Annotation id must be of the form: layer_name.1234567", 400
-
-    with connection_manager.get_db_session() as session:
-        query = session.query(DBAnnotation.id).filter(DBAnnotation.id.in_(ids))
-        if not query.count():
-            return f"Annotation ids not found", 404
-        query.delete(False)
-        session.commit()
-    return "Success", 204
-
-
 allowed_status_transitions = {
     # (from_status, to_status, only_logged_user)
     (AnnotationStatus.new, AnnotationStatus.deleted, True),
