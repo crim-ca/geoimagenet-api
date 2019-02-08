@@ -1,9 +1,10 @@
 # .coveragerc to control coverage.py
 [run]
-branch = True
+branch = False
 omit = */geoserver_setup/*
        */alembic/*
        */tests/conftest.py
+       */database/connection.py
 
 [report]
 # Regexes for lines to exclude from consideration

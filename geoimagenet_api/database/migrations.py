@@ -44,15 +44,6 @@ def migrate():
         alembic.config.main(argv=argv)
 
 
-def try_insert(session, class_, **kwargs):
-    db_object = session.query(class_).filter_by(**kwargs).first()
-    if db_object is None:
-        db_object = class_(**kwargs)
-        session.add(db_object)
-        session.flush()
-    return db_object
-
-
 def write_taxonomy(json_path: Path):
     """Writes taxonomy to the database from a json file.
 
