@@ -70,7 +70,9 @@ paths:
       summary: "Taxonomy classes: Search"
       parameters:
         - name: taxonomy_name
-          description: Full name or sluggified name of the taxonomy
+          description: >
+                       Full name or sluggified name of the taxonomy.
+                       Example of name slug for "Couverture de sol": couverture-de-sol
           in: query
           required: true
           schema:
@@ -142,7 +144,9 @@ paths:
       parameters:
         - name: name
           in: query
-          description: Full name or sluggified name of the taxonomy
+          description: >
+                       Full name or sluggified name of the taxonomy.
+                       Example of name slug for "Couverture de sol": couverture-de-sol
           schema:
             type: string
         - name: version
@@ -171,12 +175,11 @@ paths:
   /taxonomy/{name_slug}/{version}:
     get:
       summary: "Taxonomy: Get by name slug and version"
-      description: 'Example of name slug for "Couverture de sol": couverture-de-sol'
       operationId: geoimagenet_api.routes.taxonomy.get_by_slug
       parameters:
         - name: name_slug
           in: path
-          description: The name slug of the taxonomy
+          description: 'Example of name slug for "Couverture de sol": couverture-de-sol'
           required: true
           schema:
             type: string
