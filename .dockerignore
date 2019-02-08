@@ -2,10 +2,12 @@
 **/config.yaml
 
 .git
+.coverage
 
 # Unit test / Coverage reports
-.cache
-.pytest_cache
+**/.cache
+**/.coverage
+**/.pytest_cache
 
 # PyCharm
 .idea
