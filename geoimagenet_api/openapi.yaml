@@ -795,40 +795,6 @@ components:
         version:
           type: string
 
-    Validation:
-      type: object
-      required:
-        - id
-        - annotation_id
-        - validator_id
-      properties:
-        id:
-          type: integer
-          format: int64
-        annotation_id:
-          type: integer
-          format: int64
-        validator_id:
-          type: integer
-          format: int64
-        created_at:
-          type: string
-          format: date-time
-
-    ValidationPost:
-      type: object
-      required:
-        - annotation_ids
-        - validator_id
-      properties:
-        annotation_ids:
-          type: array
-          items:
-            type: integer
-        validator_id:
-          type: integer
-          format: int64
-
     Batch:
       type: object
       required:

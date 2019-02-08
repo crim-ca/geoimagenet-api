@@ -55,24 +55,10 @@ class TaxonomyGroup:
 
 
 @dataclass
-class Validation:
-    id: int
-    annotation_id: int
-    validator_id: int
-    created_ad: datetime
-
-
-@dataclass
 class Batch:
     id: int
     created_by: int
     created_at: datetime
-
-
-@dataclass
-class ValidationPost:
-    annotation_ids: List[int]
-    validator_id: int
 
 
 @dataclass
