@@ -562,7 +562,7 @@ components:
           enum:
             - Point
         coordinates:
-          $ref: '#/components/schemas/Point3D'
+          $ref: '#/components/schemas/Point2D'
 
     LineString:
       type: object
@@ -577,7 +577,7 @@ components:
         coordinates:
           type: array
           items:
-            $ref: '#/components/schemas/Point3D'
+            $ref: '#/components/schemas/Point2D'
 
     Polygon:
       type: object
@@ -594,7 +594,7 @@ components:
           items:
             type: array
             items:
-              $ref: '#/components/schemas/Point3D'
+              $ref: '#/components/schemas/Point2D'
 
     MultiPolygon:
       type: object
@@ -613,13 +613,13 @@ components:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/Point3D'
+                $ref: '#/components/schemas/Point2D'
 
-    Point3D:
+    Point2D:
       type: array
-      description: Point in 3D space
+      description: Point in 2D space
       minItems: 2
-      maxItems: 3
+      maxItems: 2
       items:
         type: number
 
