@@ -331,7 +331,7 @@ def test_annotation_count(client):
     """
 
     def get_counts(taxonomy_class_id):
-        r = client.get(api_url(f"/annotations/{taxonomy_class_id}/counts"))
+        r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"))
         assert r.status_code == 200
         return r.json
 
