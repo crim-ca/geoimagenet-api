@@ -1,6 +1,29 @@
 Changelog
 =========
 
+0.8.0 (2019-02-08)
+------------------
+
+New
+~~~
+- Annotations: add POST routes to release/validate/reject/delete. [David
+  Caron]
+
+Changes
+~~~~~~~
+- PUT on /annotations only changes 'geometry', 'taxonomy_class_id'...
+  [David Caron]
+
+  and 'image_name'
+- Fix bug and more tests for GET /users. [David Caron]
+- Delete POST on /users. [David Caron]
+- Rename /annotations/{taxonomy_class_id}/counts to ... [David Caron]
+
+  /annotations/counts/{taxonomy_class_id} to remove confusion between
+  taxonomy_class_id and annotation_id
+- Remove DELETE on /annotations. [David Caron]
+
+
 0.7.0 (2019-02-05)
 ------------------
 
