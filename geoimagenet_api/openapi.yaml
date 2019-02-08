@@ -301,7 +301,7 @@ paths:
 
   /annotations/release:
     post:
-      summary: "Annotations: Release annotations"
+      summary: "Annotations: Release"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
                    You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
@@ -329,7 +329,7 @@ paths:
 
   /annotations/validate:
     post:
-      summary: "Annotations: Validate annotations"
+      summary: "Annotations: Validate"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
                    You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
@@ -357,7 +357,7 @@ paths:
 
   /annotations/reject:
     post:
-      summary: "Annotations: Reject annotations"
+      summary: "Annotations: Reject"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
                    You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
@@ -385,7 +385,7 @@ paths:
 
   /annotations/delete:
     post:
-      summary: "Annotations: Delete annotations"
+      summary: "Annotations: Delete"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
                    You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
@@ -413,7 +413,7 @@ paths:
 
   /annotations/counts/{taxonomy_class_id}:
     get:
-      summary: "Annotations: Count annotations per taxonomy class"
+      summary: "Annotations: Counts per taxonomy class"
       operationId: geoimagenet_api.routes.annotations.counts
       parameters:
         - name: taxonomy_class_id
