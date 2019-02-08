@@ -140,7 +140,7 @@ def delete():
     return "Success", 204
 
 
-allowed_transitions = {
+allowed_status_transitions = {
     # (from_status, to_status, only_logged_user)
     (AnnotationStatus.new, AnnotationStatus.deleted, True),
     (AnnotationStatus.new, AnnotationStatus.released, True),
@@ -160,7 +160,7 @@ def _update_status(
 
         filters = []
 
-        for from_status, to_status, only_logged_user in allowed_transitions:
+        for from_status, to_status, only_logged_user in allowed_status_transitions:
             if to_status == desired_status:
                 status_filter = DBAnnotation.status == from_status
                 if only_logged_user:
