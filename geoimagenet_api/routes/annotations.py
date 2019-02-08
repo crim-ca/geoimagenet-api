@@ -176,12 +176,30 @@ def _update_status(
                 return "Annotation ids must be of the format: layer_name.123456", 400
 
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
+
+            count_in_good_state = (
+                session.query(DBAnnotation.id)
+                .filter(
+                    and_(
+                        DBAnnotation.id.in_(annotation_ids),
+                        DBAnnotation.status == desired_status,
+                    )
+                )
+                .count()
+            )
+            count_to_update = query.count()
+            count_requested = len(annotation_ids)
+            if count_to_update < count_requested - count_in_good_state:
+                # some annotation ids were not in a good state and
+                # a wrong transition was requested
+                return "Status update refused. This transition is not allowed", 403
+
         else:
             if not session.query(DBTaxonomyClass).filter_by(id=update_info.taxonomy_class_id).first():
                 return f"Taxonomy class id not found {update_info.taxonomy_class_id}", 404
             if update_info.with_taxonomy_children:
                 taxonomy_ids = get_all_taxonomy_classes_ids(
-                    session, update_info.taxonomy_class_id
+                    session, taxonomy_id, update_info.taxonomy_class_id
                 )
             else:
                 taxonomy_ids = [update_info.taxonomy_class_id]
