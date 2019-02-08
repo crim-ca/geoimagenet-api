@@ -144,7 +144,9 @@ allowed_transitions = {
 }
 
 
-def _update_status(update_info: AnnotationStatusUpdate, desired_status: AnnotationStatus):
+def _update_status(
+    update_info: AnnotationStatusUpdate, desired_status: AnnotationStatus
+):
     """Update annotations statuses based on filters provided in update_info and allowed transitions."""
     logged_user = get_logged_user(request)
 
@@ -168,10 +170,11 @@ def _update_status(update_info: AnnotationStatusUpdate, desired_status: Annotati
         if update_info.annotation_ids:
             try:
                 annotation_ids = [
-                    int(i.rsplit(".")[-1]) for i in update_info.annotation_ids
+                    int(i.split(".")[-1]) for i in update_info.annotation_ids
                 ]
             except ValueError:
                 return "Annotation ids must be of the format: layer_name.123456", 400
+
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
         else:
             if not session.query(DBTaxonomyClass).filter_by(id=update_info.taxonomy_class_id).first():
@@ -187,26 +190,31 @@ def _update_status(update_info: AnnotationStatusUpdate, desired_status: Annotati
         query.update({DBAnnotation.status: desired_status}, synchronize_session=False)
 
         session.commit()
+    return "No Content", 204
 
 
 def update_status_release():
-    _update_status(AnnotationStatusUpdate(**request.json), AnnotationStatus.released)
-    return "No Content", 204
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.released
+    )
 
 
 def update_status_validate():
-    _update_status(AnnotationStatusUpdate(**request.json), AnnotationStatus.validated)
-    return "No Content", 204
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.validated
+    )
 
 
 def update_status_reject():
-    _update_status(AnnotationStatusUpdate(**request.json), AnnotationStatus.rejected)
-    return "No Content", 204
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.rejected
+    )
 
 
 def update_status_delete():
-    _update_status(AnnotationStatusUpdate(**request.json), AnnotationStatus.deleted)
-    return "No Content", 204
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.deleted
+    )
 
 
 def counts(taxonomy_class_id):
