@@ -307,24 +307,6 @@ def test_annotation_post(client, any_geojson):
         assert session.query(Annotation.id).filter_by(id=written_ids[0]).one()
 
 
-def test_annotation_delete_not_found(client):
-    r = client.delete(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps([f"annotation.1234567"]),
-    )
-    assert r.status_code == 404
-
-
-def test_annotation_delete_malformed(client):
-    r = client.delete(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps([f"1234567"]),
-    )
-    assert r.status_code == 400
-
-
 def insert_annotation(session, taxonomy_class, status):
     annotation = Annotation(
         annotator_id=1,
