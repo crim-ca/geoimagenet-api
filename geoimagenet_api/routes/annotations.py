@@ -17,6 +17,7 @@ from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
     AnnotationStatus,
     TaxonomyClass as DBTaxonomyClass,
+    ValidationEvent,
 )
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.routes.taxonomy_classes import (
@@ -216,6 +217,15 @@ def _update_status(
             else:
                 taxonomy_ids = [update_info.taxonomy_class_id]
             query = query.filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_ids))
+
+        # record validation events
+        if desired_status == AnnotationStatus.validated:
+            session.bulk_save_objects(
+                [
+                    ValidationEvent(annotation_id=a.id, validator_id=logged_user)
+                    for a in query
+                ]
+            )
 
         query.update({DBAnnotation.status: desired_status}, synchronize_session=False)
 

@@ -1,7 +1,11 @@
 import pytest
 
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.database.models import Annotation, AnnotationStatus
+from geoimagenet_api.database.models import (
+    Annotation,
+    AnnotationStatus,
+    ValidationEvent,
+)
 from tests.utils import api_url
 
 image_name_to_cleanup = "testing_annotation_status"
@@ -46,6 +50,7 @@ def insert_annotations(*annotations):
 def cleanup_annotations(request):
     def delete_annotations():
         with connection_manager.get_db_session() as session:
+            session.query(ValidationEvent).delete()
             session.query(Annotation).filter_by(
                 image_name=image_name_to_cleanup
             ).delete()
@@ -340,3 +345,19 @@ def test_action_by_id_allowed_same_state(cleanup_annotations, client):
         AnnotationStatus.released,
     ]
     assert_statuses(ids, expected)
+
+
+def test_validate_write_validation_in_database(cleanup_annotations, client):
+    ids = insert_annotations(
+        (2, 2, AnnotationStatus.released), (2, 1, AnnotationStatus.released)
+    )
+    post_annotation_ids(client, "validate", ids)
+
+    with connection_manager.get_db_session() as session:
+        for id in ids:
+            assert (
+                session.query(ValidationEvent.validator_id)
+                .filter_by(annotation_id=id)
+                .scalar()
+                == 1
+            )
