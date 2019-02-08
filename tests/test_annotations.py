@@ -256,7 +256,7 @@ def test_annotations_put_srid(client, any_geojson):
 def test_annotations_put(client, any_geojson):
     with connection_manager.get_db_session() as session:
         annotation = Annotation(
-            annotator_id=1,
+            annotator_id=2,
             geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
             taxonomy_class_id=2,
             image_name="my image",
@@ -265,13 +265,17 @@ def test_annotations_put(client, any_geojson):
         session.commit()
 
         annotation_id = annotation.id
+        annotator_id = annotation.annotator_id
+
         if any_geojson["type"] == "FeatureCollection":
             first_feature = any_geojson["features"][0]
             first_feature["id"] = f"annotation.{annotation_id}"
+            first_feature["status"] = f"released"
             properties = AnnotationProperties(**first_feature["properties"])
         else:
             first_feature = any_geojson
             any_geojson["id"] = f"annotation.{annotation_id}"
+            any_geojson["status"] = f"released"
             properties = AnnotationProperties(**any_geojson["properties"])
 
         r = client.put(
@@ -281,16 +285,19 @@ def test_annotations_put(client, any_geojson):
         )
         assert r.status_code == 204
 
-        annotation = session.query(Annotation).filter_by(id=annotation_id).one()
-        assert annotation.taxonomy_class_id == properties.taxonomy_class_id
-        assert annotation.image_name == properties.image_name
-        assert annotation.annotator_id == properties.annotator_id
-        assert annotation.status.name == properties.status
+        annotation2 = session.query(Annotation).filter_by(id=annotation_id).one()
+        assert annotation2.taxonomy_class_id == properties.taxonomy_class_id
+        assert annotation2.image_name == properties.image_name
+
+        # you can't change owner of an annotation
+        assert annotation2.annotator_id == annotator_id
+        # you can't change the status of an annotation this way
+        assert annotation2.status == AnnotationStatus.new
 
         wkt = "SRID=3857;" + wkt_string[first_feature["geometry"]["type"]]
 
         wkt_geom = (
-            "SRID=3857;" + session.query(func.ST_AsText(annotation.geometry)).scalar()
+            "SRID=3857;" + session.query(func.ST_AsText(annotation2.geometry)).scalar()
         )
         assert wkt_geom == wkt
 

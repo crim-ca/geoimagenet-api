@@ -112,7 +112,7 @@ class AnnotationProperties:
     annotator_id: int
     taxonomy_class_id: int
     image_name: str
-    status: str = field(default=AnnotationStatus.new.name)
+    status: AnnotationStatus = field(default=AnnotationStatus.new)
 
 
 @dataclass

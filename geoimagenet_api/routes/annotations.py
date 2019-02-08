@@ -80,9 +80,13 @@ def put(srid=DEFAULT_SRID):
 
             annotation.taxonomy_class_id = properties.taxonomy_class_id
             annotation.image_name = properties.image_name
-            annotation.annotator_id = properties.annotator_id
-            annotation.status = properties.status
             annotation.geometry = geom
+
+            # You can't change the owner of an annotation
+            # annotation.annotator_id = properties.annotator_id
+
+            # Use specific routes to change the status (ex: /annotations/release)
+            # annotation.status = properties.status
 
         try:
             session.commit()

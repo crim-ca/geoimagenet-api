@@ -464,6 +464,9 @@ paths:
                   type: integer
     put:
       summary: "Annotations: Update"
+      description: >-
+                   The only properties that are updated are 'geometry', 'taxonomy_class_id' and 'image_name'.
+                   Other properties are ignored.
       parameters:
         - name: srid
           description: Valid SRID integer parameter (it must exist in the spatial_ref_sys table)
