@@ -1,6 +1,43 @@
 Changelog
 =========
 
+0.7.0 (2019-02-05)
+------------------
+
+Changes
+~~~~~~~
+- Change the format of the annotation counts to... [David Caron]
+
+  {
+    1: {'new': 10, ...}
+    2: {'new': 20, ...}
+  }
+
+
+0.6.0 (2019-02-05)
+------------------
+
+New
+~~~
+- Batches can be created from the api. [David Caron]
+- Annotation counts at /annotations/{taxonomy_class_id}/counts
+
+    The children of taxonomy_class_id are also returned
+    The annotations are grouped by status (new, pre_released, etc.)
+
+Changes
+~~~~~~~
+- Rename taxonomy_class_root_id -> root_taxonomy_class_id. [David Caron]
+- Support other CRS in PUT and POST of /annotations. [David Caron]
+- Add taxonomy_class_root_id in GET /taxonomy/{name_slug}/{version}
+  [David Caron]
+- Return taxonomy_class_root_id in GET /taxonomy. [David Caron]
+- Add test using sluggified name of the taxonomy. [David Caron]
+- Get a taxonomy class using the full name or sluggified name of the
+  taxonomy. [David Caron]
+- Add link to changelog. [David Caron]
+
+
 0.5.0 (2019-01-31)
 ------------------
 

@@ -2,15 +2,16 @@ import json
 from collections import defaultdict
 from typing import Tuple, Dict, Union
 
+import dataclasses
 from flask import request
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 
 from geoimagenet_api.openapi_schemas import (
     AnnotationProperties,
-    AnnotationCounts,
-    AnnotationCount,
+    AnnotationCountPerStatus,
+    AnnotationStatusUpdate,
 )
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
@@ -21,6 +22,7 @@ from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.routes.taxonomy_classes import (
     flatten_taxonomy_classes_ids,
     get_taxonomy_classes_tree,
+    get_all_taxonomy_classes_ids,
 )
 from geoimagenet_api.utils import get_logged_user
 
@@ -133,30 +135,112 @@ def delete():
     return "Success", 204
 
 
-def release(taxonomy_class_id):
+allowed_transitions = {
+    # (from_status, to_status, only_logged_user)
+    (AnnotationStatus.new, AnnotationStatus.deleted, True),
+    (AnnotationStatus.new, AnnotationStatus.released, True),
+    (AnnotationStatus.released, AnnotationStatus.rejected, False),
+    (AnnotationStatus.released, AnnotationStatus.validated, False),
+}
+
+
+def _update_status(
+    update_info: AnnotationStatusUpdate, desired_status: AnnotationStatus
+):
+    """Update annotations statuses based on filters provided in update_info and allowed transitions."""
     logged_user = get_logged_user(request)
 
     with connection_manager.get_db_session() as session:
-        taxo = session.query(DBTaxonomyClass).filter_by(id=taxonomy_class_id).all()
-        if not taxo:
-            return f"Taxonomy class id not found: {taxonomy_class_id}", 404
-        taxo_ids = flatten_taxonomy_classes_ids(taxo)
-        (
-            session.query(DBAnnotation)
-            .filter(
-                and_(
-                    DBAnnotation.taxonomy_class_id.in_(taxo_ids),
-                    DBAnnotation.annotator_id == logged_user,
-                )
-            )
-            .update(
-                {DBAnnotation.status: AnnotationStatus.released},
-                synchronize_session=False,
-            )
-        )
-        session.commit()
+        query = session.query(DBAnnotation)
 
+        filters = []
+
+        for from_status, to_status, only_logged_user in allowed_transitions:
+            if to_status == desired_status:
+                status_filter = DBAnnotation.status == from_status
+                if only_logged_user:
+                    filters.append(
+                        and_(DBAnnotation.annotator_id == logged_user, status_filter)
+                    )
+                else:
+                    filters.append(status_filter)
+
+        query = query.filter(or_(*filters))
+
+        if update_info.annotation_ids:
+            try:
+                annotation_ids = [
+                    int(i.split(".")[-1]) for i in update_info.annotation_ids
+                ]
+            except ValueError:
+                return "Annotation ids must be of the format: layer_name.123456", 400
+
+            query = query.filter(DBAnnotation.id.in_(annotation_ids))
+
+            count_in_good_state = (
+                session.query(DBAnnotation.id)
+                .filter(
+                    and_(
+                        DBAnnotation.id.in_(annotation_ids),
+                        DBAnnotation.status == desired_status,
+                    )
+                )
+                .count()
+            )
+            count_to_update = query.count()
+            count_requested = len(annotation_ids)
+            if count_to_update < count_requested - count_in_good_state:
+                # some annotation ids were not in a good state and
+                # a wrong transition was requested
+                return "Status update refused. This transition is not allowed", 403
+
+        else:
+            taxonomy_id = (
+                session.query(DBTaxonomyClass.taxonomy_id)
+                .filter_by(id=update_info.taxonomy_class_id)
+                .scalar()
+            )
+            if not taxonomy_id:
+                return (
+                    f"Taxonomy class id not found {update_info.taxonomy_class_id}",
+                    404,
+                )
+            if update_info.with_taxonomy_children:
+                taxonomy_ids = get_all_taxonomy_classes_ids(
+                    session, taxonomy_id, update_info.taxonomy_class_id
+                )
+            else:
+                taxonomy_ids = [update_info.taxonomy_class_id]
+            query = query.filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_ids))
+
+        query.update({DBAnnotation.status: desired_status}, synchronize_session=False)
+
+        session.commit()
     return "No Content", 204
+
+
+def update_status_release():
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.released
+    )
+
+
+def update_status_validate():
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.validated
+    )
+
+
+def update_status_reject():
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.rejected
+    )
+
+
+def update_status_delete():
+    return _update_status(
+        AnnotationStatusUpdate(**request.json), AnnotationStatus.deleted
+    )
 
 
 def counts(taxonomy_class_id):
@@ -196,7 +280,7 @@ def counts(taxonomy_class_id):
             .group_by(DBAnnotation.status)
         )
         # build dictionary of annotation count per taxonomy_class_id
-        annotation_count_dict = defaultdict(AnnotationCount)
+        annotation_count_dict = defaultdict(AnnotationCountPerStatus)
 
         for taxonomy_class_id, status, count in annotation_counts_query:
             setattr(annotation_count_dict[taxonomy_class_id], status.name, count)
@@ -209,10 +293,6 @@ def counts(taxonomy_class_id):
 
         recurse_add_counts(taxo)
 
-        # Build return object
-        annotation_counts = [
-            AnnotationCounts(taxo_id, counts)
-            for taxo_id, counts in annotation_count_dict.items()
-        ]
-
-        return annotation_counts
+        # No validation is made by `connexion` for this returned
+        # value due to the dynamic property name
+        return {str(k): dataclasses.asdict(v) for k, v in annotation_count_dict.items()}

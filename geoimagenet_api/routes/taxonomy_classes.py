@@ -71,11 +71,16 @@ def get(id, depth=-1):
     return taxo
 
 
-def get_all_taxonomy_classes_ids(session, taxonomy_id: int) -> List[int]:
-    return flatten_taxonomy_classes_ids([get_taxonomy_classes_tree(session, taxonomy_id)])
+def get_all_taxonomy_classes_ids(
+    session, taxonomy_id: int, taxonomy_class_id: int = None
+) -> List[int]:
+    taxo_tree = get_taxonomy_classes_tree(session, taxonomy_id, taxonomy_class_id)
+    return flatten_taxonomy_classes_ids([taxo_tree])
 
 
-def flatten_taxonomy_classes_ids(taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]) -> List[int]:
+def flatten_taxonomy_classes_ids(
+    taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]
+) -> List[int]:
     """make a list of all the taxonomy_class ids from nested objects"""
 
     def get_queried_ids(obj):
@@ -113,7 +118,14 @@ def get_taxonomy_classes_tree(
     missing_parents = defaultdict(list)
 
     query_fields = [DBTaxonomyClass.id, DBTaxonomyClass.name, DBTaxonomyClass.parent_id]
-    for taxo in session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id):
+    taxonomy_query = session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id)
+
+    if not taxonomy_query.first():
+        raise ValueError(
+            f"Couldn't find any taxonomy class having taxonomy id of {taxonomy_id}"
+        )
+
+    for taxo in taxonomy_query:
         taxonomy_class = TaxonomyClass(
             id=taxo.id, name=taxo.name, taxonomy_id=taxonomy_id
         )

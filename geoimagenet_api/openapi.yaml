@@ -17,6 +17,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiInfo'
+
   /users:
     get:
       summary: "Users: Search users"
@@ -62,6 +63,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
   /users/{username}:
     get:
       summary: "Users: Get by username"
@@ -82,6 +84,7 @@ paths:
           description: Not found
           content:
             application/json: {}
+
   /taxonomy_classes:
     get:
       summary: "Taxonomy classes: Search"
@@ -214,6 +217,7 @@ paths:
           description: Not found
           content:
             application/json: {}
+
   /batches:
     get:
       summary: "Batches: Search"
@@ -242,6 +246,7 @@ paths:
               schema:
                 description: The id of the created batch.
                 type: integer
+
   /batches/{id}:
     get:
       summary: "Batches: Get by id"
@@ -263,6 +268,7 @@ paths:
           description: Batch id not found
           content:
             application/json: {}
+
   /batches/{id}/items/training:
     get:
       summary: "Batches: Get training bounding boxes"
@@ -287,6 +293,7 @@ paths:
           description: No batch items found
           content:
             application/json: {}
+
   /batches/{id}/items/testing:
     get:
       summary: "Batches: Get testing bounding boxes"
@@ -311,24 +318,120 @@ paths:
           description: No batch items found
           content:
             application/json: {}
+
   /annotations/release:
     post:
-      summary: "Annotations: Release annotation by taxonomy class"
-      operationId: geoimagenet_api.routes.annotations.release
-      parameters:
-        - name: taxonomy_class_id
-          in: query
-          required: true
-          schema:
-            type: integer
+      summary: "Annotations: Release annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_release
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
       responses:
         204:
           description: No Content
         404:
-          description: Taxonomy Class id not found.
+          description: One of the provided ids were not not found.
           content:
             application/json: {}
-  /annotations/{taxonomy_class_id}/counts:
+        400:
+          description: Bad request
+          content:
+            application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
+
+  /annotations/validate:
+    post:
+      summary: "Annotations: Validate annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_validate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
+          content:
+            application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
+
+  /annotations/reject:
+    post:
+      summary: "Annotations: Reject annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_reject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
+          content:
+            application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
+
+  /annotations/delete:
+    post:
+      summary: "Annotations: Delete annotations"
+      description: >-
+                   To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
+                   You can also include the children of this taxonomy class by specifying 'with_taxonomy_children=true'.
+      operationId: geoimagenet_api.routes.annotations.update_status_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationStatusUpdate'
+      responses:
+        204:
+          description: No Content
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+        400:
+          description: Bad request
+          content:
+            application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
+
+  /annotations/counts/{taxonomy_class_id}:
     get:
       summary: "Annotations: Count annotations per taxonomy class"
       operationId: geoimagenet_api.routes.annotations.counts
@@ -344,13 +447,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AnnotationCounts'
+                $ref: '#/components/schemas/AnnotationCounts'
         404:
           description: Taxonomy Class id not found.
           content:
             application/json: {}
+
   /annotations:
     post:
       summary: "Annotations: Add new"
@@ -405,24 +507,6 @@ paths:
           description: Annotation id not found
           content:
             application/json: {}
-    delete:
-      summary: "Annotations: Delete"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              description: List of ids to be deleted
-              type: array
-              items:
-                example: 'annotation.32409'
-                type: string
-      responses:
-        204:
-          description: No Content
-        404:
-          description: Annotation id not found
-          content:
-            application/json: {}
 
 components:
   schemas:
@@ -442,6 +526,7 @@ components:
           type: string
         changelog_url:
           type: string
+
     GeoJsonFeatureCollection:
       type: object
       description: GeoJson FeatureCollection
@@ -459,6 +544,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GeoJsonFeature'
+
     GeoJsonFeature:
       type: object
       description: GeoJson Feature
@@ -481,6 +567,7 @@ components:
             - $ref: '#/components/schemas/Polygon'
         properties:
           $ref: '#/components/schemas/AnnotationProperties'
+
     Point:
       type: object
       description: GeoJson Point
@@ -493,6 +580,7 @@ components:
             - Point
         coordinates:
           $ref: '#/components/schemas/Point3D'
+
     LineString:
       type: object
       description: GeoJson LineString
@@ -507,6 +595,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Point3D'
+
     Polygon:
       type: object
       description: GeoJson Polygon
@@ -523,6 +612,7 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Point3D'
+
     MultiPolygon:
       type: object
       description: GeoJson MultiPolygon
@@ -541,6 +631,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Point3D'
+
     Point3D:
       type: array
       description: Point in 3D space
@@ -548,6 +639,39 @@ components:
       maxItems: 3
       items:
         type: number
+
+    AnnotationStatusUpdate:
+      type: object
+      description: Request body to update the status of an annotation.
+      oneOf:
+        - $ref: '#/components/schemas/AnnotationStatusUpdateIds'
+        - $ref: '#/components/schemas/AnnotationStatusUpdateTaxonomyClass'
+
+    AnnotationStatusUpdateIds:
+      type: object
+      description: Request body to update the status of an annotation.
+      required:
+        - annotation_ids
+      properties:
+        annotation_ids:
+          type: array
+          items:
+            type: string
+
+    AnnotationStatusUpdateTaxonomyClass:
+      type: object
+      description: Request body to update the status of an annotation.
+      required:
+        - taxonomy_class_id
+      properties:
+        taxonomy_class_id:
+          type: integer
+          format: int64
+        with_taxonomy_children:
+          type: boolean
+          description: If true, the taxonomy_class_id will also include its children.
+          default: true
+
     AnnotationProperties:
       type: object
       required:
@@ -561,7 +685,8 @@ components:
         image_name:
           type: string
         status:
-          $ref: '#components/schemas/AnnotationStatuses'
+          $ref: '#/components/schemas/AnnotationStatuses'
+
     AnnotationStatuses:
       type: string
       enum:
@@ -586,6 +711,7 @@ components:
           type: string
         name:
           type: string
+
     TaxonomyClass:
       type: object
       required:
@@ -605,19 +731,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaxonomyClass'
+
     AnnotationCounts:
       type: object
-      required:
-        - taxonomy_class_id
-        - counts
-      properties:
-        taxonomy_class_id:
-          type: integer
-          format: int64
-        counts:
-          $ref: '#/components/schemas/AnnotationCount'
-    AnnotationCount:
+      description: A dictionnary of type `Dict[str, AnnotationCountPerStatus]` where the keys are the taxonomy_class_id.
+      additionalProperties:
+        $ref: '#/components/schemas/AnnotationCountPerStatus'
+
+    AnnotationCountPerStatus:
       type: object
+      description: An object containing annotation counts per status.
       properties:
         new:
           type: integer
@@ -633,6 +756,7 @@ components:
           type: integer
         deleted:
           type: integer
+
     Taxonomy:
       type: object
       required:
@@ -653,6 +777,7 @@ components:
         root_taxonomy_class_id:
           type: integer
           format: int64
+
     TaxonomyGroup:
       type: object
       required:
@@ -668,6 +793,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaxonomyVersion'
+
     TaxonomyVersion:
       type: object
       required:
@@ -682,6 +808,7 @@ components:
           format: int64
         version:
           type: string
+
     Validation:
       type: object
       required:
@@ -701,6 +828,7 @@ components:
         created_at:
           type: string
           format: date-time
+
     ValidationPost:
       type: object
       required:
@@ -714,6 +842,7 @@ components:
         validator_id:
           type: integer
           format: int64
+
     Batch:
       type: object
       required:
@@ -729,6 +858,7 @@ components:
           format: date-time
         created_by:
           type: integer
+
     BatchItems:
       type: object
       properties:
