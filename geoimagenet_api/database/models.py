@@ -8,6 +8,8 @@ from sqlalchemy import (
     text,
     Boolean,
     UniqueConstraint,
+    CheckConstraint,
+    Index,
 )
 from sqlalchemy import Enum
 from sqlalchemy.orm import relationship, backref
@@ -41,7 +43,9 @@ class Annotation(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False, index=True)
-    geometry = Column(Geometry("GEOMETRY", srid=3857), nullable=False)
+    geometry = Column(
+        Geometry("GEOMETRY", srid=3857, spatial_index=False), nullable=False
+    )
     updated_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     taxonomy_class_id = Column(
         Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
@@ -52,6 +56,10 @@ class Annotation(Base):
         nullable=False,
         index=True,
         server_default=AnnotationStatus.new.name,
+    )
+
+    __table_args__ = (
+        Index("idx_annotation_geometry", geometry, postgresql_using="gist"),
     )
 
 
@@ -67,7 +75,7 @@ class AnnotationLog(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     annotation_id = Column(Integer, nullable=False, index=True)
     annotator_id = Column(Integer, ForeignKey("person.id"), index=True)
-    geometry = Column(Geometry("GEOMETRY", srid=3857))
+    geometry = Column(Geometry("GEOMETRY", srid=3857, spatial_index=False))
     created_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     image_name = Column(String)
@@ -78,6 +86,10 @@ class AnnotationLog(Base):
         index=True,
     )
 
+    __table_args__ = (
+        Index("idx_annotation_log_geometry", geometry, postgresql_using="gist"),
+    )
+
 
 class Batch(Base):
     __tablename__ = "batch"
@@ -85,7 +97,7 @@ class Batch(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     created_by = Column(Integer, ForeignKey("person.id"), index=True)
-    taxonomy_id = Column(Integer, ForeignKey("taxonomy.id"), nullable=False)
+    taxonomy_id = Column(Integer, ForeignKey("taxonomy.id", ondelete="CASCADE"), nullable=False)
     validation_rules_id = Column(
         Integer, ForeignKey("validation_rules.id"), nullable=False
     )
@@ -98,7 +110,9 @@ class BatchItem(Base):
     __tablename__ = "batch_item"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    batch_id = Column(Integer, ForeignKey("batch.id", ondelete='CASCADE'), nullable=False, index=True)
+    batch_id = Column(
+        Integer, ForeignKey("batch.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
     role = Column(String, nullable=False, index=True)
     batch = relationship("Batch", back_populates="batch_items")
@@ -142,3 +156,24 @@ class ValidationEvent(Base):
     validator_id = Column(Integer, ForeignKey("person.id"), nullable=False)
     validator = relationship("Person")
     created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
+
+
+class SpatialRefSys(Base):
+    """This class is mostly present to help `alembic revision --autogenerate`
+
+    When it's not here, alembic suggests deleting this table.
+    It's not actually used anywhere in geoimagenet_api.
+    """
+    __tablename__ = "spatial_ref_sys"
+
+    srid = Column(Integer, primary_key=True, autoincrement=False, nullable=False)
+    auth_name = Column(String(length=256), nullable=True)
+    auth_srid = Column(Integer, nullable=True)
+    srtext = Column(String(length=2048), nullable=True)
+    proj4text = Column(String(length=2048), nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "(srid > 0) AND (srid <= 998999)", name="spatial_ref_sys_srid_check"
+        ),
+    )
