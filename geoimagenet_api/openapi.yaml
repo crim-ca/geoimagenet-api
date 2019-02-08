@@ -320,7 +320,7 @@ paths:
             application/json: {}
 
   /annotations/release:
-    put:
+    post:
       summary: "Annotations: Release annotations"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
@@ -342,9 +342,13 @@ paths:
           description: Bad request
           content:
             application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
 
   /annotations/validate:
-    put:
+    post:
       summary: "Annotations: Validate annotations"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
@@ -366,9 +370,13 @@ paths:
           description: Bad request
           content:
             application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
 
   /annotations/reject:
-    put:
+    post:
       summary: "Annotations: Reject annotations"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
@@ -390,9 +398,13 @@ paths:
           description: Bad request
           content:
             application/json: {}
+        403:
+          description: Status update refused
+          content:
+            application/json: {}
 
   /annotations/delete:
-    put:
+    post:
       summary: "Annotations: Delete annotations"
       description: >-
                    To specify which annotations to update: provide either a list of annotation ids or a taxonomy class id.
@@ -412,6 +424,10 @@ paths:
             application/json: {}
         400:
           description: Bad request
+          content:
+            application/json: {}
+        403:
+          description: Status update refused
           content:
             application/json: {}
 
