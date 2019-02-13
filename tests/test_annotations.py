@@ -149,6 +149,14 @@ def test_annotation_log_triggers():
         )
         assert log.taxonomy_class_id == 2
 
+        # cleanup
+        session.query(Annotation).filter_by(id=inserted_id).delete()
+        session.commit()
+        session.query(AnnotationLog).filter_by(annotation_id=inserted_id).delete()
+        session.commit()
+        session.query(Person).filter(Person.id.in_([user_id, user2_id])).delete(synchronize_session=False)
+        session.commit()
+
 
 def test_log_delete_annotation():
     with connection_manager.get_db_session() as session:
@@ -173,6 +181,12 @@ def test_log_delete_annotation():
         )
         assert log.annotation_id == annotation.id
         assert log.operation == AnnotationLogOperation.delete
+
+        # cleanup
+        session.query(AnnotationLog).filter_by(annotation_id=annotation.id).delete()
+        session.commit()
+        session.query(Person).filter(Person.id == user_id).delete()
+        session.commit()
 
 
 def test_annotations_put_not_found(client, geojson_geometry):
@@ -252,6 +266,10 @@ def test_annotations_put_srid(client, any_geojson):
         expected = session.query(transformed).scalar()
         assert expected == geom
 
+        # cleanup
+        session.query(Annotation).filter_by(id=annotation_id).delete()
+        session.commit()
+
 
 def test_annotations_put(client, any_geojson):
     with connection_manager.get_db_session() as session:
@@ -300,6 +318,10 @@ def test_annotations_put(client, any_geojson):
             "SRID=3857;" + session.query(func.ST_AsText(annotation2.geometry)).scalar()
         )
         assert wkt_geom == wkt
+
+        # cleanup
+        session.query(Annotation).filter_by(id=annotation_id).delete()
+        session.commit()
 
 
 def test_annotation_post(client, any_geojson):
@@ -380,3 +402,7 @@ def test_annotation_count(client):
         assert_count(9, "rejected", 1)
         assert_count(2, "rejected", 0)
         assert_count(1, "deleted", 1)
+
+        # cleanup
+        session.query(Annotation).delete()
+        session.commit()
