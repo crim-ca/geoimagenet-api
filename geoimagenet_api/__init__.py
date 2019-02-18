@@ -3,6 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
+from flask_cors import CORS
 import connexion
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -45,6 +46,8 @@ def make_app(validate_responses=False):
         resolver_error=404,
     )
     connexion_app.app.json_encoder = DataclassEncoder
+
+    CORS(connexion_app.app)
 
     @connexion_app.app.route("/api/")
     def root():

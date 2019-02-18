@@ -10,5 +10,6 @@ sentry-sdk[flask]
 click
 loguru
 pyyaml
+Flask-Cors
 https://github.com/boundlessgeo/gsconfig/archive/master.zip#egg=gsconfig
 
