@@ -2,18 +2,19 @@ FROM python:3.6-alpine
 LABEL Description="GeoImageNet API" Vendor="CRIM" Maintainer="david.caron@crim.ca"
 
 WORKDIR /code
-COPY requirements.txt .
+COPY geoimagenet_api/__init__.py geoimagenet_api/__about__.py ./geoimagenet_api/
+COPY requirements* setup.py README.md ./
 
 RUN apk update && \
     apk add postgresql-libs && \
     apk add --virtual .build-deps gcc musl-dev postgresql-dev && \
-    pip install --upgrade pip gunicorn && \
-    pip install -r requirements.txt --no-cache-dir && \
+    pip install --upgrade pip setuptools gunicorn && \
+    pip install --no-cache-dir -e . && \
     apk --purge del .build-deps
 
 COPY . .
 
-RUN python setup.py develop
+RUN pip install --no-dependencies -e .
 
 EXPOSE 8080
 

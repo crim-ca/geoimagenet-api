@@ -3,6 +3,9 @@
 
 .git
 .coverage
+*.egg-info
+
+data
 
 # Unit test / Coverage reports
 **/.cache
