@@ -91,33 +91,6 @@ class AnnotationLog(Base):
     )
 
 
-class Batch(Base):
-    __tablename__ = "batch"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
-    created_by = Column(Integer, ForeignKey("person.id"), index=True)
-    taxonomy_id = Column(Integer, ForeignKey("taxonomy.id", ondelete="CASCADE"), nullable=False)
-    validation_rules_id = Column(
-        Integer, ForeignKey("validation_rules.id"), nullable=False
-    )
-    batch_items = relationship(
-        "BatchItem", back_populates="batch", passive_deletes=True
-    )
-
-
-class BatchItem(Base):
-    __tablename__ = "batch_item"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    batch_id = Column(
-        Integer, ForeignKey("batch.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    annotation_id = Column(Integer, ForeignKey("annotation.id"), nullable=False)
-    role = Column(String, nullable=False, index=True)
-    batch = relationship("Batch", back_populates="batch_items")
-
-
 class ValidationRules(Base):
     __tablename__ = "validation_rules"
 
