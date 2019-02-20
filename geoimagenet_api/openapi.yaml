@@ -212,12 +212,16 @@ paths:
             type: integer
       responses:
         201:
-          description: "The batch has been successfully created."
+          description: The batch has been successfully created.
           content:
             application/json:
               schema:
                 description: The id of the created batch.
                 type: integer
+        503:
+          description: There was a problem with the batch creation service.
+          content:
+            application/json: {}
 
   /annotations/release:
     post:
