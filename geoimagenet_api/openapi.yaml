@@ -202,17 +202,6 @@ paths:
             application/json: {}
 
   /batches:
-    get:
-      summary: "Batches: Search"
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Batch'
     post:
       summary: "Batches: Create an annotation batch for a taxonomy"
       parameters:
@@ -229,78 +218,6 @@ paths:
               schema:
                 description: The id of the created batch.
                 type: integer
-
-  /batches/{id}:
-    get:
-      summary: "Batches: Get by id"
-      parameters:
-        - name: id
-          in: path
-          description: The id of the batch
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Batch'
-        404:
-          description: Batch id not found
-          content:
-            application/json: {}
-
-  /batches/{id}/items/training:
-    get:
-      summary: "Batches: Get training bounding boxes"
-      operationId: geoimagenet_api.routes.batches.get_batch_items_training
-      parameters:
-        - name: id
-          in: path
-          description: The id of the batch
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BatchItems'
-        404:
-          description: No batch items found
-          content:
-            application/json: {}
-
-  /batches/{id}/items/testing:
-    get:
-      summary: "Batches: Get testing bounding boxes"
-      operationId: geoimagenet_api.routes.batches.get_batch_items_testing
-      parameters:
-        - name: id
-          in: path
-          description: The id of the batch
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BatchItems'
-        404:
-          description: No batch items found
-          content:
-            application/json: {}
 
   /annotations/release:
     post:
