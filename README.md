@@ -58,3 +58,16 @@ To write data for testing purposes, its possible to run:
 ``` bash
 $ init_database --testing
 ``` 
+
+
+### Running tests
+
+The tests consist mostly of integration tests, considering that a large part of the logic needs the
+data from the database to execute. 
+
+To setup a postgres database suitable to run the tests, you can run the following docker container:
+
+```bash
+$ docker run -d --rm --name 'postgis' -e ALLOW_IP_RANGE="0.0.0.0/0" -e IP_LIST='*' \
+  -e POSTGRES_DB=gis -e POSTGRES_USER=docker -e POSTGRES_PASS=docker -p 5432:5432 kartoza/postgis:9.6-2.4
+```
