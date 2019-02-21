@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import requests
 import sentry_sdk
 from sqlalchemy import func, cast
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSON, TEXT
 from sqlalchemy import and_
 
 from flask import Response, request
@@ -20,7 +20,7 @@ def get_annotations(taxonomy_id):
         taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
 
         query = session.query(
-            func.json_build_object(
+            cast(func.json_build_object(
                 "type",
                 "Feature",
                 "geometry",
@@ -32,7 +32,7 @@ def get_annotations(taxonomy_id):
                     "taxonomy_class_id",
                     DBAnnotation.taxonomy_class_id,
                 ),
-            )
+            ), TEXT)
         ).filter(
             and_(
                 DBAnnotation.status == AnnotationStatus.validated,
@@ -47,10 +47,9 @@ def get_annotations(taxonomy_id):
             yield '{"type": "FeatureCollection", "features": ['
             n_features = query.count()
             for n, r in enumerate(query):
-                feature = json.dumps(r[0])
+                yield r[0]
                 if n != n_features - 1:
-                    feature += ","
-                yield feature
+                    yield ","
             yield "]}"
 
         return Response(geojson_stream(), mimetype="application/json")
