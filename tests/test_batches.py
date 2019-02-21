@@ -130,3 +130,25 @@ def test_mock_post_failure(client):
 
     # ----- then
     assert r.status_code == 503
+
+
+def test_post_404(client):
+    # ----- given
+    data = {"name": "test_batch", "taxonomy_id": 9999, "overwrite": False}
+
+    # ----- when
+    r = client.post(
+        api_url("/batches"), content_type="application/json", data=json.dumps(data)
+    )
+
+    # ----- then
+    assert r.status_code == 404
+
+
+def test_get_404(client):
+    # ----- when
+    query = {"taxonomy_id": 9999}
+    r = client.get(api_url("/batches"), query_string=query)
+
+    # ----- then
+    assert r.status_code == 404

@@ -218,6 +218,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeoJsonFeatureCollection'
+        404:
+          description: Taxonomy id not found
+          content:
+            application/json: {}
     post:
       summary: "Batches: Create"
       description: >-
@@ -236,6 +240,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BatchPostForwarded'
+        404:
+          description: Taxonomy id not found
+          content:
+            application/json: {}
         503:
           description: There was a problem with the batch creation service.
           content:

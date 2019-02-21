@@ -11,12 +11,20 @@ from flask import Response, request
 
 from geoimagenet_api.config import config
 from geoimagenet_api.routes.taxonomy_classes import get_all_taxonomy_classes_ids
-from geoimagenet_api.database.models import Annotation as DBAnnotation, AnnotationStatus
+from geoimagenet_api.database.models import (
+    Annotation as DBAnnotation,
+    AnnotationStatus,
+    Taxonomy,
+)
 from geoimagenet_api.database.connection import connection_manager
 
 
 def get_annotations(taxonomy_id):
+    if not _is_taxonomy_id_valid(taxonomy_id):
+        return "taxonomy_id not found", 404
+
     with connection_manager.get_db_session() as session:
+
         taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
 
         query = session.query(
@@ -70,6 +78,11 @@ def get_annotations(taxonomy_id):
         return Response(geojson_stream(), mimetype="application/json")
 
 
+def _is_taxonomy_id_valid(taxonomy_id):
+    with connection_manager.get_db_session() as session:
+        return bool(session.query(Taxonomy).filter_by(id=taxonomy_id).first())
+
+
 def _get_batch_creation_url(request):
     """Returns the base url for batches creation requests.
 
@@ -92,6 +105,10 @@ def post():
     name = request.json["name"]
     taxonomy_id = request.json["taxonomy_id"]
     overwrite = request.json.get("overwrite", False)
+
+    if not _is_taxonomy_id_valid(taxonomy_id):
+        return "taxonomy_id not found", 404
+
     query = urlencode({"taxonomy_id": taxonomy_id})
     url = f"{request.base_url}?{query}"
 
