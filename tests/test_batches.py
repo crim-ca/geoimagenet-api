@@ -68,16 +68,16 @@ def test_get_annotations_load_testing(client_no_response_validation):
         session.commit()
         some_annotations_ids = [a.id for a in some_annotations]
 
-    print(f"{perf_counter() - t:.2f}")
+    # print(f"{perf_counter() - t:.2f}")
     t = perf_counter()
 
     # ----- when
     query = {"taxonomy_id": 1}
     r = client_no_response_validation.get(api_url("/batches"), query_string=query)
-    j = r.json
+    _ = r.json  # consume the streamed json
 
     # ----- then
-    print(f"{perf_counter() - t:.2f}")
+    # print(f"{perf_counter() - t:.2f}")
     assert r.status_code == 200
     assert len(r.json["features"]) == n_features
 
