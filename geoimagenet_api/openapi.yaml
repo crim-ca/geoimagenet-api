@@ -202,6 +202,22 @@ paths:
             application/json: {}
 
   /batches:
+    get:
+      summary: "Batches: Get geojson of all the validated annotations in a taxonomy"
+      operationId: geoimagenet_api.routes.batches.get_annotations
+      parameters:
+        - name: taxonomy_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoJsonFeatureCollection'
     post:
       summary: "Batches: Create an annotation batch for a taxonomy"
       parameters:
