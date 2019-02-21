@@ -42,3 +42,13 @@ def test_get_annotations(client):
             Annotation.id.in_(some_annotations_ids)
         ).delete(synchronize_session=False)
         session.commit()
+
+
+def test_post(client):
+    # ----- when
+    data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": False}
+    r = client.post(
+        api_url("/batches"), content_type="application/json", data=json.dumps(data)
+    )
+    assert r.status_code == 201
+    pp(r.json())
