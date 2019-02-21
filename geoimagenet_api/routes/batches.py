@@ -96,4 +96,4 @@ def post():
         )
         return message, 503
 
-    return "Forwarded successfully to the batch creation service", 202
+    return forwarded_json, 202

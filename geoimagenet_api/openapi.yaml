@@ -203,7 +203,7 @@ paths:
 
   /batches:
     get:
-      summary: "Batches: Get geojson of all the validated annotations in a taxonomy"
+      summary: "Batches: Get the validated annotations"
       operationId: geoimagenet_api.routes.batches.get_annotations
       parameters:
         - name: taxonomy_id
@@ -219,20 +219,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeoJsonFeatureCollection'
     post:
-      summary: "Batches: Create an annotation batch for a taxonomy"
+      summary: "Batches: Create"
       description: >-
                     Forwards information to the batch creation process.
-                    See `BatchPostForwarded` for the forwarded schema.
+                    On success, the returned body is the same as the one
+                    forwarded to the batch creation service.
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/BatchPost'
       responses:
-        201:
-          description: The batch has been successfully created.
+        202:
+          description: The batch has been successfully forwarded to the batch creation service.
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchPostForwarded'
         503:
           description: There was a problem with the batch creation service.
           content:
