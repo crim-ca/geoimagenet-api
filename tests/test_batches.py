@@ -50,6 +50,7 @@ def test_get_annotations_load_testing(client_no_response_validation):
     # ----- given
     n_features = 10  # increase this number
     from time import perf_counter
+
     t = perf_counter()
     with connection_manager.get_db_session() as session:
         some_annotations = []

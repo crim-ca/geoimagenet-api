@@ -41,10 +41,10 @@ def get_annotations(taxonomy_id):
             feature_collection = json.dumps(
                 {"type": "FeatureCollection", "features": []}
             )
-            without_ending_brackets = feature_collection[:-2]
+            before_features = feature_collection[:-2]
             ending_brackets = feature_collection[-2:]
 
-            yield without_ending_brackets
+            yield before_features
             first_result = True
             for r in query:
                 if not first_result:
@@ -52,7 +52,7 @@ def get_annotations(taxonomy_id):
                 else:
                     first_result = False
 
-                yield json.dumps(
+                data = json.dumps(
                     {
                         "type": "Feature",
                         "geometry": "__geometry",
@@ -61,8 +61,9 @@ def get_annotations(taxonomy_id):
                             "taxonomy_class_id": r.taxonomy_class_id,
                         },
                     }
+                )
                 # geometry is already serialized
-                ).replace('"__geometry"', r.geometry)
+                yield data.replace('"__geometry"', r.geometry)
 
             yield ending_brackets
 
