@@ -1,10 +1,11 @@
 import json
+from urllib.parse import urlencode
 
 from sqlalchemy import func, cast
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import and_
 
-from flask import Response
+from flask import Response, request
 
 from geoimagenet_api.routes.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import Annotation as DBAnnotation, AnnotationStatus
@@ -45,7 +46,20 @@ def get_annotations(taxonomy_id):
             for n, r in enumerate(query):
                 feature = json.dumps(r[0])
                 if n != n_features - 1:
-                    feature += ','
+                    feature += ","
                 yield feature
-            yield ']}'
-        return Response(geojson_stream(), mimetype='application/json')
+            yield "]}"
+
+        return Response(geojson_stream(), mimetype="application/json")
+
+
+def post():
+    name = request.json["name"]
+    taxonomy_id = request.json["taxonomy_id"]
+    overwrite = request.json.get("overwrite", False)
+    query = urlencode({"taxonomy_id": taxonomy_id})
+    url = f"{request.base_url}?{query}"
+
+    forwarded_json = {"name": name, "geojson_url": url, "overwrite": overwrite}
+
+    return "", 201
