@@ -1,12 +1,15 @@
 import json
 from urllib.parse import urlencode
 
+import requests
+import sentry_sdk
 from sqlalchemy import func, cast
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import and_
 
 from flask import Response, request
 
+from geoimagenet_api.config import config
 from geoimagenet_api.routes.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import Annotation as DBAnnotation, AnnotationStatus
 from geoimagenet_api.database.connection import connection_manager
@@ -53,6 +56,24 @@ def get_annotations(taxonomy_id):
         return Response(geojson_stream(), mimetype="application/json")
 
 
+def _get_batch_creation_url(request):
+    """Returns the base url for batches creation requests.
+
+    If the `batches_creation_url` configuration is a path,
+    the request.host_url is prepended.
+    This is for cases when the process is running on the same host.
+
+    for example: https://127.0.0.1/ml/processes/batch-creation/jobs
+    """
+    batches_url = config.get("batch_creation_url", str).strip("/")
+    if not batches_url.startswith("http"):
+        base = request.host_url
+        path = batches_url.strip("/")
+        batches_url = f"{base}{path}"
+
+    return batches_url
+
+
 def post():
     name = request.json["name"]
     taxonomy_id = request.json["taxonomy_id"]
@@ -62,4 +83,17 @@ def post():
 
     forwarded_json = {"name": name, "geojson_url": url, "overwrite": overwrite}
 
-    return "", 201
+    batch_url = _get_batch_creation_url(request)
+
+    try:
+        r = requests.post(batch_url, json=forwarded_json)
+        r.raise_for_status()
+    except requests.exceptions.RequestException:
+        sentry_sdk.capture_exception()
+        message = (
+            "Could't forward the request to the batch creation service. "
+            "This error was reported to the developers."
+        )
+        return message, 503
+
+    return "Forwarded successfully to the batch creation service", 202
