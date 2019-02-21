@@ -46,6 +46,48 @@ def test_get_annotations(client):
         session.commit()
 
 
+def test_get_annotations_load_testing(client_no_response_validation):
+    # ----- given
+    n_features = 10  # increase this number
+    from time import perf_counter
+    t = perf_counter()
+    with connection_manager.get_db_session() as session:
+        some_annotations = []
+        for _ in range(n_features):
+            some_annotations.append(
+                Annotation(
+                    annotator_id=1,
+                    geometry="SRID=3857;POLYGON((0.001 0.001,1.001 0.001,1.001 1.001,0.001 1.001,0.001 0.001))",
+                    taxonomy_class_id=2,
+                    image_name="my image",
+                    status="validated",
+                )
+            )
+        session.bulk_save_objects(some_annotations)
+        session.commit()
+        some_annotations_ids = [a.id for a in some_annotations]
+
+    print(f"{perf_counter() - t:.2f}")
+    t = perf_counter()
+
+    # ----- when
+    query = {"taxonomy_id": 1}
+    r = client_no_response_validation.get(api_url("/batches"), query_string=query)
+    j = r.json
+
+    # ----- then
+    print(f"{perf_counter() - t:.2f}")
+    assert r.status_code == 200
+    assert len(r.json["features"]) == n_features
+
+    # ----- cleanup
+    with connection_manager.get_db_session() as session:
+        session.query(Annotation).filter(
+            Annotation.id.in_(some_annotations_ids)
+        ).delete(synchronize_session=False)
+        session.commit()
+
+
 def test_mock_post(client):
     # ----- given
     data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": False}
