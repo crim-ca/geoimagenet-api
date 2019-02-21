@@ -1,6 +1,25 @@
 Changelog
 =========
 
+0.9.0 (2019-02-21)
+------------------
+
+New
+~~~
+
+- Add POST on /batches and forward to batch creation process. [David Caron]
+- Add GET on /batches/{taxonomy_id} to get validated annotations in geojson [David Caron]
+- Add CORS. [David Caron]
+
+Changes
+~~~~~~~
+- Remove batches models. [David Caron]
+- Add a ValidationEvent entry for every validated annotations. [David
+  Caron]
+- Remove unused annotation validation route. [David Caron]
+- Clarify annotation_ids type in openapi schema. [David Caron]
+
+
 0.8.0 (2019-02-08)
 ------------------
 
