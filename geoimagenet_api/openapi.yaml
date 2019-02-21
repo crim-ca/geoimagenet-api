@@ -782,6 +782,10 @@ components:
         id:
           type: string
         value:
-          type: string
+          oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
         href:
           type: string

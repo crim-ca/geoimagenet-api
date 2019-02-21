@@ -111,7 +111,7 @@ def test_mock_post(client):
                 },
                 {
                     "id": "overwrite",
-                    "value": str(data["overwrite"]),
+                    "value": data["overwrite"],
                 }
             ],
             "outputs": []

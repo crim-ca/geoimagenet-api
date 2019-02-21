@@ -124,7 +124,7 @@ def post():
             },
             {
                 "id": "overwrite",
-                "value": str(overwrite),
+                "value": overwrite,
             }
         ],
         "outputs": []
