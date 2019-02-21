@@ -220,12 +220,11 @@ paths:
                 $ref: '#/components/schemas/GeoJsonFeatureCollection'
     post:
       summary: "Batches: Create an annotation batch for a taxonomy"
-      parameters:
-        - name: taxonomy_id
-          in: query
-          required: true
-          schema:
-            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchPost'
       responses:
         201:
           description: The batch has been successfully created.
@@ -735,28 +734,29 @@ components:
         version:
           type: string
 
-    Batch:
+    BatchPost:
       type: object
       required:
-        - id
-        - created_at
-        - created_by
+        - name
+        - taxonomy_id
       properties:
-        id:
+        name:
+          type: string
+        taxonomy_id:
           type: integer
           format: int64
-        created_at:
-          type: string
-          format: date-time
-        created_by:
-          type: integer
+        overwrite:
+          type: boolean
+          default: false
 
-    BatchItems:
+    BatchPostForwarded:
       type: object
+      required:
+        - name
+        - geojson_url
       properties:
-        taxonomy_class_id:
-          type: integer
-        taxonomy_class_name:
+        name:
           type: string
-        geometries:
-          $ref: '#/components/schemas/MultiPolygon'
+        geojson_url:
+          type: string
+          description: Url where to download the geojson of the validated annotations.
