@@ -55,10 +55,10 @@ class TaxonomyGroup:
 
 
 @dataclass
-class Batch:
-    id: int
-    created_by: int
-    created_at: datetime
+class BatchPost:
+    name: str
+    taxonomy_id: int
+    overwrite: bool = field(default=False)
 
 
 @dataclass
@@ -132,10 +132,3 @@ class GeoJsonFeatureCollection:
 class MultiPolygon:
     coordinates: List[List[List[List[float]]]]
     type: str = field(default="MultiPolygon")
-
-
-@dataclass
-class BatchItems:
-    taxonomy_class_id: int
-    taxonomy_class_name: str
-    geometries: MultiPolygon

@@ -232,10 +232,7 @@ paths:
         201:
           description: The batch has been successfully created.
           content:
-            application/json:
-              schema:
-                description: The id of the created batch.
-                type: integer
+            application/json: {}
         503:
           description: There was a problem with the batch creation service.
           content:
@@ -763,3 +760,6 @@ components:
         geojson_url:
           type: string
           description: Url where to download the geojson of the validated annotations.
+        overwrite:
+          type: boolean
+          default: false
