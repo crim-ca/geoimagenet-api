@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import requests
 import sentry_sdk
 from sqlalchemy import func, cast
-from sqlalchemy.dialects.postgresql import JSON, TEXT
+from sqlalchemy.dialects.postgresql import TEXT
 from sqlalchemy import and_
 
 from flask import Response, request
@@ -20,37 +20,51 @@ def get_annotations(taxonomy_id):
         taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
 
         query = session.query(
-            cast(func.json_build_object(
-                "type",
-                "Feature",
-                "geometry",
-                cast(func.ST_AsGeoJSON(DBAnnotation.geometry), JSON),
-                "properties",
-                func.json_build_object(
-                    "image_name",
-                    DBAnnotation.image_name,
-                    "taxonomy_class_id",
-                    DBAnnotation.taxonomy_class_id,
-                ),
-            ), TEXT)
-        ).filter(
+            func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"),
+            DBAnnotation.image_name,
+            DBAnnotation.taxonomy_class_id,
+        )
+
+        query = query.filter(
             and_(
                 DBAnnotation.status == AnnotationStatus.validated,
                 DBAnnotation.taxonomy_class_id.in_(taxonomy_ids),
             )
         )
 
-        # try to stream the geojson features from the database
-        # so that the whole FeatureCollection is not built entirely in memory
-
+        # Stream the geojson features from the database
+        # so that the whole FeatureCollection is not built entirely in memory.
+        # The bulk of the json serialization (the geometries) takes place in the database
+        # doing all the serialization in the database is a very small
+        # performance improvement and I prefer to build the json in python than in sql.
         def geojson_stream():
-            yield '{"type": "FeatureCollection", "features": ['
-            n_features = query.count()
-            for n, r in enumerate(query):
-                yield r[0]
-                if n != n_features - 1:
+            feature_collection = json.dumps(
+                {"type": "FeatureCollection", "features": []}
+            )
+            without_ending_brackets = feature_collection[:-2]
+            ending_brackets = feature_collection[-2:]
+
+            yield without_ending_brackets
+            first_result = True
+            for r in query:
+                if not first_result:
                     yield ","
-            yield "]}"
+                else:
+                    first_result = False
+
+                yield json.dumps(
+                    {
+                        "type": "Feature",
+                        "geometry": "__geometry",
+                        "properties": {
+                            "image_name": r.image_name,
+                            "taxonomy_class_id": r.taxonomy_class_id,
+                        },
+                    }
+                # geometry is already serialized
+                ).replace('"__geometry"', r.geometry)
+
+            yield ending_brackets
 
         return Response(geojson_stream(), mimetype="application/json")
 
