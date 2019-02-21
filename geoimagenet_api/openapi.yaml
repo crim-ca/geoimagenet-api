@@ -763,14 +763,25 @@ components:
     BatchPostForwarded:
       type: object
       required:
-        - name
-        - geojson_url
+        - inputs
       properties:
-        name:
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecuteIO'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecuteIO'
+
+    ExecuteIO:
+      type: object
+      required:
+        - id
+      properties:
+        id:
           type: string
-        geojson_url:
+        value:
           type: string
-          description: Url where to download the geojson of the validated annotations.
-        overwrite:
-          type: boolean
-          default: false
+        href:
+          type: string

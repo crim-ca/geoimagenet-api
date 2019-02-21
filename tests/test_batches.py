@@ -99,10 +99,22 @@ def test_mock_post(client):
         response.raise_for_status.return_value = None
         mock_requests.post.return_value = response
         batches_url = "http://localhost/ml/processes/batch-creation/jobs"
-        forwarded_data = {
-            "name": "test_batch",
-            "geojson_url": "http://localhost/api/v1/batches?taxonomy_id=1",
-            "overwrite": False,
+        execute = {
+            "inputs": [
+                {
+                    "id": "name",
+                    "value": data["name"],
+                },
+                {
+                    "id": "geojson_url",
+                    "href": "http://localhost/api/v1/batches?taxonomy_id=1"
+                },
+                {
+                    "id": "overwrite",
+                    "value": str(data["overwrite"]),
+                }
+            ],
+            "outputs": []
         }
 
         # ----- when
@@ -112,7 +124,7 @@ def test_mock_post(client):
 
         # ----- then
         assert r.status_code == 202
-        mock_requests.post.assert_called_with(batches_url, json=forwarded_data)
+        mock_requests.post.assert_called_with(batches_url, json=execute)
 
 
 def test_mock_post_failure(client):

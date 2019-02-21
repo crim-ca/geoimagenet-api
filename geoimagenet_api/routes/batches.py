@@ -112,12 +112,28 @@ def post():
     query = urlencode({"taxonomy_id": taxonomy_id})
     url = f"{request.base_url}?{query}"
 
-    forwarded_json = {"name": name, "geojson_url": url, "overwrite": overwrite}
+    execute = {
+        "inputs": [
+            {
+                "id": "name",
+                "value": name,
+            },
+            {
+                "id": "geojson_url",
+                "href": url
+            },
+            {
+                "id": "overwrite",
+                "value": str(overwrite),
+            }
+        ],
+        "outputs": []
+    }
 
     batch_url = _get_batch_creation_url(request)
 
     try:
-        r = requests.post(batch_url, json=forwarded_json)
+        r = requests.post(batch_url, json=execute)
         r.raise_for_status()
     except requests.exceptions.RequestException:
         sentry_sdk.capture_exception()
@@ -127,4 +143,4 @@ def post():
         )
         return message, 503
 
-    return forwarded_json, 202
+    return execute, 202
