@@ -473,6 +473,13 @@ components:
           type: string
           enum:
             - FeatureCollection
+        crs:
+          type: object
+          properties:
+            type:
+              type: string
+            properties:
+              type: object
         features:
           type: array
           items:
