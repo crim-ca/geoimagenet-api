@@ -119,9 +119,13 @@ def test_mock_post_failure(client):
     data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": False}
 
     # ----- when
-    r = client.post(
-        api_url("/batches"), content_type="application/json", data=json.dumps(data)
-    )
+    # it's faster to mock the exception than to let it raise an error
+    with mock.patch("geoimagenet_api.routes.batches.requests") as mock_requests:
+        mock_requests.exceptions.RequestException = requests.exceptions.RequestException
+        mock_requests.post.side_effect = requests.exceptions.HTTPError
+        r = client.post(
+            api_url("/batches"), content_type="application/json", data=json.dumps(data)
+        )
 
     # ----- then
     assert r.status_code == 503
