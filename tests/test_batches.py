@@ -70,3 +70,16 @@ def test_mock_post(client):
         # ----- then
         assert r.status_code == 202
         mock_requests.post.assert_called_with(batches_url, json=forwarded_data)
+
+
+def test_mock_post_failure(client):
+    # ----- given
+    data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": False}
+
+    # ----- when
+    r = client.post(
+        api_url("/batches"), content_type="application/json", data=json.dumps(data)
+    )
+
+    # ----- then
+    assert r.status_code == 503
