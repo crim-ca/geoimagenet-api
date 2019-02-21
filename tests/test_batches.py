@@ -1,3 +1,5 @@
+import json
+
 import pp
 
 from geoimagenet_api.database.connection import connection_manager
@@ -16,7 +18,7 @@ def test_get_annotations(client):
                     geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
                     taxonomy_class_id=2,
                     image_name="my image",
-                    status="validated"
+                    status="validated",
                 )
             )
             session.add(some_annotations[-1])
@@ -24,15 +26,15 @@ def test_get_annotations(client):
         some_annotations_ids = [a.id for a in some_annotations]
 
     # ----- when
-    query = {'taxonomy_id': 1}
+    query = {"taxonomy_id": 1}
     r = client.get(api_url("/batches"), query_string=query)
 
     # ----- then
     assert r.status_code == 200
-    assert len(r.json['features']) == 3
-    first_feature = r.json['features'][0]
-    assert 'image_name' in first_feature['properties']
-    assert 'taxonomy_class_id' in first_feature['properties']
+    assert len(r.json["features"]) == 3
+    first_feature = r.json["features"][0]
+    assert "image_name" in first_feature["properties"]
+    assert "taxonomy_class_id" in first_feature["properties"]
 
     # ----- cleanup
     with connection_manager.get_db_session() as session:
