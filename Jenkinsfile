@@ -30,7 +30,7 @@ pipeline {
                         sh """
                         docker run --rm --link ${c.id}:postgis -e GEOIMAGENET_API_POSTGIS_USER=docker -e GEOIMAGENET_API_POSTGIS_PASSWORD=docker -e GEOIMAGENET_API_POSTGIS_HOST=postgis $LOCAL_IMAGE_NAME /bin/sh -c \" \
                         pip install -r requirements_dev.txt && \
-                        pytest -v\"
+                        pytest --cov > coverage.out\"
                         """
                     }
                 }
@@ -47,7 +47,7 @@ pipeline {
                 sh 'docker tag $LOCAL_IMAGE_NAME $LATEST_IMAGE_NAME'
                 sh 'docker push $LATEST_IMAGE_NAME'
                 sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh pull api && ./geoimagenet-compose.sh up --force-recreate -d api"'
-                slackSend channel: '#geoimagenet-dev', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
+                slackSend channel: '#jenkins-debug', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
             }
         }
         // stage('Clean') {
@@ -57,10 +57,12 @@ pipeline {
     }
     post {
        success {
-           slackSend channel: '#geoimagenet-dev', color: 'good', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>)"
+           slackSend channel: '#jenkins-debug',
+                     color: 'good',
+                     message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>) (Test coverage: `cat coverage.out | grep TOTAL | sed -r 's/.+ ([0-9]+%)/\1/'`)"
        }
        failure {
-           slackSend channel: '#geoimagenet-dev', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
+           slackSend channel: '#jenkins-debug', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
        }
     }
 }

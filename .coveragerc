@@ -3,7 +3,7 @@
 branch = False
 omit = */geoserver_setup/*
        */alembic/*
-       */tests/conftest.py
+       */tests/*
        */database/connection.py
 
 [report]
