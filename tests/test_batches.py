@@ -1,6 +1,8 @@
 import json
+from unittest import mock
 
 import pp
+import requests
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Annotation
@@ -44,11 +46,27 @@ def test_get_annotations(client):
         session.commit()
 
 
-def test_post(client):
-    # ----- when
+def test_mock_post(client):
+    # ----- given
     data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": False}
-    r = client.post(
-        api_url("/batches"), content_type="application/json", data=json.dumps(data)
-    )
-    assert r.status_code == 201
-    pp(r.json())
+
+    with mock.patch("geoimagenet_api.routes.batches.requests") as mock_requests:
+        mock_requests.exceptions.RequestException = requests.exceptions.RequestException
+        response = mock.Mock()
+        response.raise_for_status.return_value = None
+        mock_requests.post.return_value = response
+        batches_url = "http://localhost/ml/processes/batch-creation/jobs"
+        forwarded_data = {
+            "name": "test_batch",
+            "geojson_url": "http://localhost/api/v1/batches?taxonomy_id=1",
+            "overwrite": False,
+        }
+
+        # ----- when
+        r = client.post(
+            api_url("/batches"), content_type="application/json", data=json.dumps(data)
+        )
+
+        # ----- then
+        assert r.status_code == 202
+        mock_requests.post.assert_called_with(batches_url, json=forwarded_data)
