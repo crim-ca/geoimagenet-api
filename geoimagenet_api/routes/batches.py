@@ -47,12 +47,16 @@ def get_annotations(taxonomy_id):
         # performance improvement and I prefer to build the json in python than in sql.
         def geojson_stream():
             feature_collection = json.dumps(
-                {"type": "FeatureCollection", "features": []}
+                {
+                    "type": "FeatureCollection",
+                    "crs": {"type": "EPSG", "properties": {"code": 3857}},
+                    "features": [],
+                }
             )
-            before_features = feature_collection[:-2]
+            before_ending_brackets = feature_collection[:-2]
             ending_brackets = feature_collection[-2:]
 
-            yield before_features
+            yield before_ending_brackets
             first_result = True
             for r in query:
                 if not first_result:
@@ -114,20 +118,11 @@ def post():
 
     execute = {
         "inputs": [
-            {
-                "id": "name",
-                "value": name,
-            },
-            {
-                "id": "geojson_url",
-                "href": url
-            },
-            {
-                "id": "overwrite",
-                "value": overwrite,
-            }
+            {"id": "name", "value": name},
+            {"id": "geojson_url", "href": url},
+            {"id": "overwrite", "value": overwrite},
         ],
-        "outputs": []
+        "outputs": [],
     }
 
     batch_url = _get_batch_creation_url(request)
