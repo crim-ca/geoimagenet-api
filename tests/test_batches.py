@@ -19,7 +19,7 @@ def test_get_annotations(client):
                     annotator_id=1,
                     geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
                     taxonomy_class_id=2,
-                    image_name="my image",
+                    image_name="my imagéé",
                     status="validated",
                 )
             )
