@@ -35,6 +35,7 @@ def test_get_annotations(client):
     assert r.status_code == 200
     assert len(r.json["features"]) == 3
     assert "crs" in r.json
+    assert r.json["features"][0]["id"] == str(some_annotations_ids[0])
     first_feature = r.json["features"][0]
     assert "image_name" in first_feature["properties"]
     assert "taxonomy_class_id" in first_feature["properties"]

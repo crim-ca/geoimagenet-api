@@ -28,6 +28,7 @@ def get_annotations(taxonomy_id):
         taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
 
         query = session.query(
+            DBAnnotation.id,
             func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"),
             DBAnnotation.image_name,
             DBAnnotation.taxonomy_class_id,
@@ -68,6 +69,7 @@ def get_annotations(taxonomy_id):
                     {
                         "type": "Feature",
                         "geometry": "__geometry",
+                        "id": str(r.id),
                         "properties": {
                             "image_name": r.image_name,
                             "taxonomy_class_id": r.taxonomy_class_id,

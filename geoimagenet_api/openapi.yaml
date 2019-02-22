@@ -487,7 +487,9 @@ components:
 
     GeoJsonFeature:
       type: object
-      description: GeoJson Feature
+      description: >-
+                   "GeoJson Feature. Id is always a string, but can be of the OpenLayers type "
+                   "(ex: 'annotation.1234') or integer type (ex: '1234') depending on context"
       required:
         - type
         - geometry
