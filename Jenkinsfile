@@ -51,7 +51,7 @@ pipeline {
                 sh 'docker tag $LOCAL_IMAGE_NAME $LATEST_IMAGE_NAME'
                 sh 'docker push $LATEST_IMAGE_NAME'
                 sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh pull api && ./geoimagenet-compose.sh up --force-recreate -d api"'
-                slackSend channel: '#geoimagenet_dev', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
+                slackSend channel: '#geoimagenet-dev', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
             }
         }
         // stage('Clean') {
@@ -64,12 +64,12 @@ pipeline {
            script {
                coverage = sh(returnStdout: true, script: 'cat ${TEST_OUTPUT}/coverage.out | sed -nr "s/TOTAL.+ ([0-9]+%)/\\1/p" | tr -d "\n"')
            }
-           slackSend channel: '#geoimagenet_dev',
+           slackSend channel: '#geoimagenet-dev',
                      color: 'good',
                      message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>)\n(Test coverage: *${coverage}*)"
        }
        failure {
-           slackSend channel: '#geoimagenet_dev', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
+           slackSend channel: '#geoimagenet-dev', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
        }
        always {
            junit 'test_output/*.xml'
