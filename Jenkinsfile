@@ -8,6 +8,7 @@ pipeline {
         LOCAL_IMAGE_NAME = "geoimagenet_api:$TAG_NAME"
         LATEST_IMAGE_NAME = "docker-registry.crim.ca/geoimagenet/api:latest"
         TAGGED_IMAGE_NAME = "docker-registry.crim.ca/geoimagenet/api:$TAG_NAME"
+        TEST_OUTPUT = "test_output"
     }
 
     options {
@@ -18,6 +19,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                sh 'rm -rf ${TEST_OUTPUT}'
                 sh 'env | sort'
                 sh 'docker build -t $LOCAL_IMAGE_NAME .'
             }
@@ -25,12 +27,14 @@ pipeline {
 
         stage('Test') {
             steps {
+                sh 'mkdir ${TEST_OUTPUT}'
                 script {
                     docker.image('kartoza/postgis:9.6-2.4').withRun('-e "ALLOW_IP_RANGE=0.0.0.0/0" -e "IP_LIST=*" -e "POSTGRES_USER=docker" -e "POSTGRES_PASS=docker"') { c ->
                         sh """
-                        docker run --rm --link ${c.id}:postgis -e GEOIMAGENET_API_POSTGIS_USER=docker -e GEOIMAGENET_API_POSTGIS_PASSWORD=docker -e GEOIMAGENET_API_POSTGIS_HOST=postgis $LOCAL_IMAGE_NAME /bin/sh -c \" \
+                        docker run --rm --link ${c.id}:postgis -v \$(pwd)/${TEST_OUTPUT}:/code/${TEST_OUTPUT} -e GEOIMAGENET_API_POSTGIS_USER=docker -e GEOIMAGENET_API_POSTGIS_PASSWORD=docker -e GEOIMAGENET_API_POSTGIS_HOST=postgis $LOCAL_IMAGE_NAME /bin/sh -c \" \
                         pip install -r requirements_dev.txt && \
-                        pytest --cov > coverage.out\"
+                        pytest --junitxml ${TEST_OUTPUT}/junit.xml --cov 2>&1 | tee ${TEST_OUTPUT}/coverage.out && \
+                        chmod -R 777 ${TEST_OUTPUT}\"
                         """
                     }
                 }
@@ -47,7 +51,7 @@ pipeline {
                 sh 'docker tag $LOCAL_IMAGE_NAME $LATEST_IMAGE_NAME'
                 sh 'docker push $LATEST_IMAGE_NAME'
                 sh 'ssh ubuntu@geoimagenetdev.crim.ca "cd ~/compose && ./geoimagenet-compose.sh pull api && ./geoimagenet-compose.sh up --force-recreate -d api"'
-                slackSend channel: '#jenkins-debug', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
+                slackSend channel: '#geoimagenet_dev', color: 'good', message: "*GeoImageNet API*:\nPushed docker image: `${env.TAGGED_IMAGE_NAME}`\nDeployed to: https://geoimagenetdev.crim.ca/api/v1"
             }
         }
         // stage('Clean') {
@@ -57,12 +61,18 @@ pipeline {
     }
     post {
        success {
-           slackSend channel: '#jenkins-debug',
+           script {
+               coverage = sh(returnStdout: true, script: 'cat ${TEST_OUTPUT}/coverage.out | sed -nr "s/TOTAL.+ ([0-9]+%)/\\1/p" | tr -d "\n"')
+           }
+           slackSend channel: '#geoimagenet_dev',
                      color: 'good',
-                     message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>) (Test coverage: `cat coverage.out | grep TOTAL | sed -r 's/.+ ([0-9]+%)/\1/'`)"
+                     message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>)\n(Test coverage: *${coverage}*)"
        }
        failure {
-           slackSend channel: '#jenkins-debug', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
+           slackSend channel: '#geoimagenet_dev', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
+       }
+       always {
+           junit 'test_output/*.xml'
        }
     }
 }
