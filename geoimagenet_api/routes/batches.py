@@ -69,7 +69,7 @@ def get_annotations(taxonomy_id):
                     {
                         "type": "Feature",
                         "geometry": "__geometry",
-                        "id": str(r.id),
+                        "id": f"annotation.{r.id}",
                         "properties": {
                             "image_name": r.image_name,
                             "taxonomy_class_id": r.taxonomy_class_id,
