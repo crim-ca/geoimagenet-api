@@ -103,20 +103,14 @@ def test_mock_post(client):
         batches_url = "http://localhost/ml/processes/batch-creation/jobs"
         execute = {
             "inputs": [
-                {
-                    "id": "name",
-                    "value": data["name"],
-                },
+                {"id": "name", "value": data["name"]},
                 {
                     "id": "geojson_url",
-                    "href": "http://localhost/api/v1/batches?taxonomy_id=1"
+                    "href": "http://localhost/api/v1/batches?taxonomy_id=1",
                 },
-                {
-                    "id": "overwrite",
-                    "value": data["overwrite"],
-                }
+                {"id": "overwrite", "value": data["overwrite"]},
             ],
-            "outputs": []
+            "outputs": [],
         }
 
         # ----- when
