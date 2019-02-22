@@ -507,6 +507,7 @@ components:
             - $ref: '#/components/schemas/Point'
             - $ref: '#/components/schemas/LineString'
             - $ref: '#/components/schemas/Polygon'
+            - $ref: '#/components/schemas/MultiPolygon'
         properties:
           $ref: '#/components/schemas/AnnotationProperties'
 
