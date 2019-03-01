@@ -33,6 +33,11 @@ class _ConnectionManager:
             self._session_maker.remove()
 
     def reload_config(self):
+        """This function is mostly useful for unit tests.
+        When calling it, there shouldn't be any checked-out connections.
+        """
+        if self._engine is not None:
+            self._engine.dispose()
         verbose_sqlalchemy = config.get("verbose_sqlalchemy", bool)
         self._engine = create_engine(
             config.get_database_url(),
