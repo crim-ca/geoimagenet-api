@@ -99,7 +99,7 @@ def put(srid=DEFAULT_SRID):
 
 
 def post(srid=DEFAULT_SRID):
-    written_annotations = []
+    written_annotation_ids = []
 
     with connection_manager.get_db_session() as session:
         features = _geojson_features_from_request(request)
@@ -116,7 +116,7 @@ def post(srid=DEFAULT_SRID):
                 image_name=properties["image_name"],
             )
             session.add(annotation)
-            written_annotations.append(annotation)
+            written_annotation_ids.append(annotation.id)
 
         try:
             session.commit()
