@@ -45,7 +45,7 @@ def _serialize_geometry(geometry: Dict, crs: int):
 
     It transforms the geometry into the DEFAULT_CRS if necessary."""
     geom_string = json.dumps(geometry)
-    geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), crs)
+    geom = func.ST_SetSRID(func.ST_Force2D(func.ST_GeomFromGeoJSON(geom_string)), crs)
     if crs != DEFAULT_SRID:
         geom = func.ST_Transform(geom, DEFAULT_SRID)
     return geom
@@ -123,7 +123,7 @@ def post(srid=DEFAULT_SRID):
         except IntegrityError as e:
             return f"Error: {e}", 400
 
-        return [a.id for a in written_annotations], 201
+        return written_annotation_ids, 201
 
 
 allowed_status_transitions = {
