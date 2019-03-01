@@ -40,6 +40,9 @@ class _ConnectionManager:
             echo=verbose_sqlalchemy,
             pool_size=20,
             max_overflow=10,
+            # ping connection status before checkout
+            # to avoid connection errors on database restarts
+            pool_pre_ping=True,
         )
         self._session_maker = scoped_session(
             sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
