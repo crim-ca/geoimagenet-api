@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, List, Optional
 
 import dataclasses
 from flask import request
@@ -135,6 +135,15 @@ allowed_status_transitions = {
 }
 
 
+def _get_annotation_ids_integers(annotation_ids: List[str]):
+    """For annotation ids of the format 'annotation.1234', return a list of annotation ids integers"""
+    try:
+        annotation_ids = [int(i.split(".")[-1]) for i in annotation_ids]
+    except ValueError:
+        return "Annotation ids must be of the format: layer_name.123456", 400
+    return annotation_ids
+
+
 def _update_status(
     update_info: AnnotationStatusUpdate, desired_status: AnnotationStatus
 ):
@@ -159,12 +168,7 @@ def _update_status(
         query = query.filter(or_(*filters))
 
         if update_info.annotation_ids:
-            try:
-                annotation_ids = [
-                    int(i.split(".")[-1]) for i in update_info.annotation_ids
-                ]
-            except ValueError:
-                return "Annotation ids must be of the format: layer_name.123456", 400
+            annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
 
@@ -304,3 +308,67 @@ def counts(taxonomy_class_id):
         # No validation is made by `connexion` for this returned
         # value due to the dynamic property name
         return {str(k): dataclasses.asdict(v) for k, v in annotation_count_dict.items()}
+
+
+def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str, int]]:
+    """Makes sure the requested annotation ids, else return a 404 response."""
+    with connection_manager.get_db_session() as session:
+        ids_exists = (
+            session.query(DBAnnotation.id)
+            .filter(DBAnnotation.id.in_(annotation_ids))
+            .all()
+        )
+
+        count_not_found = len(set(annotation_ids).difference(ids_exists))
+        if count_not_found:
+            return f"{count_not_found} annotation ids could not be found.", 404
+
+
+def _ensure_annotation_owner(
+    annotation_ids: List[int], logged_user: int
+) -> Optional[Tuple[str, int]]:
+    """Makes sure the requested annotation ids belong to the logged in user, else return a 403 response."""
+    with connection_manager.get_db_session() as session:
+        count_not_owned = (
+            session.query(DBAnnotation.id)
+            .filter(
+                and_(
+                    DBAnnotation.id.in_(annotation_ids),
+                    DBAnnotation.annotator_id != logged_user,
+                )
+            )
+            .count()
+        )
+
+        if count_not_owned:
+            return (
+                f"{count_not_owned} annotation ids are not owned by the logged in user.",
+                403,
+            )
+
+
+def request_review():
+    """Set the 'review_requested' field for a list of annotations"""
+    logged_user = get_logged_user(request)
+
+    annotation_ids = _get_annotation_ids_integers(request.json["annotation_ids"])
+
+    response = _ensure_annotations_exists(annotation_ids)
+    if response is not None:
+        return response
+    response = _ensure_annotation_owner(annotation_ids, logged_user)
+    if response is not None:
+        return response
+
+    with connection_manager.get_db_session() as session:
+        (
+            session.query(DBAnnotation)
+            .filter(DBAnnotation.id.in_(annotation_ids))
+            .update(
+                {DBAnnotation.review_requested: request.json["state"]},
+                synchronize_session=False,
+            )
+        )
+        session.commit()
+
+    return "No Content", 204

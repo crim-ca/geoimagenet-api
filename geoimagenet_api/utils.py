@@ -49,7 +49,7 @@ def _dataclass_to_dict(obj):
     return obj
 
 
-def get_logged_user(request):
+def get_logged_user(request) -> int:
     # todo: use the id of the currently logged in user
     return 1
 

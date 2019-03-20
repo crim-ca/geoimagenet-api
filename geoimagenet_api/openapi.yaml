@@ -292,16 +292,42 @@ paths:
       responses:
         204:
           description: No Content
-        404:
-          description: One of the provided ids were not not found.
-          content:
-            application/json: {}
         400:
           description: Bad request
           content:
             application/json: {}
         403:
           description: Status update refused
+          content:
+            application/json: {}
+        404:
+          description: One of the provided ids were not not found.
+          content:
+            application/json: {}
+
+  /annotations/request_review:
+    post:
+      summary: "Annotations: Request review"
+      description: Set the review requested flag for a list of annotation ids.
+      operationId: geoimagenet_api.routes.annotations.request_review
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnotationRequestReview'
+      responses:
+        204:
+          description: No Content
+        400:
+          description: Bad request
+          content:
+            application/json: {}
+        403:
+          description: Forbidden
+          content:
+            application/json: {}
+        404:
+          description: One of the provided ids were not not found.
           content:
             application/json: {}
 
@@ -586,12 +612,25 @@ components:
       type: object
       description: Request body to update the status of an annotation.
       oneOf:
-        - $ref: '#/components/schemas/AnnotationStatusUpdateIds'
+        - $ref: '#/components/schemas/AnnotationIdsList'
         - $ref: '#/components/schemas/AnnotationStatusUpdateTaxonomyClass'
 
-    AnnotationStatusUpdateIds:
+    AnnotationRequestReview:
       type: object
       description: Request body to update the status of an annotation.
+      required:
+        - annotation_ids
+        - boolean
+      properties:
+        annotation_ids:
+          $ref: '#/components/schemas/AnnotationIdsList'
+        boolean:
+          description: Boolean whether to turn on or off the review request.
+          type: boolean
+
+    AnnotationIdsList:
+      type: object
+      description: Contains a list of annotation ids.
       required:
         - annotation_ids
       properties:
@@ -605,7 +644,7 @@ components:
 
     AnnotationStatusUpdateTaxonomyClass:
       type: object
-      description: Request body to update the status of an annotation.
+      description: A taxonomy class id and optionally also its chidren.
       required:
         - taxonomy_class_id
       properties:
