@@ -57,6 +57,9 @@ class Annotation(Base):
         index=True,
         server_default=AnnotationStatus.new.name,
     )
+    review_requested = Column(
+        Boolean, server_default=expression.false(), nullable=False, index=True
+    )
 
     __table_args__ = (
         Index("idx_annotation_geometry", geometry, postgresql_using="gist"),
@@ -80,6 +83,7 @@ class AnnotationLog(Base):
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     image_name = Column(String)
     status = Column(Enum(AnnotationStatus, name="annotation_status_enum"), index=True)
+    review_requested = Column(Boolean)
     operation = Column(
         Enum(AnnotationLogOperation, name="annotation_log_operation_enum"),
         nullable=False,
@@ -145,6 +149,7 @@ class SpatialRefSys(Base):
     When it's not here, alembic suggests deleting this table.
     It's not actually used anywhere in geoimagenet_api.
     """
+
     __tablename__ = "spatial_ref_sys"
 
     srid = Column(Integer, primary_key=True, autoincrement=False, nullable=False)

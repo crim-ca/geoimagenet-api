@@ -86,10 +86,12 @@ def test_annotation_log_triggers():
         assert log[0].taxonomy_class_id == annotation.taxonomy_class_id
         assert log[0].image_name == annotation.image_name
         assert log[0].status == AnnotationStatus.new
+        assert log[0].review_requested == annotation.review_requested
         assert log[0].operation == AnnotationLogOperation.insert
 
         # update image_name
         annotation.image_name = "something else"
+        annotation.review_requested = True
         session.add(annotation)
         session.commit()
         log = session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()
@@ -99,6 +101,7 @@ def test_annotation_log_triggers():
         assert log[1].status is None
         assert log[1].taxonomy_class_id is None
         assert log[1].image_name == "something else"
+        assert log[1].review_requested is True
         assert log[1].operation == AnnotationLogOperation.update
 
         # update geometry
@@ -116,6 +119,7 @@ def test_annotation_log_triggers():
         assert log[2].status is None
         assert log[2].taxonomy_class_id is None
         assert log[2].image_name is None
+        assert log[2].review_requested is None
         assert log[2].operation == AnnotationLogOperation.update
 
         # update annotator

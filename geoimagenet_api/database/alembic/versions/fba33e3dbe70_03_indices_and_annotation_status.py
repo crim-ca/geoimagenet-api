@@ -23,6 +23,43 @@ statuses = ("new", "pre_released", "released", "review", "validated", "rejected"
 
 annotation_log_descriptions = ("insert", "update", "delete")
 
+trigger_annotation_save = """
+            CREATE OR REPLACE FUNCTION annotation_save_event() RETURNS trigger AS $$ 
+                BEGIN 
+                    INSERT INTO annotation_log
+                    (annotation_id, annotator_id, geometry, taxonomy_class_id, image_name, status, operation)
+                    VALUES (
+                        NEW.id, 
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.annotator_id 
+                             WHEN OLD.annotator_id = NEW.annotator_id THEN NULL 
+                             ELSE NEW.annotator_id 
+                        END, 
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.geometry 
+                             WHEN st_equals(OLD.geometry, NEW.geometry) THEN NULL 
+                             ELSE NEW.geometry 
+                        END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.taxonomy_class_id 
+                             WHEN OLD.taxonomy_class_id = NEW.taxonomy_class_id THEN NULL 
+                             ELSE NEW.taxonomy_class_id 
+                        END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.image_name 
+                             WHEN OLD.image_name = NEW.image_name THEN NULL 
+                             ELSE NEW.image_name 
+                        END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.status::annotation_status_enum
+                             WHEN OLD.status = NEW.status THEN NULL 
+                             ELSE NEW.status 
+                        END,
+                        lower(tg_op)::annotation_log_operation_enum
+                    );
+                    RETURN NEW; 
+                END;
+            $$ LANGUAGE 'plpgsql';
+
+            CREATE TRIGGER log_annotation_action AFTER INSERT OR UPDATE ON annotation
+            FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
+        """
+
 
 def upgrade():
     # ---------
@@ -78,43 +115,7 @@ def upgrade():
     # ---------
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
 
-    trigger = """
-            CREATE OR REPLACE FUNCTION annotation_save_event() RETURNS trigger AS $$ 
-                BEGIN 
-                    INSERT INTO annotation_log
-                    (annotation_id, annotator_id, geometry, taxonomy_class_id, image_name, status, operation)
-                    VALUES (
-                        NEW.id, 
-                        CASE WHEN tg_op = 'INSERT' THEN NEW.annotator_id 
-                             WHEN OLD.annotator_id = NEW.annotator_id THEN NULL 
-                             ELSE NEW.annotator_id 
-                        END, 
-                        CASE WHEN tg_op = 'INSERT' THEN NEW.geometry 
-                             WHEN st_equals(OLD.geometry, NEW.geometry) THEN NULL 
-                             ELSE NEW.geometry 
-                        END,
-                        CASE WHEN tg_op = 'INSERT' THEN NEW.taxonomy_class_id 
-                             WHEN OLD.taxonomy_class_id = NEW.taxonomy_class_id THEN NULL 
-                             ELSE NEW.taxonomy_class_id 
-                        END,
-                        CASE WHEN tg_op = 'INSERT' THEN NEW.image_name 
-                             WHEN OLD.image_name = NEW.image_name THEN NULL 
-                             ELSE NEW.image_name 
-                        END,
-                        CASE WHEN tg_op = 'INSERT' THEN NEW.status::annotation_status_enum
-                             WHEN OLD.status = NEW.status THEN NULL 
-                             ELSE NEW.status 
-                        END,
-                        lower(tg_op)::annotation_log_operation_enum
-                    );
-                    RETURN NEW; 
-                END;
-            $$ LANGUAGE 'plpgsql';
-
-            CREATE TRIGGER log_annotation_action AFTER INSERT OR UPDATE ON annotation
-            FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
-        """
-    op.execute(trigger)
+    op.execute(trigger_annotation_save)
 
     op.execute(
         "drop trigger if exists log_annotation_action_delete on annotation cascade;"
@@ -256,4 +257,3 @@ def downgrade():
 
     op.execute(trigger_annotation_save)
     op.execute(trigger_delete)
-
