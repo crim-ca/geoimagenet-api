@@ -65,6 +65,44 @@ def random_user():
         return person.id
 
 
+def _write_annotation(user_id=1, taxonomy_class=2, status=AnnotationStatus.new):
+    with connection_manager.get_db_session() as session:
+        annotation = Annotation(
+            annotator_id=user_id,
+            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            taxonomy_class_id=taxonomy_class,
+            image_name="my image",
+            status=status,
+        )
+        session.add(annotation)
+        session.commit()
+        _ = annotation.id
+
+    return annotation
+
+
+def _delete_annotation(annotation_id):
+    with connection_manager.get_db_session() as session:
+        session.query(Annotation).filter_by(id=annotation_id).delete()
+        session.commit()
+        session.query(AnnotationLog).filter_by(annotation_id=annotation_id).delete()
+        session.commit()
+
+
+@pytest.fixture
+def simple_annotation(request):
+    annotation = _write_annotation(user_id=1)
+    request.addfinalizer(lambda: _delete_annotation(annotation.id))
+    return annotation
+
+
+@pytest.fixture
+def simple_annotation_user_2(request):
+    annotation = _write_annotation(user_id=2)
+    request.addfinalizer(lambda: _delete_annotation(annotation.id))
+    return annotation
+
+
 def test_annotation_log_triggers():
     with connection_manager.get_db_session() as session:
         user_id = random_user()
@@ -158,7 +196,9 @@ def test_annotation_log_triggers():
         session.commit()
         session.query(AnnotationLog).filter_by(annotation_id=inserted_id).delete()
         session.commit()
-        session.query(Person).filter(Person.id.in_([user_id, user2_id])).delete(synchronize_session=False)
+        session.query(Person).filter(Person.id.in_([user_id, user2_id])).delete(
+            synchronize_session=False
+        )
         session.commit()
 
 
@@ -230,18 +270,9 @@ def test_annotations_post_srid(client, any_geojson):
         assert expected == geom
 
 
-def test_annotations_put_srid(client, any_geojson):
+def test_annotations_put_srid(client, any_geojson, simple_annotation):
     with connection_manager.get_db_session() as session:
-        annotation = Annotation(
-            annotator_id=1,
-            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-            taxonomy_class_id=2,
-            image_name="my image",
-        )
-        session.add(annotation)
-        session.commit()
-
-        annotation_id = annotation.id
+        annotation_id = simple_annotation.id
         if any_geojson["type"] == "FeatureCollection":
             any_geojson["features"][0]["id"] = f"annotation.{annotation_id}"
         else:
@@ -270,24 +301,60 @@ def test_annotations_put_srid(client, any_geojson):
         expected = session.query(transformed).scalar()
         assert expected == geom
 
-        # cleanup
-        session.query(Annotation).filter_by(id=annotation_id).delete()
-        session.commit()
 
+def test_annotations_request_review(client, simple_annotation):
+    assert not simple_annotation.review_requested
 
-def test_annotations_put(client, any_geojson):
-    with connection_manager.get_db_session() as session:
-        annotation = Annotation(
-            annotator_id=2,
-            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-            taxonomy_class_id=2,
-            image_name="my image",
+    def request_review(boolean):
+        data = {
+            "annotation_ids": [f"annotation.{simple_annotation.id}"],
+            "boolean": boolean,
+        }
+        r = client.post(
+            api_url(f"/annotations/request_review"),
+            content_type="application/json",
+            data=json.dumps(data),
         )
-        session.add(annotation)
-        session.commit()
+        assert r.status_code == 204
 
-        annotation_id = annotation.id
-        annotator_id = annotation.annotator_id
+    request_review(True)
+
+    with connection_manager.get_db_session() as session:
+        assert (
+            session.query(Annotation)
+            .filter_by(id=simple_annotation.id)
+            .first()
+            .review_requested
+        )
+
+    request_review(False)
+
+    with connection_manager.get_db_session() as session:
+        assert (
+            not session.query(Annotation)
+            .filter_by(id=simple_annotation.id)
+            .first()
+            .review_requested
+        )
+
+
+def test_annotations_request_review_not_authorized(client, simple_annotation_user_2):
+    data = {
+        "annotation_ids": [f"annotation.{simple_annotation_user_2.id}"],
+        "boolean": True,
+    }
+    r = client.post(
+        api_url(f"/annotations/request_review"),
+        content_type="application/json",
+        data=json.dumps(data),
+    )
+    assert r.status_code == 403
+
+
+def test_annotations_put(client, any_geojson, simple_annotation_user_2):
+    with connection_manager.get_db_session() as session:
+        annotation_id = simple_annotation_user_2.id
+        annotator_id = simple_annotation_user_2.annotator_id
 
         if any_geojson["type"] == "FeatureCollection":
             first_feature = any_geojson["features"][0]
@@ -323,10 +390,6 @@ def test_annotations_put(client, any_geojson):
         )
         assert wkt_geom == wkt
 
-        # cleanup
-        session.query(Annotation).filter_by(id=annotation_id).delete()
-        session.commit()
-
 
 def test_annotation_post(client, any_geojson):
     r = client.post(
@@ -338,19 +401,6 @@ def test_annotation_post(client, any_geojson):
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
         assert session.query(Annotation.id).filter_by(id=written_ids[0]).one()
-
-
-def insert_annotation(session, taxonomy_class, status):
-    annotation = Annotation(
-        annotator_id=1,
-        geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-        taxonomy_class_id=taxonomy_class,
-        image_name="my image",
-        status=status,
-    )
-    session.add(annotation)
-    session.commit()
-    return annotation.id
 
 
 def test_annotation_count(client):
@@ -379,7 +429,7 @@ def test_annotation_count(client):
         session.commit()
 
         def add(taxonomy_class_id, status):
-            insert_annotation(session, taxonomy_class_id, status)
+            _write_annotation(taxonomy_class=taxonomy_class_id, status=status)
 
         add(3, "released")
         add(3, "released")
