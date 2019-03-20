@@ -351,6 +351,19 @@ def test_annotations_request_review_not_authorized(client, simple_annotation_use
     assert r.status_code == 403
 
 
+def test_annotations_request_review_not_found(client, simple_annotation):
+    data = {
+        "annotation_ids": [f"annotation.1234"],
+        "boolean": True,
+    }
+    r = client.post(
+        api_url(f"/annotations/request_review"),
+        content_type="application/json",
+        data=json.dumps(data),
+    )
+    assert r.status_code == 404
+
+
 def test_annotations_put(client, any_geojson, simple_annotation_user_2):
     with connection_manager.get_db_session() as session:
         annotation_id = simple_annotation_user_2.id
