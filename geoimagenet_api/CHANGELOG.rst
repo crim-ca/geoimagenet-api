@@ -1,6 +1,22 @@
 Changelog
 =========
 
+
+0.10.0 (2019-03-20)
+------------------
+
+New
+~~~
+- Add POST route /annotations/request_review. [David Caron]
+
+Changes
+~~~~~~~
+- Remove print statements and document. [David Caron]
+- Fix the schema of the Execute body for the batch creation process.
+  [David Caron]
+- Add 404 on /batches GET and POST. [David Caron]
+
+
 0.9.0 (2019-02-21)
 ------------------
 
