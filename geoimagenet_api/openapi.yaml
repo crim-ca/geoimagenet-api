@@ -616,17 +616,16 @@ components:
         - $ref: '#/components/schemas/AnnotationStatusUpdateTaxonomyClass'
 
     AnnotationRequestReview:
-      type: object
       description: Request body to update the status of an annotation.
-      required:
-        - annotation_ids
-        - boolean
-      properties:
-        annotation_ids:
-          $ref: '#/components/schemas/AnnotationIdsList'
-        boolean:
-          description: Boolean whether to turn on or off the review request.
-          type: boolean
+      allOf:
+        - $ref: '#/components/schemas/AnnotationIdsList'
+        - type: object
+          required:
+            - boolean
+          properties:
+            boolean:
+              description: Boolean whether to turn on or off the review request.
+              type: boolean
 
     AnnotationIdsList:
       type: object

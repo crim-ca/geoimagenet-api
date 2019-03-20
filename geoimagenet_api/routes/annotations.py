@@ -316,10 +316,9 @@ def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str,
         ids_exists = (
             session.query(DBAnnotation.id)
             .filter(DBAnnotation.id.in_(annotation_ids))
-            .all()
         )
 
-        count_not_found = len(set(annotation_ids).difference(ids_exists))
+        count_not_found = len(set(annotation_ids).difference((o[0] for o in ids_exists)))
         if count_not_found:
             return f"{count_not_found} annotation ids could not be found.", 404
 
@@ -365,7 +364,7 @@ def request_review():
             session.query(DBAnnotation)
             .filter(DBAnnotation.id.in_(annotation_ids))
             .update(
-                {DBAnnotation.review_requested: request.json["state"]},
+                {DBAnnotation.review_requested: request.json["boolean"]},
                 synchronize_session=False,
             )
         )
