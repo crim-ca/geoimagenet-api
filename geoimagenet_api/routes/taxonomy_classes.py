@@ -133,7 +133,7 @@ def get_taxonomy_classes_tree(
 
         if taxo.id in missing_parents:
             for child in missing_parents[taxo.id]:
-                taxo.children.append(child)
+                taxonomy_class.children.append(child)
 
         if taxo.parent_id in seen_classes:
             seen_classes[taxo.parent_id].children.append(taxonomy_class)
