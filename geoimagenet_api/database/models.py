@@ -114,7 +114,9 @@ class TaxonomyClass(Base):
     )
     name_fr = Column(String, nullable=False, index=True)
     name_en = Column(String, nullable=True, index=True)
-    __table_args__ = (UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),)
+    __table_args__ = (
+        UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),
+    )
 
 
 class Taxonomy(Base):

@@ -352,10 +352,7 @@ def test_annotations_request_review_not_authorized(client, simple_annotation_use
 
 
 def test_annotations_request_review_not_found(client, simple_annotation):
-    data = {
-        "annotation_ids": [f"annotation.1234"],
-        "boolean": True,
-    }
+    data = {"annotation_ids": [f"annotation.1234"], "boolean": True}
     r = client.post(
         api_url(f"/annotations/request_review"),
         content_type="application/json",
