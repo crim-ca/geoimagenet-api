@@ -699,13 +699,15 @@ components:
       type: object
       required:
         - id
-        - name
+        - name_fr
         - taxonomy_id
       properties:
         id:
           type: integer
           format: int64
-        name:
+        name_fr:
+          type: string
+        name_en:
           type: string
         taxonomy_id:
           type: integer

@@ -26,7 +26,8 @@ class User:
 @dataclass
 class TaxonomyClass:
     id: int
-    name: str
+    name_fr: str
+    name_en: str
     taxonomy_id: int
     children: List["TaxonomyClass"] = field(default_factory=list)
 
