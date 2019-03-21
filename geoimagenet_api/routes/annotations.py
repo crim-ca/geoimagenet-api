@@ -263,9 +263,7 @@ def counts(taxonomy_class_id):
         # Get the taxonomy tree corresponding to this taxonomy_class_id
 
         taxonomy_class = (
-            session.query(
-                DBTaxonomyClass.id, DBTaxonomyClass.name, DBTaxonomyClass.taxonomy_id
-            )
+            session.query(DBTaxonomyClass.taxonomy_id)
             .filter_by(id=taxonomy_class_id)
             .first()
         )
@@ -313,12 +311,13 @@ def counts(taxonomy_class_id):
 def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str, int]]:
     """Makes sure the requested annotation ids, else return a 404 response."""
     with connection_manager.get_db_session() as session:
-        ids_exists = (
-            session.query(DBAnnotation.id)
-            .filter(DBAnnotation.id.in_(annotation_ids))
+        ids_exists = session.query(DBAnnotation.id).filter(
+            DBAnnotation.id.in_(annotation_ids)
         )
 
-        count_not_found = len(set(annotation_ids).difference((o[0] for o in ids_exists)))
+        count_not_found = len(
+            set(annotation_ids).difference((o[0] for o in ids_exists))
+        )
         if count_not_found:
             return f"{count_not_found} annotation ids could not be found.", 404
 
