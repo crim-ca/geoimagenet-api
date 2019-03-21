@@ -13,7 +13,12 @@ from geoimagenet_api.utils import dataclass_from_object
 def search(taxonomy_name, id=None, name=None, depth=-1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
-            if taxonomy_name in (t.name_fr, slugify(t.name_fr), t.name_en, slugify(t.name_en)):
+            if taxonomy_name in (
+                t.name_fr,
+                slugify(t.name_fr),
+                t.name_en,
+                slugify(t.name_en),
+            ):
                 taxonomy = t
                 break
         else:
@@ -32,7 +37,10 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
 
         taxonomy_class = (
             session.query(
-                DBTaxonomyClass.id, DBTaxonomyClass.name_fr, DBTaxonomyClass.name_en, DBTaxonomyClass.taxonomy_id
+                DBTaxonomyClass.id,
+                DBTaxonomyClass.name_fr,
+                DBTaxonomyClass.name_en,
+                DBTaxonomyClass.taxonomy_id,
             )
             .filter_by(id=id)
             .first()
@@ -56,7 +64,10 @@ def get(id, depth=-1):
     with connection_manager.get_db_session() as session:
         taxonomy_class = (
             session.query(
-                DBTaxonomyClass.id, DBTaxonomyClass.name_fr, DBTaxonomyClass.name_en, DBTaxonomyClass.taxonomy_id
+                DBTaxonomyClass.id,
+                DBTaxonomyClass.name_fr,
+                DBTaxonomyClass.name_en,
+                DBTaxonomyClass.taxonomy_id,
             )
             .filter_by(id=id)
             .first()
@@ -117,7 +128,12 @@ def get_taxonomy_classes_tree(
     seen_classes = {}
     missing_parents = defaultdict(list)
 
-    query_fields = [DBTaxonomyClass.id, DBTaxonomyClass.name_fr, DBTaxonomyClass.name_en, DBTaxonomyClass.parent_id]
+    query_fields = [
+        DBTaxonomyClass.id,
+        DBTaxonomyClass.name_fr,
+        DBTaxonomyClass.name_en,
+        DBTaxonomyClass.parent_id,
+    ]
     taxonomy_query = session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id)
 
     if not taxonomy_query.first():
@@ -127,7 +143,10 @@ def get_taxonomy_classes_tree(
 
     for taxo in taxonomy_query:
         taxonomy_class = TaxonomyClass(
-            id=taxo.id, name_fr=taxo.name_fr, name_en=taxo.name_en, taxonomy_id=taxonomy_id
+            id=taxo.id,
+            name_fr=taxo.name_fr,
+            name_en=taxo.name_en,
+            taxonomy_id=taxonomy_id,
         )
         seen_classes[taxo.id] = taxonomy_class
 
