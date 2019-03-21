@@ -121,9 +121,10 @@ class Taxonomy(Base):
     __tablename__ = "taxonomy"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name_fr = Column(String, nullable=False)
+    name_en = Column(String, nullable=True)
     version = Column(String, nullable=False)
-    __table_args__ = (UniqueConstraint("name", "version", name="uc_taxonomy"),)
+    __table_args__ = (UniqueConstraint("name_fr", "version", name="uc_taxonomy"),)
 
 
 class ValidationValue(enum.Enum):
