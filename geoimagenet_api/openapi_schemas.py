@@ -35,7 +35,8 @@ class TaxonomyClass:
 @dataclass
 class Taxonomy:
     id: int
-    name: str
+    name_fr: str
+    name_en: str
     slug: str
     version: str
     root_taxonomy_class_id: int
@@ -50,7 +51,8 @@ class TaxonomyVersion:
 
 @dataclass
 class TaxonomyGroup:
-    name: str
+    name_fr: str
+    name_en: str
     slug: str
     versions: List[TaxonomyVersion]
 

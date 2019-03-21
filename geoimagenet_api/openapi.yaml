@@ -746,14 +746,16 @@ components:
       type: object
       required:
         - id
-        - name
+        - name_fr
         - slug
         - version
       properties:
         id:
           type: integer
           format: int64
-        name:
+        name_fr:
+          type: string
+        name_en:
           type: string
         slug:
           type: string
@@ -766,11 +768,13 @@ components:
     TaxonomyGroup:
       type: object
       required:
-        - name
+        - name_fr
         - slug
         - versions
       properties:
-        name:
+        name_fr:
+          type: string
+        name_en:
           type: string
         slug:
           type: string

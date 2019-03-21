@@ -16,14 +16,15 @@ def aggregated_taxonomies():
         query = (
             session.query(
                 func.array_agg(DBTaxonomy.id),
-                DBTaxonomy.name,
+                DBTaxonomy.name_fr,
+                DBTaxonomy.name_en,
                 func.array_agg(DBTaxonomyClass.id.label("root_taxonomy_class_id")),
                 func.array_agg(DBTaxonomy.version),
             )
             .join(DBTaxonomyClass)
-            .filter(DBTaxonomyClass.parent_id == None)
-            .group_by(DBTaxonomy.name)
-            .order_by(DBTaxonomy.name)
+            .filter(DBTaxonomyClass.parent_id.is_(None))
+            .group_by(DBTaxonomy.name_fr, DBTaxonomy.name_en)
+            .order_by(DBTaxonomy.name_fr)
         )
         return query.all()
 
@@ -34,27 +35,30 @@ def search(name=None, version=None):
 
     taxonomy_list = []
     for taxonomy in aggregated_taxonomies():
-        ids, taxonomy_name, root_taxonomy_class_ids, taxonomy_versions = taxonomy
-        taxonomy_group = list(zip(ids, root_taxonomy_class_ids, taxonomy_versions))
+        ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy
+        taxonomy_infos = list(zip(ids, root_taxonomy_class_ids, taxonomy_versions))
         if name is not None:
-            if name not in (taxonomy_name, slugify(taxonomy_name)):
+            if name not in (name_fr, slugify(name_fr), name_en, slugify(name_en)):
                 continue
         if version is not None:
             if version in taxonomy_versions:
                 index = taxonomy_versions.index(version)
-                taxonomy_group = taxonomy_group[index : index + 1]
+                taxonomy_group = taxonomy_infos[index : index + 1]
             else:
                 return f"Version not found name={name} version={version}", 404
 
         versions = [
             TaxonomyVersion(taxonomy_id=i, root_taxonomy_class_id=c, version=v)
-            for i, c, v in taxonomy_group
+            for i, c, v in taxonomy_infos
         ]
-        taxonomy = TaxonomyGroup(
-            name=taxonomy.name, slug=slugify(taxonomy.name), versions=versions
+        taxonomy_group = TaxonomyGroup(
+            name_fr=taxonomy.name_fr,
+            name_en=taxonomy.name_en,
+            slug=slugify(taxonomy.name_fr),
+            versions=versions,
         )
 
-        taxonomy_list.append(taxonomy)
+        taxonomy_list.append(taxonomy_group)
 
     if not taxonomy_list:
         return "No taxonomy found", 404
@@ -63,14 +67,15 @@ def search(name=None, version=None):
 
 def get_by_slug(name_slug, version):
     for taxonomy in aggregated_taxonomies():
-        ids, taxonomy_name, root_taxonomy_class_ids, taxonomy_versions = taxonomy
-        if slugify(taxonomy_name) == name_slug and version in taxonomy_versions:
+        ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy
+        if slugify(name_fr) == name_slug and version in taxonomy_versions:
             index = taxonomy_versions.index(version)
             taxonomy_id = ids[index]
             taxonomy_class_root = root_taxonomy_class_ids[index]
             return Taxonomy(
                 id=taxonomy_id,
-                name=taxonomy.name,
+                name_fr=taxonomy.name_fr,
+                name_en=taxonomy.name_en,
                 slug=name_slug,
                 version=version,
                 root_taxonomy_class_id=taxonomy_class_root,
