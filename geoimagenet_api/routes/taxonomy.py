@@ -43,7 +43,7 @@ def search(name=None, version=None):
         if version is not None:
             if version in taxonomy_versions:
                 index = taxonomy_versions.index(version)
-                taxonomy_group = taxonomy_infos[index : index + 1]
+                taxonomy_infos = taxonomy_infos[index : index + 1]
             else:
                 return f"Version not found name={name} version={version}", 404
 
