@@ -120,6 +120,9 @@ def upgrade():
     op.drop_constraint('uc_taxonomy_class', 'taxonomy_class')
     op.create_unique_constraint('uc_taxonomy_class', 'taxonomy_class', ["parent_id", "name_fr"])
 
+    op.drop_constraint('uc_taxonomy', 'taxonomy')
+    op.create_unique_constraint('uc_taxonomy', 'taxonomy', ["version", "name_fr"])
+
 
 def downgrade():
     # rename columns
@@ -137,3 +140,6 @@ def downgrade():
 
     op.drop_constraint('uc_taxonomy_class', 'taxonomy_class')
     op.create_unique_constraint('uc_taxonomy_class', 'taxonomy_class', ["parent_id", "name"])
+
+    op.drop_constraint('uc_taxonomy', 'taxonomy')
+    op.create_unique_constraint('uc_taxonomy', 'taxonomy', ["version", "name"])
