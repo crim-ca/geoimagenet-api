@@ -27,13 +27,13 @@ def test_taxonomy_class_by_id_query_param(client):
     query = {"taxonomy_name": "Objets", "id": "2"}
     r = client.get(api_url("/taxonomy_classes"), query_string=query)
     assert len(r.json) == 1
-    assert r.json[0]["name"] == "Bâtiment résidentiel"
+    assert r.json[0]["name_fr"] == "Bâtiment résidentiel"
 
 
 def test_taxonomy_class_by_id_route(client):
     id_ = 1
     r = client.get(api_url(f"/taxonomy_classes/{id_}"))
-    assert r.json["name"] == "Objets"
+    assert r.json["name_fr"] == "Objets"
 
 
 def test_taxonomy_class_by_id_route_depth_1(client):
@@ -41,7 +41,7 @@ def test_taxonomy_class_by_id_route_depth_1(client):
     query = {"depth": "1"}
     r = client.get(api_url(f"/taxonomy_classes/{id_}"), query_string=query)
     assert len(r.json["children"]) >= 1
-    assert r.json["name"] == "Objets"
+    assert r.json["name_fr"] == "Objets"
 
 
 def test_taxonomy_class_by_id_route_infinite_depth(client):
