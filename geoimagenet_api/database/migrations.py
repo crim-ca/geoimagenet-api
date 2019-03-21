@@ -1,3 +1,4 @@
+import contextlib
 from contextlib import contextmanager
 import os
 from pathlib import Path
@@ -44,6 +45,17 @@ def migrate():
         alembic.config.main(argv=argv)
 
 
+def get_names(names):
+    if isinstance(names, dict):
+        name_fr = names["fr"]
+        name_en = names["en"]
+    else:
+        name_fr = names
+        name_en = ""
+
+    return name_fr, name_en
+
+
 def write_taxonomy(json_path: Path):
     """Writes taxonomy to the database from a json file.
 
@@ -56,13 +68,8 @@ def write_taxonomy(json_path: Path):
     with connection_manager.get_db_session() as session:
 
         def recurse_json(obj, taxonomy_id, parent_id=None):
-            name = obj["name"]
-            if isinstance(name, dict):
-                name_fr = name["fr"]
-                name_en = name["en"]
-            else:
-                name_fr = name
-                name_en = ""
+            names = obj["name"]
+            name_fr, name_en = get_names(names)
 
             taxonomy_class = models.TaxonomyClass(
                 taxonomy_id=taxonomy_id, name_fr=name_fr, name_en=name_en, parent_id=parent_id
@@ -78,17 +85,19 @@ def write_taxonomy(json_path: Path):
 
             return taxonomy_class
 
-        def taxonomy_exists(name, version):
-            query = session.query(models.Taxonomy).filter_by(name=name, version=version)
+        def taxonomy_exists(name_fr, version):
+            query = session.query(models.Taxonomy).filter_by(name_fr=name_fr, version=version)
             return query.scalar() is not None
 
         data = json.loads(json_path.read_text())
 
-        name = data["name"]
+        names = data["name"]
+        name_fr, name_en = get_names(names)
+
         version = str(data["version"])
 
-        if not taxonomy_exists(name, version):
-            taxonomy = models.Taxonomy(name=name, version=version)
+        if not taxonomy_exists(name_fr, version):
+            taxonomy = models.Taxonomy(name_fr=name_fr, name_en=name_en, version=version)
             session.add(taxonomy)
             session.flush()
             recurse_json(data, taxonomy.id)
