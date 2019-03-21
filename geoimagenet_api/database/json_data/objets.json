@@ -487,12 +487,6 @@
                 },
                 {
                     "name": {
-                        "fr": "Balance routière",
-                        "en": "Weighing station"
-                    }
-                },
-                {
-                    "name": {
                         "fr": "Centre de services autoroutiers",
                         "en": "Service and rest area"
                     }
@@ -513,6 +507,12 @@
                     "name": {
                         "fr": "Stationnement",
                         "en": "Parking lot"
+                    }
+                },
+                {
+                    "name": {
+                        "fr": "Balance routière",
+                        "en": "Weighing station"
                     }
                 },
                 {
