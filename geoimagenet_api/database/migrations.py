@@ -56,8 +56,16 @@ def write_taxonomy(json_path: Path):
     with connection_manager.get_db_session() as session:
 
         def recurse_json(obj, taxonomy_id, parent_id=None):
+            name = obj["name"]
+            if isinstance(name, dict):
+                name_fr = name["fr"]
+                name_en = name["en"]
+            else:
+                name_fr = name
+                name_en = ""
+
             taxonomy_class = models.TaxonomyClass(
-                taxonomy_id=taxonomy_id, name=obj["name"], parent_id=parent_id
+                taxonomy_id=taxonomy_id, name_fr=name_fr, name_en=name_en, parent_id=parent_id
             )
             session.add(taxonomy_class)
             session.flush()
