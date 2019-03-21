@@ -17,10 +17,13 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-sys.path.insert(0, str(Path.cwd()))
-from models import Base
+if "--autogenerate" in sys.argv:
+    sys.path.insert(0, str(Path.cwd()))
+    from models import Base
 
-target_metadata = Base.metadata
+    target_metadata = Base.metadata
+else:
+    target_metadata = None
 
 # Set sqlalchemy url from configuration
 sys.path.insert(0, str(Path.cwd().parent / "config"))
