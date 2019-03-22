@@ -1,7 +1,12 @@
+from typing import List
+
+from fastapi import APIRouter, Query
 from slugify import slugify
 from sqlalchemy import func
 
 import sentry_sdk
+from starlette.exceptions import HTTPException
+from pydantic import BaseModel
 
 from geoimagenet_api.openapi_schemas import Taxonomy, TaxonomyVersion, TaxonomyGroup
 from geoimagenet_api.database.models import (
@@ -9,6 +14,8 @@ from geoimagenet_api.database.models import (
     TaxonomyClass as DBTaxonomyClass,
 )
 from geoimagenet_api.database.connection import connection_manager
+
+router = APIRouter()
 
 
 def aggregated_taxonomies():
@@ -21,17 +28,32 @@ def aggregated_taxonomies():
                 func.array_agg(DBTaxonomyClass.id.label("root_taxonomy_class_id")),
                 func.array_agg(DBTaxonomy.version),
             )
-            .join(DBTaxonomyClass)
-            .filter(DBTaxonomyClass.parent_id.is_(None))
-            .group_by(DBTaxonomy.name_fr, DBTaxonomy.name_en)
-            .order_by(DBTaxonomy.name_fr)
+                .join(DBTaxonomyClass)
+                .filter(DBTaxonomyClass.parent_id.is_(None))
+                .group_by(DBTaxonomy.name_fr, DBTaxonomy.name_en)
+                .order_by(DBTaxonomy.name_fr)
         )
         return query.all()
 
 
-def search(name=None, version=None):
+name_query = Query(
+    None,
+    description=(
+        "Full name or sluggified name of the taxonomy. "
+        "Example of name slug for 'Couverture de sol': "
+        "couverture-de-sol"
+    ),
+)
+
+
+class TaxonomyGroups(BaseModel):
+    taxonomy_groups: List[TaxonomyGroup]
+
+
+@router.get("/", response_model=TaxonomyGroups)
+def search(name: str = name_query, version: str = None):
     if version and not name:
-        return "Please provide a `name` if you provide a `version`.", 400
+        raise HTTPException(400, "Please provide a `name` if you provide a `version`.")
 
     taxonomy_list = []
     for taxonomy in aggregated_taxonomies():
@@ -43,9 +65,9 @@ def search(name=None, version=None):
         if version is not None:
             if version in taxonomy_versions:
                 index = taxonomy_versions.index(version)
-                taxonomy_infos = taxonomy_infos[index : index + 1]
+                taxonomy_infos = taxonomy_infos[index: index + 1]
             else:
-                return f"Version not found name={name} version={version}", 404
+                raise HTTPException(404, f"Version not found name={name} version={version}")
 
         versions = [
             TaxonomyVersion(taxonomy_id=i, root_taxonomy_class_id=c, version=v)
@@ -63,11 +85,16 @@ def search(name=None, version=None):
     if not taxonomy_list:  # pragma: no cover
         message = "Could't find any taxonomy."
         sentry_sdk.capture_exception(error=EnvironmentError(message))
-        return message + " This error was reported to the developers.", 503
+        raise HTTPException(503, message + " This error was reported to the developers.")
     return taxonomy_list
 
+name_slug_query = Query(
+    None, description='Example of name slug for "Couverture de sol": couverture-de-sol'
+)
 
-def get_by_slug(name_slug, version):
+
+@router.get("/{name_slug}/{version}", response_model=Taxonomy)
+def get_by_slug(name_slug: str, version: str):
     for taxonomy in aggregated_taxonomies():
         ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy
         if slugify(name_fr) == name_slug and version in taxonomy_versions:
@@ -82,4 +109,4 @@ def get_by_slug(name_slug, version):
                 version=version,
                 root_taxonomy_class_id=taxonomy_class_root,
             )
-    return "Taxonomy not found", 404
+    raise HTTPException(404, "No taxonomy found")

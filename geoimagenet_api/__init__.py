@@ -3,16 +3,17 @@ import logging
 import sys
 from pathlib import Path
 
-from flask_cors import CORS
-import connexion
+from fastapi import FastAPI
+from starlette.responses import PlainTextResponse, RedirectResponse
+
 import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-from flask import redirect, request, render_template, Response
 
 from geoimagenet_api.__about__ import __version__, __author__, __email__
 from geoimagenet_api.utils import DataclassEncoder
 from geoimagenet_api.database import connection, migrations
 from geoimagenet_api import config
+
+from geoimagenet_api import endpoints
 
 logger = logging.getLogger(__name__)
 
@@ -30,45 +31,30 @@ if config.get("wait_for_db_connection_on_import", bool):
 
 sentry_dsn = config.get("sentry_url", str)
 if sentry_dsn:
-    sentry_sdk.init(
-        dsn=sentry_dsn, integrations=[FlaskIntegration(transaction_style="url")]
-    )
+    sentry_sdk.init(dsn=sentry_dsn)
+
+# todo: validate reponses
+
+base_app = FastAPI()
+app = FastAPI(openapi_prefix="/api/v1")
+base_app.mount("/api/v1", app)
+
+logger.info("App initialized")
 
 
-def make_app(validate_responses=False):
-    options = {"swagger_ui": False}
-    connexion_app = connexion.App(__name__, port=8080, options=options)
-    connexion_app.add_api(
-        "openapi.yaml",
-        strict_validation=True,
-        validate_responses=validate_responses,
-        resolver=connexion.RestyResolver("geoimagenet_api.routes"),
-        resolver_error=404,
-    )
-    connexion_app.app.json_encoder = DataclassEncoder
-
-    CORS(connexion_app.app)
-
-    @connexion_app.app.route("/api/")
-    def root():
-        return redirect(request.url + "v1/")
-
-    @connexion_app.app.route("/api/v1/ui/")
-    def redoc():
-        return render_template("redoc.html")
-
-    @connexion_app.app.route("/api/v1/changelog/")
-    def changelog():
-        changes = Path(__file__).with_name("CHANGELOG.rst").read_text()
-        return Response(changes, mimetype='text/plain')
-
-    logger.info("App initialized")
-
-    return connexion_app
+@base_app.get("/api/", include_in_schema=False)
+def redirect_v1():
+    return RedirectResponse(url="/api/v1")
 
 
-app = make_app()
-application = app.app
+@app.get("/changelog/", include_in_schema=False, content_type=PlainTextResponse)
+def changelog():
+    return Path(__file__).with_name("CHANGELOG.rst").read_text()
+
+
+app.include_router(endpoints.router)
 
 if __name__ == "__main__":  # pragma: no cover
-    app.run()
+    import uvicorn
+
+    uvicorn.run(base_app, host="0.0.0.0", port=8080)

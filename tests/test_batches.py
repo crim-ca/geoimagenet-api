@@ -95,7 +95,7 @@ def test_mock_post(client):
     # ----- given
     data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": False}
 
-    with mock.patch("geoimagenet_api.routes.batches.requests") as mock_requests:
+    with mock.patch("geoimagenet_api.endpoints.batches.requests") as mock_requests:
         mock_requests.exceptions.RequestException = requests.exceptions.RequestException
         response = mock.Mock()
         response.raise_for_status.return_value = None
@@ -129,7 +129,7 @@ def test_mock_post_failure(client):
 
     # ----- when
     # it's faster to mock the exception than to let it raise an error
-    with mock.patch("geoimagenet_api.routes.batches.requests") as mock_requests:
+    with mock.patch("geoimagenet_api.endpoints.batches.requests") as mock_requests:
         mock_requests.exceptions.RequestException = requests.exceptions.RequestException
         mock_requests.post.side_effect = requests.exceptions.HTTPError
         r = client.post(

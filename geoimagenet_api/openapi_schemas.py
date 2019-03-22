@@ -1,13 +1,12 @@
+from __future__ import annotations
 from typing import List
-from datetime import datetime
 
-from dataclasses import dataclass, field
+from pydantic import BaseModel
 
 from geoimagenet_api.database.models import AnnotationStatus
 
 
-@dataclass
-class ApiInfo:
+class ApiInfo(BaseModel):
     name: str
     version: str
     authors: str
@@ -16,24 +15,24 @@ class ApiInfo:
     changelog_url: str
 
 
-@dataclass
-class User:
+class User(BaseModel):
     id: int
     username: str
     name: str
 
 
-@dataclass
-class TaxonomyClass:
+class TaxonomyClass(BaseModel):
     id: int
     name_fr: str
     name_en: str
     taxonomy_id: int
-    children: List["TaxonomyClass"] = field(default_factory=list)
+    children: List[TaxonomyClass] = []
 
 
-@dataclass
-class Taxonomy:
+TaxonomyClass.update_forward_refs()
+
+
+class Taxonomy(BaseModel):
     id: int
     name_fr: str
     name_en: str
@@ -42,37 +41,33 @@ class Taxonomy:
     root_taxonomy_class_id: int
 
 
-@dataclass
-class TaxonomyVersion:
+class TaxonomyVersion(BaseModel):
     taxonomy_id: int
     root_taxonomy_class_id: int
     version: str
 
 
-@dataclass
-class TaxonomyGroup:
+class TaxonomyGroup(BaseModel):
     name_fr: str
     name_en: str
     slug: str
     versions: List[TaxonomyVersion]
 
 
-@dataclass
-class BatchPost:
+class BatchPost(BaseModel):
     name: str
     taxonomy_id: int
-    overwrite: bool = field(default=False)
+    overwrite: bool = False
 
 
-@dataclass
-class AnnotationCountByStatus:
-    new: int = field(default=0)
-    pre_released: int = field(default=0)
-    released: int = field(default=0)
-    review: int = field(default=0)
-    validated: int = field(default=0)
-    rejected: int = field(default=0)
-    deleted: int = field(default=0)
+class AnnotationCountByStatus(BaseModel):
+    new: int = 0
+    pre_released: int = 0
+    released: int = 0
+    review: int = 0
+    validated: int = 0
+    rejected: int = 0
+    deleted: int = 0
 
     def __add__(self, other):
         return AnnotationCountByStatus(
@@ -86,42 +81,36 @@ class AnnotationCountByStatus:
         )
 
 
-@dataclass
-class AnnotationProperties:
+class AnnotationProperties(BaseModel):
     annotator_id: int
     taxonomy_class_id: int
     image_name: str
-    status: AnnotationStatus = field(default=AnnotationStatus.new)
+    status: AnnotationStatus = AnnotationStatus.new
 
 
-@dataclass
-class AnnotationStatusUpdate:
-    annotation_ids: List[str] = field(default=None)
-    taxonomy_class_id: int = field(default=None)
-    with_taxonomy_children: bool = field(default=True)
+class AnnotationStatusUpdate(BaseModel):
+    annotation_ids: List[str] = None
+    taxonomy_class_id: int = None
+    with_taxonomy_children: bool = True
 
 
-@dataclass
-class GeoJsonGeometry:
+# class GeoJsonGeometry(BaseModel):
+#     type: str
+#     coordinates: List
+
+
+class GeoJsonFeature(BaseModel):
     type: str
-    coordinates: List
-
-
-@dataclass
-class GeoJsonFeature:
-    type: str
-    geometry: GeoJsonGeometry
+    # geometry: GeoJsonGeometry
     properties: AnnotationProperties
-    id: str = field(default=None)
+    id: str = None
 
 
-@dataclass
-class GeoJsonFeatureCollection:
+class GeoJsonFeatureCollection(BaseModel):
     features: List[GeoJsonFeature]
-    type: str = field(default="FeatureCollection")
+    type: str = "FeatureCollection"
 
 
-@dataclass
-class MultiPolygon:
+class MultiPolygon(BaseModel):
     coordinates: List[List[List[List[float]]]]
-    type: str = field(default="MultiPolygon")
+    type: str = "MultiPolygon"

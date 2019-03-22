@@ -1,5 +1,6 @@
 from typing import List, Union
 
+from fastapi import APIRouter, HTTPException
 from slugify import slugify
 from collections import defaultdict
 
@@ -9,7 +10,9 @@ from geoimagenet_api.database.models import Taxonomy as DBTaxonomy
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.utils import dataclass_from_object
 
+router = APIRouter()
 
+@router.get("/", response_model=TaxonomyClass)
 def search(taxonomy_name, name, depth=-1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
@@ -22,7 +25,9 @@ def search(taxonomy_name, name, depth=-1):
                 taxonomy = t
                 break
         else:
-            return f"Taxonomy name or slug not found: {taxonomy_name}", 404
+            raise HTTPException(
+                404, f"Taxonomy name or slug not found: {taxonomy_name}"
+            )
 
         taxonomy_class = (
             session.query(
@@ -34,20 +39,18 @@ def search(taxonomy_name, name, depth=-1):
             .filter_by(taxonomy_id=taxonomy.id, name_fr=name)
             .first()
         )
-
         if not taxonomy_class:
-            return f"Taxonomy class name not found: {name}", 404
+            raise HTTPException(404, f"Taxonomy class name not found: {name}")
 
-        if depth == 0:
-            taxo = dataclass_from_object(TaxonomyClass, taxonomy_class)
-        else:
-            taxo = get_taxonomy_classes_tree(
-                session, taxonomy_class_id=taxonomy_class.id
+        if depth != 0:
+            taxonomy_class = get_taxonomy_classes_tree(
+                session, taxonomy_id=taxonomy.id, taxonomy_class_id=id
             )
 
-    return [taxo]
+    return taxonomy_class
 
 
+@router.get("/{id}", response_model=TaxonomyClass)
 def get(id, depth=-1):
     with connection_manager.get_db_session() as session:
         taxonomy_class = (
@@ -61,11 +64,12 @@ def get(id, depth=-1):
             .first()
         )
         if not taxonomy_class:
-            return "Taxonomy class id not found", 404
-        if depth == 0:
-            return dataclass_from_object(TaxonomyClass, taxonomy_class)
-        taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=id)
-    return taxo
+            raise HTTPException(404, "Taxonomy class id not found")
+        if depth != 0:
+            taxonomy_class = get_taxonomy_classes_tree(
+                session, taxonomy_id=taxonomy_class.taxonomy_id, taxonomy_class_id=id
+            )
+    return taxonomy_class
 
 
 def get_all_taxonomy_classes_ids(session, taxonomy_class_id: int = None) -> List[int]:

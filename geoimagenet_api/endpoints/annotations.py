@@ -21,7 +21,7 @@ from geoimagenet_api.database.models import (
     ValidationValue,
 )
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.routes.taxonomy_classes import (
+from geoimagenet_api.endpoints.taxonomy_classes import (
     flatten_taxonomy_classes_ids,
     get_taxonomy_classes_tree,
     get_all_taxonomy_classes_ids,
@@ -86,7 +86,7 @@ def put(srid=DEFAULT_SRID):
             # You can't change the owner of an annotation
             # annotation.annotator_id = properties.annotator_id
 
-            # Use specific routes to change the status (ex: /annotations/release)
+            # Use specific endpoints to change the status (ex: /annotations/release)
             # annotation.status = properties.status
 
         try:

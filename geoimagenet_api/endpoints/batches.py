@@ -10,7 +10,7 @@ from sqlalchemy import and_
 from flask import Response, request
 
 from geoimagenet_api.config import config
-from geoimagenet_api.routes.taxonomy_classes import get_all_taxonomy_classes_ids
+from geoimagenet_api.endpoints.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
     AnnotationStatus,

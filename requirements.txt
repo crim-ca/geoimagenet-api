@@ -13,3 +13,4 @@ pyyaml
 Flask-Cors
 https://github.com/boundlessgeo/gsconfig/archive/master.zip#egg=gsconfig
 
+fastapi[all]
