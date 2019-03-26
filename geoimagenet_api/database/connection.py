@@ -43,7 +43,7 @@ class _ConnectionManager:
             config.get_database_url(),
             convert_unicode=True,
             echo=verbose_sqlalchemy,
-            pool_size=20,
+            pool_size=5,
             max_overflow=10,
             # ping connection status before checkout
             # to avoid connection errors on database restarts
