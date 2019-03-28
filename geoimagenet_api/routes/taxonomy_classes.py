@@ -80,11 +80,11 @@ def get(id, depth=-1):
 
 def get_all_taxonomy_classes_ids(session, taxonomy_class_id: int = None) -> List[int]:
     taxo_tree = get_taxonomy_classes_tree(session, taxonomy_class_id)
-    return flatten_taxonomy_classes_ids([taxo_tree])
+    return flatten_taxonomy_classes_ids(taxo_tree)
 
 
 def flatten_taxonomy_classes_ids(
-    taxo: Union[List[TaxonomyClass], List[DBTaxonomyClass]]
+    taxo: Union[TaxonomyClass, DBTaxonomyClass]
 ) -> List[int]:
     """make a list of all the taxonomy_class ids from nested objects"""
 
@@ -93,7 +93,7 @@ def flatten_taxonomy_classes_ids(
         for child in obj.children:
             yield from get_queried_ids(child)
 
-    queried_taxo_ids = list(set(id_ for t in taxo for id_ in get_queried_ids(t)))
+    queried_taxo_ids = list(set(id_ for id_ in get_queried_ids(taxo)))
     return queried_taxo_ids
 
 
