@@ -390,6 +390,7 @@ paths:
   /annotations/counts/{taxonomy_class_id}:
     get:
       summary: "Annotations: Counts per taxonomy class"
+      description: Return annotation counts for the given taxonomy class along with its children.
       operationId: geoimagenet_api.routes.annotations.counts
       parameters:
         - name: taxonomy_class_id
@@ -406,6 +407,32 @@ paths:
                 $ref: '#/components/schemas/AnnotationCounts'
         404:
           description: Taxonomy Class id not found.
+          content:
+            application/json: {}
+
+
+  /annotations/counts_by_image/{taxonomy_class_id}:
+    get:
+      summary: "Annotations: Counts per taxonomy class and status"
+      description: Return annotation counts grouped by image for the given taxonomy class.
+      operationId: geoimagenet_api.routes.annotations.counts_by_image
+      parameters:
+        - name: taxonomy_class_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Annotations counts grouped by image name.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnnotationCountsByImage'
+        404:
+          description: Taxonomy Class id not found or status invalid.
           content:
             application/json: {}
 
@@ -717,13 +744,23 @@ components:
           items:
             $ref: '#/components/schemas/TaxonomyClass'
 
+    AnnotationCountsByImage:
+      type: object
+      properties:
+        image_name:
+          type: string
+        status:
+          type: string
+        annotation_count:
+          type: integer
+
     AnnotationCounts:
       type: object
-      description: A dictionnary of type `Dict[str, AnnotationCountPerStatus]` where the keys are the taxonomy_class_id.
+      description: A dictionnary of type `Dict[str, AnnotationCountByStatus]` where the keys are the taxonomy_class_id.
       additionalProperties:
-        $ref: '#/components/schemas/AnnotationCountPerStatus'
+        $ref: '#/components/schemas/AnnotationCountByStatus'
 
-    AnnotationCountPerStatus:
+    AnnotationCountByStatus:
       type: object
       description: An object containing annotation counts per status.
       properties:

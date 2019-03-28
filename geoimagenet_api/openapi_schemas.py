@@ -65,7 +65,7 @@ class BatchPost:
 
 
 @dataclass
-class AnnotationCountPerStatus:
+class AnnotationCountByStatus:
     new: int = field(default=0)
     pre_released: int = field(default=0)
     released: int = field(default=0)
@@ -75,7 +75,7 @@ class AnnotationCountPerStatus:
     deleted: int = field(default=0)
 
     def __add__(self, other):
-        return AnnotationCountPerStatus(
+        return AnnotationCountByStatus(
             new=self.new + other.new,
             pre_released=self.pre_released + other.pre_released,
             released=self.released + other.released,
@@ -94,6 +94,13 @@ class AnnotationCountPerStatus:
         self.rejected += other.rejected
         self.deleted += other.deleted
         return self
+
+
+@dataclass
+class AnnotationCountsByImage:
+    image_name: str
+    status: AnnotationStatus
+    annotation_count: int = field(default=0)
 
 
 @dataclass

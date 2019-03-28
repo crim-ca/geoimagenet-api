@@ -10,8 +10,9 @@ from sqlalchemy.sql import func
 
 from geoimagenet_api.openapi_schemas import (
     AnnotationProperties,
-    AnnotationCountPerStatus,
+    AnnotationCountByStatus,
     AnnotationStatusUpdate,
+    AnnotationCountsByImage,
 )
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
@@ -26,7 +27,7 @@ from geoimagenet_api.routes.taxonomy_classes import (
     get_taxonomy_classes_tree,
     get_all_taxonomy_classes_ids,
 )
-from geoimagenet_api.utils import get_logged_user
+from geoimagenet_api.utils import get_logged_user, dataclass_from_object
 
 DEFAULT_SRID = 3857
 
@@ -275,7 +276,7 @@ def counts(taxonomy_class_id):
             .group_by(DBAnnotation.status)
         )
         # build dictionary of annotation count per taxonomy_class_id
-        annotation_count_dict = defaultdict(AnnotationCountPerStatus)
+        annotation_count_dict = defaultdict(AnnotationCountByStatus)
 
         for taxonomy_class_id, status, count in annotation_counts_query:
             setattr(annotation_count_dict[taxonomy_class_id], status.name, count)
@@ -291,6 +292,36 @@ def counts(taxonomy_class_id):
         # No validation is made by `connexion` for this returned
         # value due to the dynamic property name
         return {str(k): dataclasses.asdict(v) for k, v in annotation_count_dict.items()}
+
+
+def counts_by_image(taxonomy_class_id):
+    """Get annotation count per annotation status for a specific taxonomy class and its children.
+    """
+    with connection_manager.get_db_session() as session:
+
+        # Get the taxonomy tree corresponding to this taxonomy_class_id
+        taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class_id)
+
+        if not taxo:
+            return "Taxonomy class id not found", 404
+
+        queried_taxo_ids = flatten_taxonomy_classes_ids(taxo)
+
+        annotation_counts_query = (
+            session.query(
+                DBAnnotation.image_name,
+                DBAnnotation.status,
+                func.count(DBAnnotation.id).label("annotation_count"),
+            )
+            .filter(DBAnnotation.taxonomy_class_id.in_(queried_taxo_ids))
+            .group_by(DBAnnotation.image_name)
+            .group_by(DBAnnotation.status)
+        )
+
+        def make_dataclass(source_obj):
+            return dataclass_from_object(AnnotationCountsByImage, source_obj)
+
+        return map(make_dataclass, annotation_counts_query)
 
 
 def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str, int]]:
