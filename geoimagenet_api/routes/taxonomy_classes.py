@@ -51,9 +51,7 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
         if depth == 0:
             taxo = dataclass_from_object(TaxonomyClass, taxonomy_class)
         else:
-            taxo = get_taxonomy_classes_tree(
-                session, taxonomy_id=taxonomy.id, taxonomy_class_id=id
-            )
+            taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=id)
 
     if not taxo:
         return "No taxonomy class found", 404
@@ -76,16 +74,12 @@ def get(id, depth=-1):
             return "Taxonomy class id not found", 404
         if depth == 0:
             return dataclass_from_object(TaxonomyClass, taxonomy_class)
-        taxo = get_taxonomy_classes_tree(
-            session, taxonomy_id=taxonomy_class.taxonomy_id, taxonomy_class_id=id
-        )
+        taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=id)
     return taxo
 
 
-def get_all_taxonomy_classes_ids(
-    session, taxonomy_id: int, taxonomy_class_id: int = None
-) -> List[int]:
-    taxo_tree = get_taxonomy_classes_tree(session, taxonomy_id, taxonomy_class_id)
+def get_all_taxonomy_classes_ids(session, taxonomy_class_id: int = None) -> List[int]:
+    taxo_tree = get_taxonomy_classes_tree(session, taxonomy_class_id)
     return flatten_taxonomy_classes_ids([taxo_tree])
 
 
@@ -104,8 +98,8 @@ def flatten_taxonomy_classes_ids(
 
 
 def get_taxonomy_classes_tree(
-    session, taxonomy_id: int, taxonomy_class_id: int = None
-) -> TaxonomyClass:
+    session, taxonomy_class_id: int = None
+) -> Union[TaxonomyClass, None]:
     """Builds the taxonomy_class tree.
 
     If taxonomy_class_id is specified, returns this id and its children.
@@ -125,41 +119,51 @@ def get_taxonomy_classes_tree(
 
     This should be the fastest based on my tests.
     """
-    seen_classes = {}
-    missing_parents = defaultdict(list)
 
-    query_fields = [
-        DBTaxonomyClass.id,
-        DBTaxonomyClass.name_fr,
-        DBTaxonomyClass.name_en,
-        DBTaxonomyClass.parent_id,
-    ]
-    taxonomy_query = session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id)
+    taxonomy_class = (
+        session.query(DBTaxonomyClass.taxonomy_id)
+        .filter_by(id=taxonomy_class_id)
+        .first()
+    )
 
-    if not taxonomy_query.first():
-        raise ValueError(
-            f"Couldn't find any taxonomy class having taxonomy id of {taxonomy_id}"
-        )
+    if taxonomy_class:
+        taxonomy_id = taxonomy_class.taxonomy_id
 
-    for taxo in taxonomy_query:
-        taxonomy_class = TaxonomyClass(
-            id=taxo.id,
-            name_fr=taxo.name_fr,
-            name_en=taxo.name_en,
-            taxonomy_id=taxonomy_id,
-        )
-        seen_classes[taxo.id] = taxonomy_class
+        seen_classes = {}
+        missing_parents = defaultdict(list)
 
-        if taxo.id in missing_parents:
-            for child in missing_parents[taxo.id]:
-                taxonomy_class.children.append(child)
+        query_fields = [
+            DBTaxonomyClass.id,
+            DBTaxonomyClass.name_fr,
+            DBTaxonomyClass.name_en,
+            DBTaxonomyClass.parent_id,
+        ]
+        taxonomy_query = session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id)
 
-        if taxo.parent_id in seen_classes:
-            seen_classes[taxo.parent_id].children.append(taxonomy_class)
-        else:
-            missing_parents[taxo.parent_id].append(taxonomy_class)
+        if not taxonomy_query.first():
+            raise ValueError(
+                f"Couldn't find any taxonomy class having taxonomy id of {taxonomy_id}"
+            )
 
-    root = missing_parents[None][0]
-    if taxonomy_class_id is not None:
-        return seen_classes[taxonomy_class_id]
-    return root
+        for taxo in taxonomy_query:
+            taxonomy_class = TaxonomyClass(
+                id=taxo.id,
+                name_fr=taxo.name_fr,
+                name_en=taxo.name_en,
+                taxonomy_id=taxonomy_id,
+            )
+            seen_classes[taxo.id] = taxonomy_class
+
+            if taxo.id in missing_parents:
+                for child in missing_parents[taxo.id]:
+                    taxonomy_class.children.append(child)
+
+            if taxo.parent_id in seen_classes:
+                seen_classes[taxo.parent_id].children.append(taxonomy_class)
+            else:
+                missing_parents[taxo.parent_id].append(taxonomy_class)
+
+        root = missing_parents[None][0]
+        if taxonomy_class_id is not None:
+            return seen_classes[taxonomy_class_id]
+        return root

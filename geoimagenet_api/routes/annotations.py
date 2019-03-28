@@ -190,22 +190,18 @@ def _update_status(
                 return "Status update refused. This transition is not allowed", 403
 
         else:
+            taxonomy_class_id = update_info.taxonomy_class_id
             taxonomy_id = (
-                session.query(DBTaxonomyClass.taxonomy_id)
-                .filter_by(id=update_info.taxonomy_class_id)
-                .scalar()
+                session.query(DBTaxonomyClass.id)
+                .filter_by(id=taxonomy_class_id)
+                .first()
             )
             if not taxonomy_id:
-                return (
-                    f"Taxonomy class id not found {update_info.taxonomy_class_id}",
-                    404,
-                )
+                return f"Taxonomy class id not found {taxonomy_class_id}", 404
             if update_info.with_taxonomy_children:
-                taxonomy_ids = get_all_taxonomy_classes_ids(
-                    session, taxonomy_id, update_info.taxonomy_class_id
-                )
+                taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_class_id)
             else:
-                taxonomy_ids = [update_info.taxonomy_class_id]
+                taxonomy_ids = [taxonomy_class_id]
             query = query.filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_ids))
 
         # record validation events
@@ -260,21 +256,10 @@ def counts(taxonomy_class_id):
     """
     with connection_manager.get_db_session() as session:
 
-        # Get the taxonomy tree corresponding to this taxonomy_class_id
+        taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class_id)
 
-        taxonomy_class = (
-            session.query(DBTaxonomyClass.taxonomy_id)
-            .filter_by(id=taxonomy_class_id)
-            .first()
-        )
-        if not taxonomy_class:
+        if not taxo:
             return "Taxonomy class id not found", 404
-
-        taxo = get_taxonomy_classes_tree(
-            session,
-            taxonomy_id=taxonomy_class.taxonomy_id,
-            taxonomy_class_id=taxonomy_class_id,
-        )
 
         # Get annotation count only for these taxonomy class ids
         queried_taxo_ids = flatten_taxonomy_classes_ids([taxo])
