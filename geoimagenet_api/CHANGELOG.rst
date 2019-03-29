@@ -2,6 +2,28 @@ Changelog
 =========
 
 
+0.11.0 (2019-03-29)
+------------------
+
+New
+~~~
+- Add route /annotations/counts_by_image/{taxonomy_class_id} [David
+  Caron]
+
+  to get annotation counts grouped by image and status
+
+Changes
+~~~~~~~
+- Breaking change: french and english in Taxonomy and TaxonomyClasses...
+  [David Caron]
+
+  Returned results are in french and english using keys "name_fr" and "name_en". The old "name" is removed.
+
+Other
+~~~~~
+- Fix taxonomy tree building. [David Caron]
+
+
 0.10.0 (2019-03-20)
 ------------------
 
