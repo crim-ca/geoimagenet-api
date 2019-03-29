@@ -97,13 +97,6 @@ class AnnotationCountByStatus:
 
 
 @dataclass
-class AnnotationCountsByImage:
-    image_name: str
-    status: AnnotationStatus
-    annotation_count: int = field(default=0)
-
-
-@dataclass
 class AnnotationProperties:
     annotator_id: int
     taxonomy_class_id: int

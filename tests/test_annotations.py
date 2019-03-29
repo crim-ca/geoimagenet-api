@@ -467,6 +467,8 @@ def test_annotation_count(client):
             assert_count(9, "rejected", 1)
             assert_count(2, "rejected", 0)
             assert_count(1, "deleted", 1)
+
+            assert all(key.isdigit() for key in get_counts(1))
         finally:
             # cleanup
             session.query(Annotation).delete()
@@ -475,11 +477,6 @@ def test_annotation_count(client):
 
 def test_annotation_counts_not_found(client):
     r = client.get(api_url(f"/annotations/counts/123456"))
-    assert r.status_code == 404
-
-
-def test_annotation_counts_by_image_not_found(client):
-    r = client.get(api_url(f"/annotations/counts_by_image/123456"))
     assert r.status_code == 404
 
 
@@ -493,18 +490,16 @@ def test_annotation_counts_by_image(client):
 
     """
 
-    def get_counts(taxonomy_class_id, status, image_name):
-        r = client.get(api_url(f"/annotations/counts_by_image/{taxonomy_class_id}"))
+    def get_counts(taxonomy_class_id):
+        params = {"group_by_image": True}
+        r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"), query_string=params)
         assert r.status_code == 200
-        for i in r.json:
-            if i["status"] == status and i["image_name"] == image_name:
-                return i
-        raise AssertionError("Got the wrong annotation count")
+        return r.json
 
     def assert_count(taxonomy_class_id, status, image_name, expected):
-        r = get_counts(taxonomy_class_id, status, image_name)
-        counts = r["annotation_count"]
-        assert counts == expected
+        r = get_counts(taxonomy_class_id)
+        counts = r[str(image_name)]
+        assert counts[status] == expected
 
     with connection_manager.get_db_session() as session:
         # make sure there are no other annotations
@@ -542,6 +537,8 @@ def test_annotation_counts_by_image(client):
             assert_count(1, "released", "image_2", 1)
             assert_count(1, "validated", "image_2", 5)
             assert_count(2, "validated", "image_2", 3)
+
+            assert set(get_counts(1)) == {"image_1", "image_2"}
         finally:
             # cleanup
             session.query(Annotation).delete()
