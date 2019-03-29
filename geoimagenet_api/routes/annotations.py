@@ -303,8 +303,8 @@ def counts(taxonomy_class_id, group_by_image=False):
 
             recurse_add_counts(taxo)
 
-        # No validation is made by `connexion` for this returned
-        # value due to the dynamic property name
+        # Note: No validation is made by `connexion` for this returned
+        # value structure due to the dynamic property name
         return {str(k): dataclasses.asdict(v) for k, v in annotation_count_dict.items()}
 
 
