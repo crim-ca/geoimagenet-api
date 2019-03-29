@@ -8,12 +8,12 @@ from geoimagenet_api.openapi_schemas import TaxonomyClass
 from geoimagenet_api.database.models import TaxonomyClass as DBTaxonomyClass
 from geoimagenet_api.database.models import Taxonomy as DBTaxonomy
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import dataclass_from_object
 
 router = APIRouter()
 
-@router.get("/", response_model=TaxonomyClass)
-def search(taxonomy_name, name, depth=-1):
+
+@router.get("/", response_model=List[TaxonomyClass])
+def search(taxonomy_name: str, name: str, depth: int = -1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
             if taxonomy_name in (
@@ -44,14 +44,21 @@ def search(taxonomy_name, name, depth=-1):
 
         if depth != 0:
             taxonomy_class = get_taxonomy_classes_tree(
-                session, taxonomy_id=taxonomy.id, taxonomy_class_id=id
+                session, taxonomy_class_id=taxonomy_class.id
+            )
+        else:
+            taxonomy_class = TaxonomyClass(
+                id=taxonomy_class.id,
+                name_fr=taxonomy_class.name_fr,
+                name_en=taxonomy_class.name_en,
+                taxonomy_id=taxonomy_class.taxonomy_id,
             )
 
-    return taxonomy_class
+    return [taxonomy_class]
 
 
 @router.get("/{id}", response_model=TaxonomyClass)
-def get(id, depth=-1):
+def get(id: int, depth: int = -1):
     with connection_manager.get_db_session() as session:
         taxonomy_class = (
             session.query(
@@ -67,7 +74,14 @@ def get(id, depth=-1):
             raise HTTPException(404, "Taxonomy class id not found")
         if depth != 0:
             taxonomy_class = get_taxonomy_classes_tree(
-                session, taxonomy_id=taxonomy_class.taxonomy_id, taxonomy_class_id=id
+                session, taxonomy_class_id=taxonomy_class.id
+            )
+        else:
+            taxonomy_class = TaxonomyClass(
+                id=taxonomy_class.id,
+                name_fr=taxonomy_class.name_fr,
+                name_en=taxonomy_class.name_en,
+                taxonomy_id=taxonomy_class.taxonomy_id,
             )
     return taxonomy_class
 

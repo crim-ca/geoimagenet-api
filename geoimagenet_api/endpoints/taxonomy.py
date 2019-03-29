@@ -6,7 +6,6 @@ from sqlalchemy import func
 
 import sentry_sdk
 from starlette.exceptions import HTTPException
-from pydantic import BaseModel
 
 from geoimagenet_api.openapi_schemas import Taxonomy, TaxonomyVersion, TaxonomyGroup
 from geoimagenet_api.database.models import (
@@ -28,10 +27,10 @@ def aggregated_taxonomies():
                 func.array_agg(DBTaxonomyClass.id.label("root_taxonomy_class_id")),
                 func.array_agg(DBTaxonomy.version),
             )
-                .join(DBTaxonomyClass)
-                .filter(DBTaxonomyClass.parent_id.is_(None))
-                .group_by(DBTaxonomy.name_fr, DBTaxonomy.name_en)
-                .order_by(DBTaxonomy.name_fr)
+            .join(DBTaxonomyClass)
+            .filter(DBTaxonomyClass.parent_id.is_(None))
+            .group_by(DBTaxonomy.name_fr, DBTaxonomy.name_en)
+            .order_by(DBTaxonomy.name_fr)
         )
         return query.all()
 
@@ -46,11 +45,7 @@ name_query = Query(
 )
 
 
-class TaxonomyGroups(BaseModel):
-    taxonomy_groups: List[TaxonomyGroup]
-
-
-@router.get("/", response_model=TaxonomyGroups)
+@router.get("/", response_model=List[TaxonomyGroup])
 def search(name: str = name_query, version: str = None):
     if version and not name:
         raise HTTPException(400, "Please provide a `name` if you provide a `version`.")
@@ -65,9 +60,11 @@ def search(name: str = name_query, version: str = None):
         if version is not None:
             if version in taxonomy_versions:
                 index = taxonomy_versions.index(version)
-                taxonomy_infos = taxonomy_infos[index: index + 1]
+                taxonomy_infos = taxonomy_infos[index : index + 1]
             else:
-                raise HTTPException(404, f"Version not found name={name} version={version}")
+                raise HTTPException(
+                    404, f"Version not found name={name} version={version}"
+                )
 
         versions = [
             TaxonomyVersion(taxonomy_id=i, root_taxonomy_class_id=c, version=v)
@@ -84,9 +81,12 @@ def search(name: str = name_query, version: str = None):
 
     if not taxonomy_list:  # pragma: no cover
         message = "Could't find any taxonomy."
-        sentry_sdk.capture_exception(error=EnvironmentError(message))
-        raise HTTPException(503, message + " This error was reported to the developers.")
+        sentry_sdk.capture_exception(error=ValueError(message))
+        raise HTTPException(
+            503, message + " This error was reported to the developers."
+        )
     return taxonomy_list
+
 
 name_slug_query = Query(
     None, description='Example of name slug for "Couverture de sol": couverture-de-sol'
