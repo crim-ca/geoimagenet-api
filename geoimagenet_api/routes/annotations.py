@@ -295,13 +295,13 @@ def counts(taxonomy_class_id, group_by_image=False):
             for class_id, status, count in annotation_counts_query:
                 setattr(annotation_count_dict[class_id], status, count)
 
-        # add annotation count to parent objects
-        def recurse_add_counts(obj):
-            for o in obj.children:
-                annotation_count_dict[obj.id] += recurse_add_counts(o)
-            return annotation_count_dict[obj.id]
+            # add annotation count to parent objects
+            def recurse_add_counts(obj):
+                for o in obj.children:
+                    annotation_count_dict[obj.id] += recurse_add_counts(o)
+                return annotation_count_dict[obj.id]
 
-        recurse_add_counts(taxo)
+            recurse_add_counts(taxo)
 
         # No validation is made by `connexion` for this returned
         # value due to the dynamic property name

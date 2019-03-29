@@ -467,6 +467,8 @@ def test_annotation_count(client):
             assert_count(9, "rejected", 1)
             assert_count(2, "rejected", 0)
             assert_count(1, "deleted", 1)
+
+            assert all(key.isdigit() for key in get_counts(1))
         finally:
             # cleanup
             session.query(Annotation).delete()
@@ -535,6 +537,8 @@ def test_annotation_counts_by_image(client):
             assert_count(1, "released", "image_2", 1)
             assert_count(1, "validated", "image_2", 5)
             assert_count(2, "validated", "image_2", 3)
+
+            assert set(get_counts(1)) == {"image_1", "image_2"}
         finally:
             # cleanup
             session.query(Annotation).delete()
