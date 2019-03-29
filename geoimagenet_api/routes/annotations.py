@@ -251,9 +251,10 @@ def update_status_delete():
     )
 
 
-def counts(taxonomy_class_id, group_by_image=False):
+def counts(taxonomy_class_id, group_by_image=False, current_user_only=False):
     """Get annotation count per annotation status for a specific taxonomy class and its children.
     """
+
     with connection_manager.get_db_session() as session:
 
         taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class_id)
@@ -266,6 +267,11 @@ def counts(taxonomy_class_id, group_by_image=False):
 
         annotation_count_dict = defaultdict(AnnotationCountByStatus)
 
+        def add_filter_current_user(query):
+            logged_user = get_logged_user(request)
+            query = query.filter_by(annotator_id=logged_user)
+            return query
+
         if group_by_image:
             annotation_counts_query = (
                 session.query(
@@ -277,6 +283,9 @@ def counts(taxonomy_class_id, group_by_image=False):
                 .group_by(DBAnnotation.image_name)
                 .group_by(DBAnnotation.status.name)
             )
+
+            if current_user_only:
+                annotation_counts_query = add_filter_current_user(annotation_counts_query)
 
             for image_name, status, count in annotation_counts_query:
                 setattr(annotation_count_dict[image_name], status, count)
@@ -291,6 +300,9 @@ def counts(taxonomy_class_id, group_by_image=False):
                 .group_by(DBAnnotation.taxonomy_class_id)
                 .group_by(DBAnnotation.status.name)
             )
+
+            if current_user_only:
+                annotation_counts_query = add_filter_current_user(annotation_counts_query)
 
             for class_id, status, count in annotation_counts_query:
                 setattr(annotation_count_dict[class_id], status, count)

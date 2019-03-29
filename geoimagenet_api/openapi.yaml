@@ -409,6 +409,13 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: current_user_only
+          in: query
+          description: If true, the counts only reflect the currently logged in user's annotations.
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: Annotations count

@@ -543,3 +543,54 @@ def test_annotation_counts_by_image(client):
             # cleanup
             session.query(Annotation).delete()
             session.commit()
+
+
+def test_annotation_counts_current_user(client):
+    """
+    Taxonomy classes tree:
+    1
+    --2
+      --3
+    --9
+
+    """
+
+    def get_counts(taxonomy_class_id, current_user_only):
+        params = {"group_by_image": False, "current_user_only": current_user_only}
+        r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"), query_string=params)
+        assert r.status_code == 200
+        return r.json
+
+    def assert_count(taxonomy_class_id, current_user_only, expected):
+        r = get_counts(taxonomy_class_id, current_user_only)
+        counts = r[str(taxonomy_class_id)]
+        assert counts["new"] == expected
+
+    def add(taxonomy_class_id, user_id):
+        _write_annotation(user_id=user_id, taxonomy_class=taxonomy_class_id)
+
+    with connection_manager.get_db_session() as session:
+        # make sure there are no other annotations
+        session.query(Annotation).delete()
+        session.commit()
+
+        try:
+            add(2, user_id=1)
+            add(2, user_id=1)
+            add(3, user_id=1)
+            add(3, user_id=1)
+            add(3, user_id=1)
+
+            add(3, user_id=2)
+            add(3, user_id=2)
+            add(3, user_id=2)
+
+            assert_count(2, True, 5)
+            assert_count(2, False, 8)
+            assert_count(3, True, 3)
+            assert_count(3, False, 6)
+
+        finally:
+            # cleanup
+            session.query(Annotation).delete()
+            session.commit()
