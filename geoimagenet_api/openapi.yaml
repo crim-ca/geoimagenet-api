@@ -403,6 +403,9 @@ paths:
         - name: group_by_image
           in: query
           required: false
+          description: >-
+                       The key of the returned json will either be the taxonomy class
+                       if this value is false, or the image name if it's true.
           schema:
             type: boolean
             default: false
