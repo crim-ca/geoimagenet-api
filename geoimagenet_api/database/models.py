@@ -60,6 +60,7 @@ class Annotation(Base):
     review_requested = Column(
         Boolean, server_default=expression.false(), nullable=False, index=True
     )
+    name = Column(String, nullable=False)  # This is updated automatically by a trigger
 
     __table_args__ = (
         Index("idx_annotation_geometry", geometry, postgresql_using="gist"),
@@ -114,6 +115,7 @@ class TaxonomyClass(Base):
     )
     name_fr = Column(String, nullable=False, index=True)
     name_en = Column(String, nullable=True, index=True)
+    code = Column(String, nullable=False, server_default="NONE", index=True)
     __table_args__ = (
         UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),
     )

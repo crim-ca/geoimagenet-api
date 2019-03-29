@@ -11,6 +11,7 @@ from geoimagenet_api.database.models import (
     AnnotationLog,
     AnnotationLogOperation,
     AnnotationStatus,
+    TaxonomyClass,
 )
 from geoimagenet_api.openapi_schemas import AnnotationProperties
 from tests.utils import random_user_name, api_url
@@ -65,7 +66,9 @@ def random_user():
         return person.id
 
 
-def _write_annotation(user_id=1, taxonomy_class=2, status=AnnotationStatus.new, image_name="my image"):
+def _write_annotation(
+    user_id=1, taxonomy_class=2, status=AnnotationStatus.new, image_name="my image"
+):
     with connection_manager.get_db_session() as session:
         annotation = Annotation(
             annotator_id=user_id,
@@ -507,7 +510,9 @@ def test_annotation_counts_by_image(client):
         session.commit()
 
         def add(taxonomy_class_id, status, image_name):
-            _write_annotation(taxonomy_class=taxonomy_class_id, status=status, image_name=image_name)
+            _write_annotation(
+                taxonomy_class=taxonomy_class_id, status=status, image_name=image_name
+            )
 
         try:
             add(3, "released", "image_1")
@@ -594,3 +599,31 @@ def test_annotation_counts_current_user(client):
             # cleanup
             session.query(Annotation).delete()
             session.commit()
+
+
+def test_friendly_name(simple_annotation):
+    assert simple_annotation.name == "NONE_+000.500000_+000.500000"
+
+    with connection_manager.get_db_session() as session:
+        taxo = (
+            session.query(TaxonomyClass)
+            .filter_by(id=simple_annotation.taxonomy_class_id)
+            .first()
+        )
+        taxo.code = "TEST"
+        session.commit()
+
+        session.add(simple_annotation)
+
+        simple_annotation.taxonomy_class_id = 10
+        session.commit()
+        simple_annotation.taxonomy_class_id = taxo.id
+        session.commit()
+
+        assert simple_annotation.name == "TEST_+000.500000_+000.500000"
+
+        polygon_wkt = "SRID=3857;POLYGON((0 0,-2 0,-2 -2,0 -2,0 0))"
+        simple_annotation.geometry = polygon_wkt
+        session.commit()
+
+        assert simple_annotation.name == "TEST_-001.000000_-001.000000"

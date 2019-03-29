@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from sqlalchemy.exc import OperationalError
 from geoimagenet_api import config
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, Session
 
 
 class _ConnectionManager:
@@ -25,7 +25,7 @@ class _ConnectionManager:
         return self._engine
 
     @contextmanager
-    def get_db_session(self):
+    def get_db_session(self) -> Session:
         session = self._session_maker()
         try:
             yield session
