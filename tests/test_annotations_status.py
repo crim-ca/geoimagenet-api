@@ -5,7 +5,8 @@ from geoimagenet_api.database.models import (
     Annotation,
     AnnotationStatus,
     ValidationEvent,
-    ValidationValue)
+    ValidationValue,
+)
 from tests.utils import api_url
 
 image_name_to_cleanup = "testing_annotation_status"
@@ -79,10 +80,10 @@ def make_taxonomy_class_payload(taxo_id, recurse=True):
     return {"taxonomy_class_id": taxo_id, "with_taxonomy_children": recurse}
 
 
-def post_taxonomy_class(client, action, taxonomy_class_id, recurse):
+def post_taxonomy_class(client, action, taxonomy_class_id, recurse, expected_code=204):
     data = make_taxonomy_class_payload(taxonomy_class_id, recurse=recurse)
     r = client.post(api_url(f"/annotations/{action}"), json=data)
-    assert r.status_code == 204
+    assert r.status_code == expected_code
 
 
 def post_annotation_ids(client, action, ids, expected_code=204):
@@ -144,6 +145,17 @@ def test_release_by_id(cleanup_annotations, client):
     post_annotation_ids(client, "release", ids)
     expected = [AnnotationStatus.released, AnnotationStatus.released]
     assert_statuses(ids, expected)
+
+
+def test_release_by_id_not_an_int(cleanup_annotations, client):
+    ids = ["not_an_int"]
+    post_annotation_ids(client, "release", ids, expected_code=400)
+
+
+def test_release_id_not_found(cleanup_annotations, client):
+    post_taxonomy_class(
+        client, "release", taxonomy_class_id=9999, recurse=False, expected_code=404
+    )
 
 
 def test_release_by_taxonomy_class(cleanup_annotations, client):
@@ -347,4 +359,3 @@ def test_validate_write_rejection_in_database(cleanup_annotations, client):
             )
             assert validation.validator_id == 1
             assert validation.validation_value == ValidationValue.rejected
-

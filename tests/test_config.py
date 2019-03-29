@@ -1,6 +1,7 @@
 import os
 import re
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from geoimagenet_api import config
@@ -123,3 +124,34 @@ def test_environment_variable(temp_environment_variable_db):
     db = config.get("postgis_db", str)
 
     assert db == "bananas"
+
+
+def test_convert_bool():
+    with pytest.raises(ValueError):
+        config.config._convert_bool("hehe")
+
+    assert config.config._convert_bool("1")
+    assert config.config._convert_bool("true")
+    assert config.config._convert_bool("YES")
+
+    assert not config.config._convert_bool("0")
+    assert not config.config._convert_bool("false")
+    assert not config.config._convert_bool("NO")
+
+
+def test_sentry(ignore_custom_ini, ignore_environment_variables):
+    old = os.environ.get("GEOIMAGENET_API_SENTRY_URL", "")
+
+    os.environ["GEOIMAGENET_API_SENTRY_URL"] = "http://test"
+
+    import importlib
+    import geoimagenet_api
+
+    with mock.patch("geoimagenet_api.sentry_sdk.init") as p:
+        importlib.reload(geoimagenet_api)
+        assert p.called
+        assert p.call_args_list[0][1]["dsn"] == "http://test"
+
+    assert geoimagenet_api.sentry_sdk
+
+    os.environ["GEOIMAGENET_API_SENTRY_URL"] = old

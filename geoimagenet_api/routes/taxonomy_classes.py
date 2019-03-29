@@ -10,7 +10,7 @@ from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.utils import dataclass_from_object
 
 
-def search(taxonomy_name, id=None, name=None, depth=-1):
+def search(taxonomy_name, name, depth=-1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
             if taxonomy_name in (
@@ -24,17 +24,6 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
         else:
             return f"Taxonomy name or slug not found: {taxonomy_name}", 404
 
-        if not id and not name:
-            return "Please provide one of: id, name", 400
-        if name and not id:
-            id = (
-                session.query(DBTaxonomyClass.id)
-                .filter_by(taxonomy_id=taxonomy.id, name_fr=name)
-                .scalar()
-            )
-            if not id:
-                return f"Taxonomy class name not found: {name}", 404
-
         taxonomy_class = (
             session.query(
                 DBTaxonomyClass.id,
@@ -42,19 +31,18 @@ def search(taxonomy_name, id=None, name=None, depth=-1):
                 DBTaxonomyClass.name_en,
                 DBTaxonomyClass.taxonomy_id,
             )
-            .filter_by(id=id)
+            .filter_by(taxonomy_id=taxonomy.id, name_fr=name)
             .first()
         )
+
         if not taxonomy_class:
-            return "Taxonomy class id not found", 404
+            return f"Taxonomy class name not found: {name}", 404
 
         if depth == 0:
             taxo = dataclass_from_object(TaxonomyClass, taxonomy_class)
         else:
-            taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=id)
+            taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class.id)
 
-    if not taxo:
-        return "No taxonomy class found", 404
     return [taxo]
 
 

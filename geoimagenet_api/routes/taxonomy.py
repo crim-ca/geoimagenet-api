@@ -1,6 +1,7 @@
 from slugify import slugify
 from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
+
+import sentry_sdk
 
 from geoimagenet_api.openapi_schemas import Taxonomy, TaxonomyVersion, TaxonomyGroup
 from geoimagenet_api.database.models import (
@@ -8,7 +9,6 @@ from geoimagenet_api.database.models import (
     TaxonomyClass as DBTaxonomyClass,
 )
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import dataclass_from_object
 
 
 def aggregated_taxonomies():
@@ -60,8 +60,10 @@ def search(name=None, version=None):
 
         taxonomy_list.append(taxonomy_group)
 
-    if not taxonomy_list:
-        return "No taxonomy found", 404
+    if not taxonomy_list:  # pragma: no cover
+        message = "Could't find any taxonomy."
+        sentry_sdk.capture_exception(error=EnvironmentError(message))
+        return message + " This error was reported to the developers.", 503
     return taxonomy_list
 
 

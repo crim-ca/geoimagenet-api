@@ -85,16 +85,6 @@ class AnnotationCountByStatus:
             deleted=self.deleted + other.deleted,
         )
 
-    def __iadd__(self, other):
-        self.new += other.new
-        self.pre_released += other.pre_released
-        self.released += other.released
-        self.review += other.review
-        self.validated += other.validated
-        self.rejected += other.rejected
-        self.deleted += other.deleted
-        return self
-
 
 @dataclass
 class AnnotationProperties:

@@ -56,7 +56,7 @@ def get(parameter_name: str, type_):
 def _convert_bool(value):
     boolean_states = configparser.ConfigParser.BOOLEAN_STATES
     if value.lower() not in boolean_states:
-        raise ValueError("Not a boolean: %s" % value)
+        raise ValueError("Not a valid boolean state: %s" % value)
     return boolean_states[value.lower()]
 
 

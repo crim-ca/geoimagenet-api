@@ -77,12 +77,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: id
-          in: query
-          schema:
-            type: integer
         - name: name
           description: Name of the taxonomy class
+          required: true
           in: query
           schema:
             type: string
@@ -169,6 +166,10 @@ paths:
             application/json: {}
         400:
           description: Bad request
+          content:
+            application/json: {}
+        503:
+          description: Server is not configured
           content:
             application/json: {}
 

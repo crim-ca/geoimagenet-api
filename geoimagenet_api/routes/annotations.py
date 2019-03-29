@@ -67,12 +67,11 @@ def put(srid=DEFAULT_SRID):
             if "id" not in json_annotation:
                 return "Property 'id' is required", 400
 
-            layer, id_ = json_annotation.get("id").split(".", 1)
+            result = _get_annotation_ids_integers([json_annotation["id"]])
+            if isinstance(result, tuple) and len(result) == 2:
+                return result  # error reponse
 
-            try:
-                id_ = int(id_)
-            except ValueError:
-                return f"Annotation id not an int: {id_}", 400
+            id_ = result[0]
 
             annotation = session.query(DBAnnotation).filter_by(id=id_).first()
             if not annotation:
@@ -92,7 +91,7 @@ def put(srid=DEFAULT_SRID):
 
         try:
             session.commit()
-        except IntegrityError as e:
+        except IntegrityError as e:  # pragma: no cover
             return f"Error: {e}", 400
 
     return "Annotations updated", 204
@@ -120,7 +119,7 @@ def post(srid=DEFAULT_SRID):
 
         try:
             session.commit()
-        except IntegrityError as e:
+        except IntegrityError as e:  # pragma: no cover
             return f"Error: {e}", 400
 
         return [a.id for a in written_annotations], 201
@@ -135,7 +134,7 @@ allowed_status_transitions = {
 }
 
 
-def _get_annotation_ids_integers(annotation_ids: List[str]):
+def _get_annotation_ids_integers(annotation_ids: List[str]) -> Union[List[int], Tuple]:
     """For annotation ids of the format 'annotation.1234', return a list of annotation ids integers"""
     try:
         annotation_ids = [int(i.split(".")[-1]) for i in annotation_ids]
@@ -168,7 +167,11 @@ def _update_status(
         query = query.filter(or_(*filters))
 
         if update_info.annotation_ids:
-            annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
+            result = _get_annotation_ids_integers(update_info.annotation_ids)
+            if isinstance(result, tuple) and len(result) == 2:
+                return result  # error response
+
+            annotation_ids = result
 
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
 
@@ -361,7 +364,11 @@ def request_review():
     """Set the 'review_requested' field for a list of annotations"""
     logged_user = get_logged_user(request)
 
-    annotation_ids = _get_annotation_ids_integers(request.json["annotation_ids"])
+    result = _get_annotation_ids_integers(request.json["annotation_ids"])
+    if isinstance(result, tuple) and len(result) == 2:
+        return result  # error response
+
+    annotation_ids = result
 
     response = _ensure_annotations_exists(annotation_ids)
     if response is not None:

@@ -238,13 +238,31 @@ def test_log_delete_annotation():
 
 def test_annotations_put_not_found(client, geojson_geometry):
     geojson_geometry["id"] = "annotation.1234567"
-
     r = client.put(
         api_url(f"/annotations"),
         content_type="application/json",
         data=json.dumps(geojson_geometry),
     )
     assert r.status_code == 404
+
+
+def test_annotations_put_not_an_int(client, geojson_geometry):
+    geojson_geometry["id"] = "annotation.not_an_int"
+    r = client.put(
+        api_url(f"/annotations"),
+        content_type="application/json",
+        data=json.dumps(geojson_geometry),
+    )
+    assert r.status_code == 400
+
+
+def test_annotations_put_id_required(client, geojson_geometry):
+    r = client.put(
+        api_url(f"/annotations"),
+        content_type="application/json",
+        data=json.dumps(geojson_geometry),
+    )
+    assert r.status_code == 400
 
 
 def test_annotations_post_srid(client, any_geojson):
@@ -352,6 +370,19 @@ def test_annotations_request_review_not_authorized(client, simple_annotation_use
         data=json.dumps(data),
     )
     assert r.status_code == 403
+
+
+def test_annotations_request_review_not_an_int(client):
+    data = {
+        "annotation_ids": [f"annotation.not_an_int"],
+        "boolean": True,
+    }
+    r = client.post(
+        api_url(f"/annotations/request_review"),
+        content_type="application/json",
+        data=json.dumps(data),
+    )
+    assert r.status_code == 400
 
 
 def test_annotations_request_review_not_found(client, simple_annotation):
@@ -560,19 +591,22 @@ def test_annotation_counts_current_user(client):
 
     """
 
-    def get_counts(taxonomy_class_id, current_user_only):
-        params = {"group_by_image": False, "current_user_only": current_user_only}
+    def get_counts(taxonomy_class_id, current_user_only, group_by_image=False):
+        params = {"group_by_image": group_by_image, "current_user_only": current_user_only}
         r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"), query_string=params)
         assert r.status_code == 200
         return r.json
 
-    def assert_count(taxonomy_class_id, current_user_only, expected):
-        r = get_counts(taxonomy_class_id, current_user_only)
-        counts = r[str(taxonomy_class_id)]
+    def assert_count(taxonomy_class_id, current_user_only, group_by_image, expected):
+        r = get_counts(taxonomy_class_id, current_user_only, group_by_image)
+        if group_by_image:
+            counts = r["my image"]
+        else:
+            counts = r[str(taxonomy_class_id)]
         assert counts["new"] == expected
 
     def add(taxonomy_class_id, user_id):
-        _write_annotation(user_id=user_id, taxonomy_class=taxonomy_class_id)
+        _write_annotation(user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image")
 
     with connection_manager.get_db_session() as session:
         # make sure there are no other annotations
@@ -590,10 +624,17 @@ def test_annotation_counts_current_user(client):
             add(3, user_id=2)
             add(3, user_id=2)
 
-            assert_count(2, True, 5)
-            assert_count(2, False, 8)
-            assert_count(3, True, 3)
-            assert_count(3, False, 6)
+            # group_by_image=False
+            assert_count(2, True, False, 5)
+            assert_count(2, False, False, 8)
+            assert_count(3, True, False, 3)
+            assert_count(3, False, False, 6)
+
+            # group_by_image=True
+            assert_count(2, True, True, 5)
+            assert_count(2, False, True, 8)
+            assert_count(3, True, True, 3)
+            assert_count(3, False, True, 6)
 
         finally:
             # cleanup
