@@ -2,6 +2,17 @@ Changelog
 =========
 
 
+0.12.0 (2019-03-29)
+------------------
+
+Changes
+~~~~~~~
+- Change structure and route of annotation counts grouped by image.
+  [David Caron]
+
+  /annotations/counts/{taxonomy_class_id}?group_by_image=true
+
+
 0.11.0 (2019-03-29)
 ------------------
 
