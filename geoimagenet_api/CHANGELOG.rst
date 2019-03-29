@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+0.13.0 (2019-03-29)
+------------------
+
+New
+~~~
+- Add a 'name' property to annotations of the type
+  CODE_+042.000000_-073.000000 (CODE_latitude_longitude)
+- Add current_user_only query parameter to annotation counts
+
+
 0.12.0 (2019-03-29)
 ------------------
 
