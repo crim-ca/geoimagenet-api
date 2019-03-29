@@ -310,7 +310,7 @@ def counts_by_image(taxonomy_class_id):
         annotation_counts_query = (
             session.query(
                 DBAnnotation.image_name,
-                DBAnnotation.status,
+                DBAnnotation.status.name,
                 func.count(DBAnnotation.id).label("annotation_count"),
             )
             .filter(DBAnnotation.taxonomy_class_id.in_(queried_taxo_ids))
@@ -321,7 +321,7 @@ def counts_by_image(taxonomy_class_id):
         def make_dataclass(source_obj):
             return dataclass_from_object(AnnotationCountsByImage, source_obj)
 
-        return map(make_dataclass, annotation_counts_query)
+        return list(map(make_dataclass, annotation_counts_query))
 
 
 def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str, int]]:
