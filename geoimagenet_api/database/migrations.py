@@ -1,4 +1,3 @@
-import contextlib
 from contextlib import contextmanager
 import os
 from pathlib import Path
@@ -28,7 +27,7 @@ def cwd(path):
 def ensure_database_exists():
     """If the database name given in the config doesn't exist, create it"""
     engine = connection_manager.engine
-    if not database_exists(engine.url):
+    if not database_exists(engine.url):  # pragma: no cover
         create_database(engine.url, template="template_postgis")
 
 
@@ -125,7 +124,7 @@ def load_testing_data():
         session.add(demo_validateur)
         try:
             session.commit()
-        except IntegrityError:
+        except IntegrityError:  # pragma: no cover
             session.rollback()
 
 
@@ -144,9 +143,5 @@ def init_database_data():
 
     load_taxonomies()
 
-    if "--testing" in sys.argv:
+    if "--testing" in sys.argv:  # pragma: no cover
         load_testing_data()
-
-
-if __name__ == "__main__":
-    init_database_data()

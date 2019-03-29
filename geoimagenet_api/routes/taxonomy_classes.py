@@ -41,7 +41,9 @@ def search(taxonomy_name, name, depth=-1):
         if depth == 0:
             taxo = dataclass_from_object(TaxonomyClass, taxonomy_class)
         else:
-            taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class.id)
+            taxo = get_taxonomy_classes_tree(
+                session, taxonomy_class_id=taxonomy_class.id
+            )
 
     return [taxo]
 
@@ -86,7 +88,7 @@ def flatten_taxonomy_classes_ids(
 
 
 def get_taxonomy_classes_tree(
-    session, taxonomy_class_id: int = None
+    session, taxonomy_class_id: int
 ) -> Union[TaxonomyClass, None]:
     """Builds the taxonomy_class tree.
 
@@ -120,18 +122,12 @@ def get_taxonomy_classes_tree(
         seen_classes = {}
         missing_parents = defaultdict(list)
 
-        query_fields = [
+        taxonomy_query = session.query(
             DBTaxonomyClass.id,
             DBTaxonomyClass.name_fr,
             DBTaxonomyClass.name_en,
             DBTaxonomyClass.parent_id,
-        ]
-        taxonomy_query = session.query(*query_fields).filter_by(taxonomy_id=taxonomy_id)
-
-        if not taxonomy_query.first():
-            raise ValueError(
-                f"Couldn't find any taxonomy class having taxonomy id of {taxonomy_id}"
-            )
+        ).filter_by(taxonomy_id=taxonomy_id)
 
         for taxo in taxonomy_query:
             taxonomy_class = TaxonomyClass(
@@ -151,7 +147,4 @@ def get_taxonomy_classes_tree(
             else:
                 missing_parents[taxo.parent_id].append(taxonomy_class)
 
-        root = missing_parents[None][0]
-        if taxonomy_class_id is not None:
-            return seen_classes[taxonomy_class_id]
-        return root
+        return seen_classes[taxonomy_class_id]

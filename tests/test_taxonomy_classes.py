@@ -41,6 +41,20 @@ def test_taxonomy_class_by_id_route(client):
     assert r.json["name_fr"] == "Objets"
 
 
+def test_taxonomy_class_by_id_route_not_found(client):
+    id_ = 9999
+    r = client.get(api_url(f"/taxonomy_classes/{id_}"))
+    assert r.status_code == 404
+
+
+def test_taxonomy_class_by_id_route_depth_0(client):
+    id_ = 1
+    query = {"depth": "0"}
+    r = client.get(api_url(f"/taxonomy_classes/{id_}"), query_string=query)
+    assert len(r.json["children"]) == 0
+    assert r.json["name_fr"] == "Objets"
+
+
 def test_taxonomy_class_by_id_route_depth_1(client):
     id_ = 1
     query = {"depth": "1"}
