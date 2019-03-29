@@ -1,24 +1,34 @@
+from typing import List
+
+from fastapi import APIRouter
+from starlette.exceptions import HTTPException
 from geoimagenet_api.openapi_schemas import User
 from geoimagenet_api.database.models import Person
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import dataclass_from_object
+
+router = APIRouter()
 
 
-def search(username=None, name=None):
-    filter_by = {k: v for k, v in locals().items() if v is not None}
-
+@router.get("/", response_model=List[User])
+def search(username: str = None, name: str = None):
     with connection_manager.get_db_session() as session:
-        persons = session.query(Person).filter_by(**filter_by)
-        users = [dataclass_from_object(User, p) for p in persons]
-        if not users:
-            return "No user found", 404
-        return users
+        query = session.query(Person)
+        if username is not None:
+            query = query.filter_by(username=username)
+        if name is not None:
+            query = query.filter_by(name=name)
+
+        users_all = query.all()
+        if not users_all:
+            raise HTTPException(404, "No user found")
+        return users_all
 
 
-def get(username):
+@router.get("/{username}", response_model=User)
+def get(username: str):
     with connection_manager.get_db_session() as session:
         person = session.query(Person).filter_by(username=username).first()
         if not person:
-            return "Username not found", 404
-        user = dataclass_from_object(User, person)
-        return user
+            raise HTTPException(404, "Username not found")
+
+        return person
