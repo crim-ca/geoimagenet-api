@@ -32,10 +32,13 @@ sentry_dsn = config.get("sentry_url", str)
 if sentry_dsn:
     sentry_sdk.init(dsn=sentry_dsn)
 
-# todo: validate reponses
-
 base_app = FastAPI()
-app = FastAPI(openapi_prefix="/api/v1")
+app = FastAPI(
+    openapi_prefix="/api/v1",
+    title="GeoImageNet Annotations API",
+    description="API for the GeoImageNet platform",
+    version=__version__
+)
 base_app.mount("/api/v1", app)
 
 logger.info("App initialized")

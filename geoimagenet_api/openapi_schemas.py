@@ -11,7 +11,8 @@ class ApiInfo(BaseModel):
     version: str
     authors: str
     email: str
-    documetation_url: str
+    documetation_url_swagger: str
+    documetation_url_redoc: str
     changelog_url: str
 
 
