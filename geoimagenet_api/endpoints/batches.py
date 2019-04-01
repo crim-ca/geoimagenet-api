@@ -1,13 +1,13 @@
 import json
 from urllib.parse import urlencode
 
+from fastapi import APIRouter
+from starlette.exceptions import HTTPException
+from starlette.requests import Request
+from starlette.responses import StreamingResponse
 import requests
 import sentry_sdk
-from sqlalchemy import func, cast
-from sqlalchemy.dialects.postgresql import TEXT
-from sqlalchemy import and_
-
-from flask import Response, request
+from sqlalchemy import func, and_
 
 from geoimagenet_api.config import config
 from geoimagenet_api.endpoints.taxonomy_classes import get_all_taxonomy_classes_ids
@@ -17,11 +17,21 @@ from geoimagenet_api.database.models import (
     Taxonomy,
 )
 from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.openapi_schemas import (
+    GeoJsonFeatureCollection,
+    BatchPost,
+    BatchPostForwarded,
+    ExecuteIOHref,
+    ExecuteIOValue,
+)
+
+router = APIRouter()
 
 
-def get_annotations(taxonomy_id):
+@router.get("/", response_model=GeoJsonFeatureCollection)
+def get_annotations(taxonomy_id: int):
     if not _is_taxonomy_id_valid(taxonomy_id):
-        return "taxonomy_id not found", 404
+        raise HTTPException(404, "taxonomy_id not found")
 
     with connection_manager.get_db_session() as session:
 
@@ -46,7 +56,7 @@ def get_annotations(taxonomy_id):
         # The bulk of the json serialization (the geometries) takes place in the database
         # doing all the serialization in the database is a very small
         # performance improvement and I prefer to build the json in python than in sql.
-        def geojson_stream():
+        async def geojson_stream():
             feature_collection = json.dumps(
                 {
                     "type": "FeatureCollection",
@@ -81,7 +91,7 @@ def get_annotations(taxonomy_id):
 
             yield ending_brackets
 
-        return Response(geojson_stream(), mimetype="application/json")
+        return StreamingResponse(geojson_stream(), media_type="application/json")
 
 
 def _is_taxonomy_id_valid(taxonomy_id):
@@ -89,7 +99,7 @@ def _is_taxonomy_id_valid(taxonomy_id):
         return bool(session.query(Taxonomy).filter_by(id=taxonomy_id).first())
 
 
-def _get_batch_creation_url(request):
+def _get_batch_creation_url(request: Request):
     """Returns the base url for batches creation requests.
 
     If the `batches_creation_url` configuration is a path,
@@ -100,37 +110,33 @@ def _get_batch_creation_url(request):
     """
     batches_url = config.get("batch_creation_url", str).strip("/")
     if not batches_url.startswith("http"):
-        base = request.host_url
         path = batches_url.strip("/")
-        batches_url = f"{base}{path}"
+        batches_url = f"{request.url}{path}"
 
     return batches_url
 
 
-def post():
-    name = request.json["name"]
-    taxonomy_id = request.json["taxonomy_id"]
-    overwrite = request.json.get("overwrite", False)
+@router.post("/", response_model=BatchPostForwarded, status_code=202)
+def post(batch_post: BatchPost, request: Request):
+    if not _is_taxonomy_id_valid(batch_post.taxonomy_id):
+        raise HTTPException(404, "Taxonomy_id not found")
 
-    if not _is_taxonomy_id_valid(taxonomy_id):
-        return "taxonomy_id not found", 404
+    query = urlencode({"taxonomy_id": batch_post.taxonomy_id})
+    url = f"{request.url}?{query}"
 
-    query = urlencode({"taxonomy_id": taxonomy_id})
-    url = f"{request.base_url}?{query}"
-
-    execute = {
-        "inputs": [
-            {"id": "name", "value": name},
-            {"id": "geojson_url", "href": url},
-            {"id": "overwrite", "value": overwrite},
+    execute = BatchPostForwarded(
+        inputs=[
+            ExecuteIOValue(id="name", value=batch_post.name),
+            ExecuteIOHref(id="geojson_url", href=url),
+            ExecuteIOValue(id="overwrite", value=batch_post.overwrite),
         ],
-        "outputs": [],
-    }
+        outputs=[],
+    )
 
     batch_url = _get_batch_creation_url(request)
 
     try:
-        r = requests.post(batch_url, json=execute)
+        r = requests.post(batch_url, json=execute.json())
         r.raise_for_status()
     except requests.exceptions.RequestException:
         sentry_sdk.capture_exception()
@@ -138,6 +144,6 @@ def post():
             "Could't forward the request to the batch creation service. "
             "This error was reported to the developers."
         )
-        return message, 503
+        raise HTTPException(503, message)
 
-    return execute, 202
+    return execute

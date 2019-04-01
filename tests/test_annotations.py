@@ -66,7 +66,7 @@ def random_user():
         return person.id
 
 
-def _write_annotation(
+def write_annotation(
     user_id=1, taxonomy_class=2, status=AnnotationStatus.new, image_name="my image"
 ):
     with connection_manager.get_db_session() as session:
@@ -94,14 +94,14 @@ def _delete_annotation(annotation_id):
 
 @pytest.fixture
 def simple_annotation(request):
-    annotation = _write_annotation(user_id=1)
+    annotation = write_annotation(user_id=1)
     request.addfinalizer(lambda: _delete_annotation(annotation.id))
     return annotation
 
 
 @pytest.fixture
 def simple_annotation_user_2(request):
-    annotation = _write_annotation(user_id=2)
+    annotation = write_annotation(user_id=2)
     request.addfinalizer(lambda: _delete_annotation(annotation.id))
     return annotation
 
@@ -473,7 +473,7 @@ def test_annotation_count(client):
         session.commit()
 
         def add(taxonomy_class_id, status):
-            _write_annotation(taxonomy_class=taxonomy_class_id, status=status)
+            write_annotation(taxonomy_class=taxonomy_class_id, status=status)
 
         try:
             add(3, "released")
@@ -541,7 +541,7 @@ def test_annotation_counts_by_image(client):
         session.commit()
 
         def add(taxonomy_class_id, status, image_name):
-            _write_annotation(
+            write_annotation(
                 taxonomy_class=taxonomy_class_id, status=status, image_name=image_name
             )
 
@@ -606,7 +606,7 @@ def test_annotation_counts_current_user(client):
         assert counts["new"] == expected
 
     def add(taxonomy_class_id, user_id):
-        _write_annotation(user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image")
+        write_annotation(user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image")
 
     with connection_manager.get_db_session() as session:
         # make sure there are no other annotations

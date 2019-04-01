@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel
 
@@ -58,6 +58,21 @@ class BatchPost(BaseModel):
     name: str
     taxonomy_id: int
     overwrite: bool = False
+
+
+class ExecuteIOValue(BaseModel):
+    id: str
+    value: Union[str, int, float, bool]
+
+
+class ExecuteIOHref(BaseModel):
+    id: str
+    href: str
+
+
+class BatchPostForwarded(BaseModel):
+    inputs: List[Union[ExecuteIOValue, ExecuteIOHref]]
+    outputs: List[Union[ExecuteIOValue, ExecuteIOHref]]
 
 
 class AnnotationCountByStatus(BaseModel):
