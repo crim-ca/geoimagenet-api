@@ -9,7 +9,6 @@ from starlette.responses import PlainTextResponse, RedirectResponse
 import sentry_sdk
 
 from geoimagenet_api.__about__ import __version__, __author__, __email__
-from geoimagenet_api.utils import DataclassEncoder
 from geoimagenet_api.database import connection, migrations
 from geoimagenet_api import config
 
