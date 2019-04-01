@@ -172,5 +172,5 @@ class CRS(BaseModel):
 
 class GeoJsonFeatureCollection(BaseModel):
     type: str = Schema(..., regex="FeatureCollection")
-    crs: CRS
+    crs: CRS = CRS(type="EPSG", properties=CRSCode(code=3857))
     features: List[GeoJsonFeature] = []

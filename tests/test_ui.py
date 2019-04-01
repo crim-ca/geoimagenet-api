@@ -1,5 +1,5 @@
 def test_ensure_ui_loads(client):
-    r = client.get("/ui", allow_redirects=True)
+    r = client.get("/docs", allow_redirects=True)
 
     # The ui is rendered in javascript... so the response is always 200
     # even if the openapi schema is malformed
@@ -11,4 +11,6 @@ def test_ensure_ui_loads(client):
     # html.render()
     # print(html.html)
 
+    assert r.status_code == 200
+    r = client.get("/redoc", allow_redirects=True)
     assert r.status_code == 200
