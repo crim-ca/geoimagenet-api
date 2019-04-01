@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union
+from typing import List, Union, Any
 
 from pydantic import BaseModel
 
@@ -96,6 +96,11 @@ class AnnotationCountByStatus(BaseModel):
         )
 
 
+class AnnotationRequestReview(BaseModel):
+    annotation_ids: List[str]
+    boolean: bool
+
+
 class AnnotationProperties(BaseModel):
     annotator_id: int
     taxonomy_class_id: int
@@ -109,14 +114,14 @@ class AnnotationStatusUpdate(BaseModel):
     with_taxonomy_children: bool = True
 
 
-# class GeoJsonGeometry(BaseModel):
-#     type: str
-#     coordinates: List
+class GeoJsonGeometry(BaseModel):
+    type: str
+    coordinates: List[Any]
 
 
 class GeoJsonFeature(BaseModel):
     type: str
-    # geometry: GeoJsonGeometry
+    geometry: GeoJsonGeometry
     properties: AnnotationProperties
     id: str = None
 

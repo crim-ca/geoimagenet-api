@@ -238,43 +238,26 @@ def test_log_delete_annotation():
 
 def test_annotations_put_not_found(client, geojson_geometry):
     geojson_geometry["id"] = "annotation.1234567"
-    r = client.put(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps(geojson_geometry),
-    )
+    r = client.put(f"/annotations/", json=geojson_geometry)
     assert r.status_code == 404
 
 
 def test_annotations_put_not_an_int(client, geojson_geometry):
     geojson_geometry["id"] = "annotation.not_an_int"
-    r = client.put(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps(geojson_geometry),
-    )
+    r = client.put(f"/annotations/", json=geojson_geometry)
     assert r.status_code == 400
 
 
 def test_annotations_put_id_required(client, geojson_geometry):
-    r = client.put(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps(geojson_geometry),
-    )
+    r = client.put(f"/annotations/", json=geojson_geometry)
     assert r.status_code == 400
 
 
 def test_annotations_post_srid(client, any_geojson):
     from_srid = 4326
     query = {"srid": from_srid}
-    r = client.post(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps(any_geojson),
-        query_string=query,
-    )
-    written_ids = r.json
+    r = client.post("/annotations/", json=any_geojson, params=query)
+    written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
         annotation = session.query(Annotation).filter_by(id=written_ids[0]).one()
@@ -301,12 +284,7 @@ def test_annotations_put_srid(client, any_geojson, simple_annotation):
 
         from_srid = 4326
         query = {"srid": from_srid}
-        r = client.put(
-            api_url(f"/annotations"),
-            content_type="application/json",
-            data=json.dumps(any_geojson),
-            query_string=query,
-        )
+        r = client.put(f"/annotations/", json=any_geojson, params=query)
         assert r.status_code == 204
 
         annotation = session.query(Annotation).filter_by(id=annotation_id).one()
@@ -331,11 +309,7 @@ def test_annotations_request_review(client, simple_annotation):
             "annotation_ids": [f"annotation.{simple_annotation.id}"],
             "boolean": boolean,
         }
-        r = client.post(
-            api_url(f"/annotations/request_review"),
-            content_type="application/json",
-            data=json.dumps(data),
-        )
+        r = client.post(f"/annotations/request_review/", json=data)
         assert r.status_code == 204
 
     request_review(True)
@@ -364,34 +338,19 @@ def test_annotations_request_review_not_authorized(client, simple_annotation_use
         "annotation_ids": [f"annotation.{simple_annotation_user_2.id}"],
         "boolean": True,
     }
-    r = client.post(
-        api_url(f"/annotations/request_review"),
-        content_type="application/json",
-        data=json.dumps(data),
-    )
+    r = client.post(f"/annotations/request_review/", json=data)
     assert r.status_code == 403
 
 
 def test_annotations_request_review_not_an_int(client):
-    data = {
-        "annotation_ids": [f"annotation.not_an_int"],
-        "boolean": True,
-    }
-    r = client.post(
-        api_url(f"/annotations/request_review"),
-        content_type="application/json",
-        data=json.dumps(data),
-    )
+    data = {"annotation_ids": [f"annotation.not_an_int"], "boolean": True}
+    r = client.post(f"/annotations/request_review/", json=data)
     assert r.status_code == 400
 
 
 def test_annotations_request_review_not_found(client, simple_annotation):
     data = {"annotation_ids": [f"annotation.1234"], "boolean": True}
-    r = client.post(
-        api_url(f"/annotations/request_review"),
-        content_type="application/json",
-        data=json.dumps(data),
-    )
+    r = client.post(f"/annotations/request_review/", json=data)
     assert r.status_code == 404
 
 
@@ -411,11 +370,7 @@ def test_annotations_put(client, any_geojson, simple_annotation_user_2):
             any_geojson["status"] = f"released"
             properties = AnnotationProperties(**any_geojson["properties"])
 
-        r = client.put(
-            api_url(f"/annotations"),
-            content_type="application/json",
-            data=json.dumps(any_geojson),
-        )
+        r = client.put(f"/annotations/", json=any_geojson)
         assert r.status_code == 204
 
         annotation2 = session.query(Annotation).filter_by(id=annotation_id).one()
@@ -436,12 +391,8 @@ def test_annotations_put(client, any_geojson, simple_annotation_user_2):
 
 
 def test_annotation_post(client, any_geojson):
-    r = client.post(
-        api_url(f"/annotations"),
-        content_type="application/json",
-        data=json.dumps(any_geojson),
-    )
-    written_ids = r.json
+    r = client.post(f"/annotations/", json=any_geojson)
+    written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
         assert session.query(Annotation.id).filter_by(id=written_ids[0]).one()
@@ -458,9 +409,9 @@ def test_annotation_count(client):
     """
 
     def get_counts(taxonomy_class_id):
-        r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"))
+        r = client.get(f"/annotations/counts/{taxonomy_class_id}")
         assert r.status_code == 200
-        return r.json
+        return r.json()
 
     def assert_count(taxonomy_class_id, status, expected):
         r = get_counts(taxonomy_class_id)
@@ -510,7 +461,7 @@ def test_annotation_count(client):
 
 
 def test_annotation_counts_not_found(client):
-    r = client.get(api_url(f"/annotations/counts/123456"))
+    r = client.get(f"/annotations/counts/123456")
     assert r.status_code == 404
 
 
@@ -526,9 +477,9 @@ def test_annotation_counts_by_image(client):
 
     def get_counts(taxonomy_class_id):
         params = {"group_by_image": True}
-        r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"), query_string=params)
+        r = client.get(f"/annotations/counts/{taxonomy_class_id}", params=params)
         assert r.status_code == 200
-        return r.json
+        return r.json()
 
     def assert_count(taxonomy_class_id, status, image_name, expected):
         r = get_counts(taxonomy_class_id)
@@ -592,10 +543,13 @@ def test_annotation_counts_current_user(client):
     """
 
     def get_counts(taxonomy_class_id, current_user_only, group_by_image=False):
-        params = {"group_by_image": group_by_image, "current_user_only": current_user_only}
-        r = client.get(api_url(f"/annotations/counts/{taxonomy_class_id}"), query_string=params)
+        params = {
+            "group_by_image": group_by_image,
+            "current_user_only": current_user_only,
+        }
+        r = client.get(f"/annotations/counts/{taxonomy_class_id}", params=params)
         assert r.status_code == 200
-        return r.json
+        return r.json()
 
     def assert_count(taxonomy_class_id, current_user_only, group_by_image, expected):
         r = get_counts(taxonomy_class_id, current_user_only, group_by_image)
@@ -606,7 +560,9 @@ def test_annotation_counts_current_user(client):
         assert counts["new"] == expected
 
     def add(taxonomy_class_id, user_id):
-        write_annotation(user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image")
+        write_annotation(
+            user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image"
+        )
 
     with connection_manager.get_db_session() as session:
         # make sure there are no other annotations

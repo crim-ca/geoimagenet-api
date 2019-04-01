@@ -1,17 +1,21 @@
-import json
 from collections import defaultdict
-from typing import Tuple, Dict, Union, List, Optional
+from typing import Tuple, Dict, Union, List
 
-import dataclasses
-from flask import request
+from fastapi import APIRouter
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
+from starlette.exceptions import HTTPException
+from starlette.requests import Request
 
 from geoimagenet_api.openapi_schemas import (
     AnnotationProperties,
     AnnotationCountByStatus,
     AnnotationStatusUpdate,
+    GeoJsonFeature,
+    GeoJsonFeatureCollection,
+    GeoJsonGeometry,
+    AnnotationRequestReview,
 )
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
@@ -20,99 +24,90 @@ from geoimagenet_api.database.models import (
     ValidationEvent,
     ValidationValue,
 )
-from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.endpoints.taxonomy_classes import (
     flatten_taxonomy_classes_ids,
     get_taxonomy_classes_tree,
     get_all_taxonomy_classes_ids,
 )
+from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.utils import get_logged_user
 
 DEFAULT_SRID = 3857
 
+router = APIRouter()
 
-def _geojson_features_from_request(request) -> Tuple[Dict, Union[Dict, None]]:
+
+def _geojson_features_from_body(
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection]
+) -> List[GeoJsonFeature]:
     """Basic helper function to support a FeatureCollection and a single feature."""
-    if request.json["type"] == "FeatureCollection":
-        features = request.json["features"]
+    if isinstance(body, GeoJsonFeatureCollection):
+        features = body.features
     else:
-        features = [request.json]
+        features = [body]
     return features
 
 
-def _serialize_geometry(geometry: Dict, crs: int):
+def _serialize_geometry(geometry: GeoJsonGeometry, crs: int):
     """Takes a dict geojson geometry, and prepares it to  be written to the db.
 
     It transforms the geometry into the DEFAULT_CRS if necessary."""
-    geom_string = json.dumps(geometry)
+    geom_string = geometry.json()
     geom = func.ST_SetSRID(func.ST_GeomFromGeoJSON(geom_string), crs)
     if crs != DEFAULT_SRID:
         geom = func.ST_Transform(geom, DEFAULT_SRID)
     return geom
 
 
-def put(srid=DEFAULT_SRID):
+@router.put("/", status_code=204)
+def put(
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
+):
     with connection_manager.get_db_session() as session:
-        json_annotations = _geojson_features_from_request(request)
+        json_annotations = _geojson_features_from_body(body)
         for json_annotation in json_annotations:
-            properties = json_annotation["properties"]
-            geometry = json_annotation["geometry"]
-            properties = AnnotationProperties(
-                annotator_id=properties["annotator_id"],
-                taxonomy_class_id=properties["taxonomy_class_id"],
-                image_name=properties["image_name"],
-                status=properties.get("status", AnnotationStatus.new),
-            )
+            properties = json_annotation.properties
+            geometry = json_annotation.geometry
 
-            if "id" not in json_annotation:
-                return "Property 'id' is required", 400
+            if json_annotation.id is None:
+                raise HTTPException(400, "Property 'id' is required")
 
-            result = _get_annotation_ids_integers([json_annotation["id"]])
-            if isinstance(result, tuple) and len(result) == 2:
-                return result  # error reponse
-
-            id_ = result[0]
+            id_ = _get_annotation_ids_integers([json_annotation.id])[0]
 
             annotation = session.query(DBAnnotation).filter_by(id=id_).first()
             if not annotation:
-                return f"Annotation id not found: {id_}", 404
+                raise HTTPException(404, f"Annotation id not found: {id_}")
 
             geom = _serialize_geometry(geometry, srid)
 
+            # Notes:
+            # You can't change the annotator_id of an annotation
+            # Use specific endpoints to change the status (ex: /annotations/release)
             annotation.taxonomy_class_id = properties.taxonomy_class_id
             annotation.image_name = properties.image_name
             annotation.geometry = geom
-
-            # You can't change the owner of an annotation
-            # annotation.annotator_id = properties.annotator_id
-
-            # Use specific endpoints to change the status (ex: /annotations/release)
-            # annotation.status = properties.status
-
         try:
             session.commit()
         except IntegrityError as e:  # pragma: no cover
-            return f"Error: {e}", 400
-
-    return "Annotations updated", 204
+            raise HTTPException(400, f"Error: {e}")
 
 
-def post(srid=DEFAULT_SRID):
+@router.post("/", response_model=List[int], status_code=201)
+def post(
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
+):
     written_annotations = []
 
     with connection_manager.get_db_session() as session:
-        features = _geojson_features_from_request(request)
+        features = _geojson_features_from_body(body)
         for feature in features:
-            geometry = feature["geometry"]
-            properties = feature["properties"]
-
-            geom = _serialize_geometry(geometry, srid)
-
+            geom = _serialize_geometry(feature.geometry, srid)
+            properties = feature.properties
             annotation = DBAnnotation(
-                annotator_id=properties["annotator_id"],
+                annotator_id=properties.annotator_id,
                 geometry=geom,
-                taxonomy_class_id=properties["taxonomy_class_id"],
-                image_name=properties["image_name"],
+                taxonomy_class_id=properties.taxonomy_class_id,
+                image_name=properties.image_name,
             )
             session.add(annotation)
             written_annotations.append(annotation)
@@ -120,9 +115,9 @@ def post(srid=DEFAULT_SRID):
         try:
             session.commit()
         except IntegrityError as e:  # pragma: no cover
-            return f"Error: {e}", 400
+            raise HTTPException(400, f"Error: {e}")
 
-        return [a.id for a in written_annotations], 201
+        return [a.id for a in written_annotations]
 
 
 allowed_status_transitions = {
@@ -139,12 +134,16 @@ def _get_annotation_ids_integers(annotation_ids: List[str]) -> Union[List[int], 
     try:
         annotation_ids = [int(i.split(".")[-1]) for i in annotation_ids]
     except ValueError:
-        return "Annotation ids must be of the format: layer_name.123456", 400
+        raise HTTPException(
+            400, "Annotation ids must be of the format: layer_name.123456"
+        )
     return annotation_ids
 
 
 def _update_status(
-    update_info: AnnotationStatusUpdate, desired_status: AnnotationStatus
+    update_info: AnnotationStatusUpdate,
+    desired_status: AnnotationStatus,
+    request: Request,
 ):
     """Update annotations statuses based on filters provided in update_info and allowed transitions."""
     logged_user = get_logged_user(request)
@@ -167,11 +166,7 @@ def _update_status(
         query = query.filter(or_(*filters))
 
         if update_info.annotation_ids:
-            result = _get_annotation_ids_integers(update_info.annotation_ids)
-            if isinstance(result, tuple) and len(result) == 2:
-                return result  # error response
-
-            annotation_ids = result
+            annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
 
@@ -190,7 +185,9 @@ def _update_status(
             if count_to_update < count_requested - count_in_good_state:
                 # some annotation ids were not in a good state and
                 # a wrong transition was requested
-                return "Status update refused. This transition is not allowed", 403
+                raise HTTPException(
+                    403, "Status update refused. This transition is not allowed"
+                )
 
         else:
             taxonomy_class_id = update_info.taxonomy_class_id
@@ -200,7 +197,9 @@ def _update_status(
                 .first()
             )
             if not taxonomy_id:
-                return f"Taxonomy class id not found {taxonomy_class_id}", 404
+                raise HTTPException(
+                    404, f"Taxonomy class id not found: {taxonomy_class_id}"
+                )
             if update_info.with_taxonomy_children:
                 taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_class_id)
             else:
@@ -227,34 +226,39 @@ def _update_status(
         query.update({DBAnnotation.status: desired_status}, synchronize_session=False)
 
         session.commit()
-    return "No Content", 204
 
 
-def update_status_release():
-    return _update_status(
-        AnnotationStatusUpdate(**request.json), AnnotationStatus.released
-    )
+@router.post("/release", status_code=204)
+def update_status_release(update: AnnotationStatusUpdate, request: Request):
+    return _update_status(update, AnnotationStatus.released, request)
 
 
-def update_status_validate():
-    return _update_status(
-        AnnotationStatusUpdate(**request.json), AnnotationStatus.validated
-    )
+@router.post("/validate", status_code=204)
+def update_status_validate(update: AnnotationStatusUpdate, request: Request):
+    return _update_status(update, AnnotationStatus.validated, request)
 
 
-def update_status_reject():
-    return _update_status(
-        AnnotationStatusUpdate(**request.json), AnnotationStatus.rejected
-    )
+@router.post("/reject", status_code=204)
+def update_status_reject(update: AnnotationStatusUpdate, request: Request):
+    return _update_status(update, AnnotationStatus.rejected, request)
 
 
-def update_status_delete():
-    return _update_status(
-        AnnotationStatusUpdate(**request.json), AnnotationStatus.deleted
-    )
+@router.post("/delete", status_code=204)
+def update_status_delete(update: AnnotationStatusUpdate, request: Request):
+    return _update_status(update, AnnotationStatus.deleted, request)
 
 
-def counts(taxonomy_class_id, group_by_image=False, current_user_only=False):
+@router.get(
+    "/counts/{taxonomy_class_id}",
+    response_model=Dict[str, AnnotationCountByStatus],
+    status_code=200,
+)
+def counts(
+    request: Request,
+    taxonomy_class_id: int,
+    group_by_image: bool = False,
+    current_user_only: bool = False,
+):
     """Get annotation count per annotation status for a specific taxonomy class and its children.
     """
 
@@ -263,7 +267,9 @@ def counts(taxonomy_class_id, group_by_image=False, current_user_only=False):
         taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class_id)
 
         if not taxo:
-            return "Taxonomy class id not found", 404
+            raise HTTPException(
+                404, f"Taxonomy class id not found: {taxonomy_class_id}"
+            )
 
         # Get annotation count only for these taxonomy class ids
         queried_taxo_ids = flatten_taxonomy_classes_ids(taxo)
@@ -288,7 +294,9 @@ def counts(taxonomy_class_id, group_by_image=False, current_user_only=False):
             )
 
             if current_user_only:
-                annotation_counts_query = add_filter_current_user(annotation_counts_query)
+                annotation_counts_query = add_filter_current_user(
+                    annotation_counts_query
+                )
 
             for image_name, status, count in annotation_counts_query:
                 setattr(annotation_count_dict[image_name], status, count)
@@ -305,25 +313,25 @@ def counts(taxonomy_class_id, group_by_image=False, current_user_only=False):
             )
 
             if current_user_only:
-                annotation_counts_query = add_filter_current_user(annotation_counts_query)
+                annotation_counts_query = add_filter_current_user(
+                    annotation_counts_query
+                )
 
             for class_id, status, count in annotation_counts_query:
-                setattr(annotation_count_dict[class_id], status, count)
+                setattr(annotation_count_dict[str(class_id)], status, count)
 
             # add annotation count to parent objects
             def recurse_add_counts(obj):
                 for o in obj.children:
-                    annotation_count_dict[obj.id] += recurse_add_counts(o)
-                return annotation_count_dict[obj.id]
+                    annotation_count_dict[str(obj.id)] += recurse_add_counts(o)
+                return annotation_count_dict[str(obj.id)]
 
             recurse_add_counts(taxo)
 
-        # Note: No validation is made by `connexion` for this returned
-        # value structure due to the dynamic property name
-        return {str(k): dataclasses.asdict(v) for k, v in annotation_count_dict.items()}
+        return annotation_count_dict
 
 
-def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str, int]]:
+def _ensure_annotations_exists(annotation_ids: List[int]):
     """Makes sure the requested annotation ids, else return a 404 response."""
     with connection_manager.get_db_session() as session:
         ids_exists = session.query(DBAnnotation.id).filter(
@@ -334,12 +342,12 @@ def _ensure_annotations_exists(annotation_ids: List[int]) -> Optional[Tuple[str,
             set(annotation_ids).difference((o[0] for o in ids_exists))
         )
         if count_not_found:
-            return f"{count_not_found} annotation ids could not be found.", 404
+            raise HTTPException(
+                404, f"{count_not_found} annotation ids could not be found."
+            )
 
 
-def _ensure_annotation_owner(
-    annotation_ids: List[int], logged_user: int
-) -> Optional[Tuple[str, int]]:
+def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
     """Makes sure the requested annotation ids belong to the logged in user, else return a 403 response."""
     with connection_manager.get_db_session() as session:
         count_not_owned = (
@@ -354,38 +362,28 @@ def _ensure_annotation_owner(
         )
 
         if count_not_owned:
-            return (
-                f"{count_not_owned} annotation ids are not owned by the logged in user.",
+            raise HTTPException(
                 403,
+                f"{count_not_owned} annotation ids are not owned by the logged in user.",
             )
 
 
-def request_review():
+@router.post("/request_review/", status_code=204)
+def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""
     logged_user = get_logged_user(request)
 
-    result = _get_annotation_ids_integers(request.json["annotation_ids"])
-    if isinstance(result, tuple) and len(result) == 2:
-        return result  # error response
+    annotation_ids = _get_annotation_ids_integers(body.annotation_ids)
 
-    annotation_ids = result
-
-    response = _ensure_annotations_exists(annotation_ids)
-    if response is not None:
-        return response
-    response = _ensure_annotation_owner(annotation_ids, logged_user)
-    if response is not None:
-        return response
+    _ensure_annotations_exists(annotation_ids)
+    _ensure_annotation_owner(annotation_ids, logged_user)
 
     with connection_manager.get_db_session() as session:
         (
             session.query(DBAnnotation)
             .filter(DBAnnotation.id.in_(annotation_ids))
             .update(
-                {DBAnnotation.review_requested: request.json["boolean"]},
-                synchronize_session=False,
+                {DBAnnotation.review_requested: body.boolean}, synchronize_session=False
             )
         )
         session.commit()
-
-    return "No Content", 204

@@ -3,7 +3,7 @@ from starlette.requests import Request
 
 from geoimagenet_api import __version__, __author__, __email__
 from geoimagenet_api.openapi_schemas import ApiInfo
-from geoimagenet_api.endpoints import taxonomy, taxonomy_classes, users, batches
+from geoimagenet_api.endpoints import taxonomy, taxonomy_classes, users, batches, annotations
 
 router = APIRouter()
 
@@ -13,6 +13,7 @@ router.include_router(
     taxonomy_classes.router, prefix="/taxonomy_classes", tags=["taxonomy_classes"]
 )
 router.include_router(batches.router, prefix="/batches", tags=["batches"])
+router.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
 
 
 @router.get("/", response_model=ApiInfo)
