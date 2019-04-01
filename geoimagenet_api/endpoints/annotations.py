@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Tuple, Dict, Union, List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -9,13 +9,13 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
 from geoimagenet_api.openapi_schemas import (
-    AnnotationProperties,
     AnnotationCountByStatus,
-    AnnotationStatusUpdate,
     GeoJsonFeature,
     GeoJsonFeatureCollection,
-    GeoJsonGeometry,
     AnnotationRequestReview,
+    AnnotationStatusUpdateIds,
+    AnnotationStatusUpdateTaxonomyClass,
+    AnyGeojsonGeometry,
 )
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
@@ -48,7 +48,7 @@ def _geojson_features_from_body(
     return features
 
 
-def _serialize_geometry(geometry: GeoJsonGeometry, crs: int):
+def _serialize_geometry(geometry: AnyGeojsonGeometry, crs: int):
     """Takes a dict geojson geometry, and prepares it to  be written to the db.
 
     It transforms the geometry into the DEFAULT_CRS if necessary."""
@@ -140,10 +140,13 @@ def _get_annotation_ids_integers(annotation_ids: List[str]) -> Union[List[int], 
     return annotation_ids
 
 
+status_update_type = Union[
+    AnnotationStatusUpdateIds, AnnotationStatusUpdateTaxonomyClass
+]
+
+
 def _update_status(
-    update_info: AnnotationStatusUpdate,
-    desired_status: AnnotationStatus,
-    request: Request,
+    update_info: status_update_type, desired_status: AnnotationStatus, request: Request
 ):
     """Update annotations statuses based on filters provided in update_info and allowed transitions."""
     logged_user = get_logged_user(request)
@@ -165,7 +168,7 @@ def _update_status(
 
         query = query.filter(or_(*filters))
 
-        if update_info.annotation_ids:
+        if isinstance(update_info, AnnotationStatusUpdateIds):
             annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
@@ -229,23 +232,40 @@ def _update_status(
 
 
 @router.post("/release", status_code=204, summary="Release")
-def update_status_release(update: AnnotationStatusUpdate, request: Request):
+def update_status_release(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.released, request)
 
 
 @router.post("/validate", status_code=204, summary="Validate")
-def update_status_validate(update: AnnotationStatusUpdate, request: Request):
+def update_status_validate(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.validated, request)
 
 
 @router.post("/reject", status_code=204, summary="Reject")
-def update_status_reject(update: AnnotationStatusUpdate, request: Request):
+def update_status_reject(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.rejected, request)
 
 
 @router.post("/delete", status_code=204, summary="Delete")
-def update_status_delete(update: AnnotationStatusUpdate, request: Request):
+def update_status_delete(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.deleted, request)
+
+
+group_by_image_type = Query(
+    False,
+    description=(
+        "The key of the returned json will either be the taxonomy class "
+        "if this value is false, or the image name if it's true."
+    ),
+)
+
+current_user_only_type = Query(
+    False,
+    description=(
+        "If true, the counts only reflect the currently "
+        "logged in user's annotations."
+    ),
+)
 
 
 @router.get(
@@ -257,10 +277,12 @@ def update_status_delete(update: AnnotationStatusUpdate, request: Request):
 def counts(
     request: Request,
     taxonomy_class_id: int,
-    group_by_image: bool = False,
-    current_user_only: bool = False,
+    group_by_image: bool = group_by_image_type,
+    current_user_only: bool = current_user_only_type,
 ):
-    """Get annotation count per annotation status for a specific taxonomy class and its children.
+    """Return annotation counts for the given taxonomy class along with its children.
+    If group_by_image is True, the counts are grouped by image name instead of
+    taxonomy class.
     """
 
     with connection_manager.get_db_session() as session:
@@ -369,7 +391,9 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
             )
 
 
-@router.post("/request_review/", status_code=204, summary="Request review")
+@router.post(
+    "/request_review/", status_code=204, response_model=None, summary="Request review"
+)
 def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""
     logged_user = get_logged_user(request)

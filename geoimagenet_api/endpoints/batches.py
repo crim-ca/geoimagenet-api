@@ -28,7 +28,9 @@ from geoimagenet_api.openapi_schemas import (
 router = APIRouter()
 
 
-@router.get("/", response_model=GeoJsonFeatureCollection, summary="Get validated annotations")
+@router.get(
+    "/", response_model=GeoJsonFeatureCollection, summary="Get validated annotations"
+)
 def get_annotations(taxonomy_id: int):
     if not _is_taxonomy_id_valid(taxonomy_id):
         raise HTTPException(404, "taxonomy_id not found")
@@ -116,7 +118,20 @@ def _get_batch_creation_url(request: Request):
     return batches_url
 
 
-@router.post("/", response_model=BatchPostForwarded, status_code=202, summary="Create")
+post_description = (
+    "Forwards information to the batch creation process. On success, "
+    "the returned body is the same as the one forwarded to the batch "
+    "creation service."
+)
+
+
+@router.post(
+    "/",
+    response_model=BatchPostForwarded,
+    status_code=202,
+    summary="Create",
+    description=post_description,
+)
 def post(batch_post: BatchPost, request: Request):
     if not _is_taxonomy_id_valid(batch_post.taxonomy_id):
         raise HTTPException(404, "Taxonomy_id not found")

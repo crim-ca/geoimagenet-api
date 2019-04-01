@@ -73,7 +73,7 @@ class ExecuteIOHref(BaseModel):
 
 class BatchPostForwarded(BaseModel):
     inputs: List[Union[ExecuteIOValue, ExecuteIOHref]]
-    outputs: List[Union[ExecuteIOValue, ExecuteIOHref]]
+    outputs: List[Union[ExecuteIOValue, ExecuteIOHref]] = []
 
 
 class AnnotationCountByStatus(BaseModel):
@@ -97,9 +97,19 @@ class AnnotationCountByStatus(BaseModel):
         )
 
 
+annotation_ids_schema = Schema(
+    ...,
+    description="Must be an array of string like: "
+    "['annotation.1234', 'annotation.1235', ...]. "
+    "This is the standard OpenLayers format.",
+)
+
+
 class AnnotationRequestReview(BaseModel):
-    annotation_ids: List[str]
-    boolean: bool
+    annotation_ids: List[str] = annotation_ids_schema
+    boolean: bool = Schema(
+        ..., description="Boolean whether to turn on or off the review request."
+    )
 
 
 class AnnotationProperties(BaseModel):
@@ -109,29 +119,58 @@ class AnnotationProperties(BaseModel):
     status: AnnotationStatus = AnnotationStatus.new
 
 
-class AnnotationStatusUpdate(BaseModel):
-    annotation_ids: List[str] = None
-    taxonomy_class_id: int = None
-    with_taxonomy_children: bool = True
+class AnnotationStatusUpdateIds(BaseModel):
+    annotation_ids: List[str] = annotation_ids_schema
 
 
-class GeoJsonGeometry(BaseModel):
-    type: str
-    coordinates: List[Any]
+class AnnotationStatusUpdateTaxonomyClass(BaseModel):
+    taxonomy_class_id: int
+    with_taxonomy_children: bool = Schema(
+        True,
+        description="If true, the taxonomy_class_id will also include its children.",
+    )
+
+
+class Point(BaseModel):
+    type: str = Schema(..., regex="Point")
+    coordinates: List[float]
+
+
+class LineString(BaseModel):
+    type: str = Schema(..., regex="LineString")
+    coordinates: List[List[float]]
+
+
+class Polygon(BaseModel):
+    type: str = Schema(..., regex="Polygon")
+    coordinates: List[List[List[float]]]
+
+
+class MultiPolygon(BaseModel):
+    type: str = Schema(..., regex="MultiPolygon")
+    coordinates: List[List[List[List[float]]]]
+
+
+AnyGeojsonGeometry = Union[Point, LineString, Polygon, MultiPolygon]
 
 
 class GeoJsonFeature(BaseModel):
-    type: str
-    geometry: GeoJsonGeometry
+    type: str = Schema(..., regex="Feature")
+    geometry: AnyGeojsonGeometry
     properties: AnnotationProperties
     id: str = None
 
 
+class CRSCode(BaseModel):
+    code: int
+
+
+class CRS(BaseModel):
+    type: str = Schema(..., regex="EPSG")
+    properties: CRSCode
+
+
 class GeoJsonFeatureCollection(BaseModel):
-    features: List[GeoJsonFeature]
-    type: str = "FeatureCollection"
-
-
-class MultiPolygon(BaseModel):
-    coordinates: List[List[List[List[float]]]]
-    type: str = "MultiPolygon"
+    type: str = Schema(..., regex="FeatureCollection")
+    crs: CRS
+    features: List[GeoJsonFeature] = []

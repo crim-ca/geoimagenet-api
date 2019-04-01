@@ -10,7 +10,7 @@ router = APIRouter()
 router.include_router(users.router, prefix="/users", tags=["Users"])
 router.include_router(taxonomy.router, prefix="/taxonomy", tags=["Taxonomy"])
 router.include_router(
-    taxonomy_classes.router, prefix="/taxonomy_classes", tags=["Taxonomy_classes"]
+    taxonomy_classes.router, prefix="/taxonomy_classes", tags=["Taxonomy Classes"]
 )
 router.include_router(batches.router, prefix="/batches", tags=["Batches"])
 router.include_router(annotations.router, prefix="/annotations", tags=["Annotations"])

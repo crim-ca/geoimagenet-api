@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from slugify import slugify
 from collections import defaultdict
 
@@ -12,8 +12,18 @@ from geoimagenet_api.database.connection import connection_manager
 router = APIRouter()
 
 
+taxonomy_name_query = Query(
+    ...,
+    description=(
+        "Full name or sluggified name of the taxonomy. "
+        "Example of name slug for 'Couverture de sol': "
+        "couverture-de-sol"
+    ),
+)
+
+
 @router.get("/", response_model=List[TaxonomyClass], summary="Search")
-def search(taxonomy_name: str, name: str, depth: int = -1):
+def search(name: str, taxonomy_name: str = taxonomy_name_query, depth: int = -1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
             if taxonomy_name in (

@@ -36,7 +36,7 @@ def aggregated_taxonomies():
 
 
 name_query = Query(
-    None,
+    ...,
     description=(
         "Full name or sluggified name of the taxonomy. "
         "Example of name slug for 'Couverture de sol': "
@@ -94,7 +94,7 @@ name_slug_query = Query(
 
 
 @router.get("/{name_slug}/{version}", response_model=Taxonomy, summary="Get by slug")
-def get_by_slug(name_slug: str, version: str):
+def get_by_slug(version: str, name_slug: str = name_slug_query):
     for taxonomy in aggregated_taxonomies():
         ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy
         if slugify(name_fr) == name_slug and version in taxonomy_versions:
