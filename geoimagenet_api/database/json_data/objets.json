@@ -4,48 +4,56 @@
         "fr": "Objets",
         "en": "Objects"
     },
+    "code": "",
     "value": [
         {
             "name": {
                 "fr": "Bâtiment résidentiel",
                 "en": "Residential building"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Unifamilial",
                         "en": "Single-family"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Unifamilial détaché",
                         "en": "Single-family detached"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Unifamilial jumelé",
                         "en": "Single-family attached"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Multifamiliale",
                         "en": "Multi-family"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Maison mobile",
                         "en": "Mobile home"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Autre bâtiment",
                         "en": "Building other"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -54,54 +62,63 @@
                 "fr": "Bâtiment commercial et service",
                 "en": "Commercial building"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Centre commercial",
                         "en": "Shopping center"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Commerce indépendant (pharmacie, épicerie, …)",
                         "en": "Commercial store (drugstore, grocery store, …)"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Commerce de véhicules",
                         "en": "Car dealership"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Station de service et garage",
                         "en": "Gas station and automobile repair shop"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Hôtel",
                         "en": "Hotel"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Motel",
                         "en": "Motel"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Restaurant, brasserie",
                         "en": "Restaurant, bar"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Autre commerce/service",
                         "en": "Other retail or service"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -110,126 +127,147 @@
                 "fr": "Bâtiment de service et d'utilité publique (équipements collectifs)",
                 "en": "Public utility and services building"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Édifice gouvernemental",
                         "en": "Government building"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Hôtel de ville",
                         "en": "City hall"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Établissement d'incarcération",
                         "en": "Incarceration facility"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Poste de police",
                         "en": "Police station"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Poste de pompiers",
                         "en": "Fire station"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Hôpital",
                         "en": "Hospital"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Église",
                         "en": "Church"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Maison de religieux",
                         "en": "Other religious building"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Université, collège",
                         "en": "University and college"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "École primaire/secondaire",
                         "en": "School (elementary and high)"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Cinéma extérieur",
                         "en": "Drive-in cinema"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Aréna",
                         "en": "Arena"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Stade",
                         "en": "Stadium"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Centre sportif",
                         "en": "Sport facility"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de jeu, parc urbain",
                         "en": "Playground and park"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Cimetière",
                         "en": "Cemetary"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Poste de douane",
                         "en": "Customs checkpoint"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Observatoire",
                         "en": "Observatory"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Château d'eau",
                         "en": "Water tower"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Bassin de rétention",
                         "en": "Retention basin"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -238,90 +276,105 @@
                 "fr": "Installations sportives extérieures",
                 "en": "Outdoor sport facility"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Terrain de baseball",
                         "en": "Baseball field"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de soccer",
                         "en": "Soccer field"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de football",
                         "en": "Football field"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Piscine extérieure",
                         "en": "Outdoor pool"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de tennis",
                         "en": "Tennis court"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de basketball",
                         "en": "Basketball court"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Piste d'athlétisme",
                         "en": "Athletics track"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain à vocation multiple",
                         "en": "Multiple-use sports field"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de volley-ball",
                         "en": "Volleyball court"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Terrain de golf",
                         "en": "Golf course"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Centre de ski",
                         "en": "Ski resort"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Piste de course",
                         "en": "Racetrack"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Parc d'attractions",
                         "en": "Amusement park"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Hippodrome",
                         "en": "Hippodrome"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -330,72 +383,84 @@
                 "fr": "Bâtiment ou infrastructure industriel",
                 "en": "Industrial building and structure"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Usine d'extraction (carrière, sablière, gravière)",
                         "en": "Extraction plant (quarry, gravel/sand pit)"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Usine de fabrication/transformation légère",
                         "en": "Light processing/manufacturing plant"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Usine de fabrication/transformation lourde",
                         "en": "Heavy processing/manufacturing plant"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Entrepôt de marchandise",
                         "en": "Merchandise warehouse"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Entrepôt d'hydrocarbures",
                         "en": "Oil and gas storage facility"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Station d'épuration des eaux",
                         "en": "Water treatment plant"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Bassin de décantation",
                         "en": "Decantation basin"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Site d'enfouissement (dépôt de déchets)",
                         "en": "Landfill site"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Réservoir",
                         "en": "Tank"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Cheminée",
                         "en": "Chimney"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Usine autre",
                         "en": "Other factory"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -404,42 +469,49 @@
                 "fr": "Autres objets bâtis (mobilier urbain)",
                 "en": "Street furniture"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Clôture",
                         "en": "Fence"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Lampadaire",
                         "en": "Lamp post"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Trottoir",
                         "en": "Sidewalk"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Haie",
                         "en": "Hedgerow"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Poteau électrique",
                         "en": "Utility pole"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Abribus",
                         "en": "Bus shelter"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -448,84 +520,98 @@
                 "fr": "Infrastructure de transport routier",
                 "en": "Road infrastructure"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Autoroute",
                         "en": "Highway"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Échangeur",
                         "en": "Interchange"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Route pavée",
                         "en": "Paved road"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Route non pavée",
                         "en": "Unpaved road"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Pont",
                         "en": "Bridge"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Viaduc",
                         "en": "Overpass"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Centre de services autoroutiers",
                         "en": "Service and rest area"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Poste de péage",
                         "en": "Toll station"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Signalisation routière",
                         "en": "Road sign"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Stationnement",
                         "en": "Parking lot"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Balance routière",
                         "en": "Weighing station"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Paraneige",
                         "en": "Snow fence"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Tunnel (entrée et sortie)",
                         "en": "Tunnel (entrance and exit)"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -534,42 +620,49 @@
                 "fr": "Infrastructure de transport ferroviaire",
                 "en": "Train infrastructure"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Gare de train",
                         "en": "Train station"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Voie ferrée unique",
                         "en": "Single railroad track"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Voie ferrée multiple",
                         "en": "Multiple railroad tracks"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Voie de garage",
                         "en": "Storage track"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Gare de triage",
                         "en": "Train depot"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Aiguillage ferroviaire",
                         "en": "Railway switch"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -578,42 +671,49 @@
                 "fr": "Infrastructure de transport maritime",
                 "en": "Maritime infrastructure"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Port commercial",
                         "en": "Commercial port"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Marina / Port de plaisance",
                         "en": "Marina"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Port militaire",
                         "en": "Military port"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Quai",
                         "en": "Warf"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Rampe de mise à l'eau",
                         "en": "Boat launching ramp"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Écluse",
                         "en": "Boat lock"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -622,24 +722,28 @@
                 "fr": "Infrastructure de transport aérien",
                 "en": "Air transport infastructure"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Aéroport",
                         "en": "Airport"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Piste de décollage",
                         "en": "Runway"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Hangar",
                         "en": "Hangar"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -648,108 +752,126 @@
                 "fr": "Moyen de transport mobile",
                 "en": "Mobile transportation means"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Voiture",
                         "en": "Car"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Fourgonnette",
                         "en": "Van"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Camionnette",
                         "en": "Pick-up truck"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Autocar/autobus",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Train - locomotive",
                         "en": "Train - locomotive"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Train - wagon de passagers",
                         "en": "Train - passenger car"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Train - wagon de marchandise",
                         "en": "Train - freight car"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Bateau de plaisance, voilier",
                         "en": "Pleasure craft"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Bateau de marchandise",
                         "en": "Freight vessel"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Porte-conteneurs",
                         "en": "Container ship"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Pétrolier/méthanier",
                         "en": "Tanker"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Avion type cessna",
                         "en": "Small plane"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Avion de ligne",
                         "en": "Airliner"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Avion militaire",
                         "en": "Military aircraft"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Train routier",
                         "en": "Road train"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Paquebot",
                         "en": "Cruise ship"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Navire militaire",
                         "en": "Military vessel"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -758,24 +880,28 @@
                 "fr": "Télécommunications",
                 "en": "Telecommunication"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Tour (dédiée)",
                         "en": "Tower (dedicated)"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Antenne de communication (sur toit)",
                         "en": "Communication antenna (roof)"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Station de réception satellite (grandes paraboles)",
                         "en": "Satellite dish"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -784,72 +910,84 @@
                 "fr": "Énergie",
                 "en": "Energy"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Ligne de haute tension",
                         "en": "High-voltage line"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Pipeline",
                         "en": "Pipeline"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Pylône",
                         "en": "Pylon"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Centrale thermique",
                         "en": "Thermal power plant"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Centrale hydro-électrique",
                         "en": "Hydroelectric power plant"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Centrale nucléaire",
                         "en": "Nuclear plant"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Éolienne",
                         "en": "Wind turbine"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Panneau solaire",
                         "en": "Solar pannel"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Transformateur d'électricité, poste électrique",
                         "en": "Electrical substation"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Puits de pétrole/gaz",
                         "en": "Oil/ gas well"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Raffinerie",
                         "en": "Refinery"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -858,54 +996,63 @@
                 "fr": "Structures anthropiques hydrographiques",
                 "en": "Man-made hydrographic structure"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Digue",
                         "en": "Dike"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Brise-Lame",
                         "en": "Breakwater"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Cale sèche",
                         "en": "Dry dock"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Entrave à la navigation",
                         "en": "Navigational obstacle"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Mur de protection (seawall)",
                         "en": "Seawall"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Repère de navigation",
                         "en": "Navigational landmark"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Vivier / pisciculture",
                         "en": "Fish pool/ farm"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Échelle à poisson",
                         "en": "Fish ladder"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -914,54 +1061,63 @@
                 "fr": "Exploitation agricole",
                 "en": "Farmland"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Champ - grandes cultures",
                         "en": "Crop field"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Champ - cultures maraîchères",
                         "en": "Field - vegetable crop"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Champ - horticulture",
                         "en": "Field - horticulture"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Champ - fourrager",
                         "en": "Field - hay"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Friche",
                         "en": "Fallow"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Verger",
                         "en": "Orchard"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Vignoble",
                         "en": "Vineyards"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Enclos",
                         "en": "Paddock"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -970,48 +1126,56 @@
                 "fr": "Bâtiments agricoles",
                 "en": "Agricultural buildings"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Grange, entrepôt, hangar",
                         "en": "Barn, warehouse, shed"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Silo",
                         "en": "Silo"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Ferme d'élevage",
                         "en": "Livestock farm"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Fosse lisier",
                         "en": "Manure pit"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Serre d'exploitation agricole",
                         "en": "Agricultural greenhouse"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Serre commerciale",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Élévateur à grain",
                         "en": "Grain elevator"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1020,18 +1184,21 @@
                 "fr": "Arbres (en divers milieux)",
                 "en": "Trees"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Arbre feuillu (Deciduous tree)",
                         "en": "Deciduous tree"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Arbre conifère (Evergreen Forest Land)",
                         "en": "Coniferous tree"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1040,42 +1207,49 @@
                 "fr": "Hydrographie linéaire",
                 "en": "Linear hydrography"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Rivière (Streams)",
                         "en": "River and stream"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Ruisseau",
                         "en": "Brook"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Fossé",
                         "en": "Ditch"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Chute",
                         "en": "Waterfall"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Rapide",
                         "en": "Rapid"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Cours d'eau tari",
                         "en": "Dry watercourse"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1084,12 +1258,14 @@
                 "fr": "Hydrographie surfacique",
                 "en": "Surficial hydrography"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Eau",
                         "en": "Water"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1098,42 +1274,49 @@
                 "fr": "Milieux humides",
                 "en": "Wetland"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Bog - arboré",
                         "en": "Treed bog"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Bog - non arboré",
                         "en": "Untreed bog"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Fen",
                         "en": "Fen"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Marécage",
                         "en": "Swamp"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Marais",
                         "en": "Marsh"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Eau peu profonde",
                         "en": "Shallow water"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1142,30 +1325,35 @@
                 "fr": "Mines",
                 "en": "Mines"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Pit",
                         "en": "Pit"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Mine shaft",
                         "en": "Mine shaft"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Tailings",
                         "en": "Tailings"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Decantation basin",
                         "en": "Decantation basin"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1174,30 +1362,35 @@
                 "fr": "Formes terrestres",
                 "en": "Glacial landforms"
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Esker",
                         "en": "Esker"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Moraine",
                         "en": "Moraine"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Pingo",
                         "en": "Pingo"
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Drumlin",
                         "en": "Drumlin"
-                    }
+                    },
+                    "code": ""
                 }
             ]
         },
@@ -1206,66 +1399,77 @@
                 "fr": "Énergie verte",
                 "en": ""
             },
+            "code": "",
             "value": [
                 {
                     "name": {
                         "fr": "Roofedge - toit vert",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Roofedge - avec panneau solaire",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit plat",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit plat < 10 % obstruction",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit plat  10 - 30% obstruction",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit plat > 30 % obstruction",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit 2 pentes",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit 4 pentes",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit complexe",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 },
                 {
                     "name": {
                         "fr": "Toit convexe",
                         "en": ""
-                    }
+                    },
+                    "code": ""
                 }
             ]
         }

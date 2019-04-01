@@ -1,220 +1,546 @@
 {
-	"version": 1,
-	"name": "Couverture de sol",
-	"value": [{
-		"name": "Urban or Built-up Land",
-		"value": [{
-			"name": "Residential",
-			"value": [{
-				"name": "Densité faible"
-			},
-			{
-				"name": "Densité moyenne"
-			},
-			{
-				"name": "Densité élevée"
-			},
-			{
-				"name": "Parc de maisons mobiles"
-			}]
-		},
-		{
-			"name": "Commercial and Services",
-			"value": [{
-				"name": "Terrain associé au commerce ou au service (selon le type de commerce ou de service)?"
-			}]
-		},
-		{
-			"name": "Industrial",
-			"value": [{
-				"name": "Terrain associé à l'industrie (selon le type d'industrie)?"
-			}]
-		},
-		{
-			"name": "Transportation",
-			"value": [{
-				"name": "Emprise/corridor de transport routier"
-			},
-			{
-				"name": "Emprise/corridor de transport ferroviaire"
-			},
-			{
-				"name": "Zone portuaire"
-			},
-			{
-				"name": "Zone aéroportuaire"
-			}]
-		},
-		{
-			"name": "Energy",
-			"value": [{
-				"name": "Emprise/corridor de transport d'énergie électrique"
-			},
-			{
-				"name": "Emprise de pipeline"
-			},
-			{
-				"name": "Parc solaire"
-			}]
-		},
-		{
-			"name": "Other Urban or Built-up Land",
-			"value": [{
-				"name": "Parc, espace vert"
-			},
-			{
-				"name": "Terrain associé aux installations (traitement des eaux, traitement des déchets)"
-			}]
-		}]
-	},
-	{
-		"name": "Agricultural Land",
-		"value": [{
-			"name": "Grandes cultures"
-		},
-		{
-			"name": "Maraîcher"
-		},
-		{
-			"name": "Pâturage"
-		},
-		{
-			"name": "Ferme (terrain avec bâtiments)"
-		},
-		{
-			"name": "Other Agricultural Land"
-		}]
-	},
-	{
-		"name": "Rangeland",
-		"value": [{
-			"name": "Herbaceous Rangeland"
-		},
-		{
-			"name": "Shrub and Brush Rangeland"
-		},
-		{
-			"name": "Mixed Rangeland"
-		}]
-	},
-	{
-		"name": "Forest Land",
-		"value": [{
-			"name": "Deciduous Forest Land"
-		},
-		{
-			"name": "Evergreen Forest Land"
-		},
-		{
-			"name": "Mixed Forest Land"
-		},
-		{
-			"name": "Plantation"
-		},
-		{
-			"name": "Recent disturbance (fire, clear-cut)"
-		}]
-	},
-	{
-		"name": "Water",
-		"value": [{
-			"name": "Streams considéré comme objet ou comme zone d'occupation du sol selon l'échelle de cartographie"
-		},
-		{
-			"name": "Lakes"
-		},
-		{
-			"name": "Reservoirs"
-		},
-		{
-			"name": "Bays and Estuaries"
-		},
-		{
-			"name": "Canals"
-		}]
-	},
-	{
-		"name": "Wetland",
-		"value": [{
-			"name": "Forested peatland"
-		},
-		{
-			"name": "Bog"
-		},
-		{
-			"name": "Fen"
-		},
-		{
-			"name": "Swamp"
-		},
-		{
-			"name": "Marsh"
-		}]
-	},
-	{
-		"name": "Barren Land",
-		"value": [{
-			"name": "Dry Salt Flats"
-		},
-		{
-			"name": "Beaches"
-		},
-		{
-			"name": "Sandy Areas other than Beaches"
-		},
-		{
-			"name": "Bare Exposed Rock"
-		},
-		{
-			"name": "Strip Mine Quarries, and Gravel Pits"
-		},
-		{
-			"name": "Transitional Areas"
-		},
-		{
-			"name": "Mixed Barren Land"
-		}]
-	},
-	{
-		"name": "Tundra",
-		"value": [{
-			"name": "Shrub and Brush Tundra"
-		},
-		{
-			"name": "Herbaceous Tundra"
-		},
-		{
-			"name": "Bare Ground Tundra"
-		},
-		{
-			"name": "Wet Tundra"
-		},
-		{
-			"name": "Mixed Tundra"
-		}]
-	},
-	{
-		"name": "Perennial Snow or Ice",
-		"value": [{
-			"name": "Perennial Snowfields"
-		},
-		{
-			"name": "Glaciers"
-		}]
-	},
-	{
-		"name": "Formes terrestres",
-		"value": [{
-			"name": "Esker"
-		},
-		{
-			"name": "Moraine"
-		},
-		{
-			"name": "Pingo"
-		},
-		{
-			"name": "Drumlin"
-		}]
-	}]
+    "version": 1,
+    "name": {
+        "fr": "CouvertureDeSol",
+        "en": ""
+    },
+    "code": "",
+    "value": [
+        {
+            "name": {
+                "fr": "Urban or Built-up Land",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Residential",
+                        "en": ""
+                    },
+                    "code": "",
+                    "value": [
+                        {
+                            "name": {
+                                "fr": "Densité faible",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Densité moyenne",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Densité élevée",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Parc de maisons mobiles",
+                                "en": ""
+                            },
+                            "code": ""
+                        }
+                    ]
+                },
+                {
+                    "name": {
+                        "fr": "Commercial and Services",
+                        "en": ""
+                    },
+                    "code": "",
+                    "value": [
+                        {
+                            "name": {
+                                "fr": "Terrain associé au commerce ou au service (selon le type de commerce ou de service)?",
+                                "en": ""
+                            },
+                            "code": ""
+                        }
+                    ]
+                },
+                {
+                    "name": {
+                        "fr": "Industrial",
+                        "en": ""
+                    },
+                    "code": "",
+                    "value": [
+                        {
+                            "name": {
+                                "fr": "Terrain associé à l'industrie (selon le type d'industrie)?",
+                                "en": ""
+                            },
+                            "code": ""
+                        }
+                    ]
+                },
+                {
+                    "name": {
+                        "fr": "Transportation",
+                        "en": ""
+                    },
+                    "code": "",
+                    "value": [
+                        {
+                            "name": {
+                                "fr": "Emprise/corridor de transport routier",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Emprise/corridor de transport ferroviaire",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Zone portuaire",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Zone aéroportuaire",
+                                "en": ""
+                            },
+                            "code": ""
+                        }
+                    ]
+                },
+                {
+                    "name": {
+                        "fr": "Energy",
+                        "en": ""
+                    },
+                    "code": "",
+                    "value": [
+                        {
+                            "name": {
+                                "fr": "Emprise/corridor de transport d'énergie électrique",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Emprise de pipeline",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Parc solaire",
+                                "en": ""
+                            },
+                            "code": ""
+                        }
+                    ]
+                },
+                {
+                    "name": {
+                        "fr": "Other Urban or Built-up Land",
+                        "en": ""
+                    },
+                    "code": "",
+                    "value": [
+                        {
+                            "name": {
+                                "fr": "Parc, espace vert",
+                                "en": ""
+                            },
+                            "code": ""
+                        },
+                        {
+                            "name": {
+                                "fr": "Terrain associé aux installations (traitement des eaux, traitement des déchets)",
+                                "en": ""
+                            },
+                            "code": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Agricultural Land",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Grandes cultures",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Maraîcher",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Pâturage",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Ferme (terrain avec bâtiments)",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Other Agricultural Land",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Rangeland",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Herbaceous Rangeland",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Shrub and Brush Rangeland",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Mixed Rangeland",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Forest Land",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Deciduous Forest Land",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Evergreen Forest Land",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Mixed Forest Land",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Plantation",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Recent disturbance (fire, clear-cut)",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Water",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Streams considéré comme objet ou comme zone d'occupation du sol selon l'échelle de cartographie",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Lakes",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Reservoirs",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Bays and Estuaries",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Canals",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Wetland",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Forested peatland",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Bog",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Fen",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Swamp",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Marsh",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Barren Land",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Dry Salt Flats",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Beaches",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Sandy Areas other than Beaches",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Bare Exposed Rock",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Strip Mine Quarries, and Gravel Pits",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Transitional Areas",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Mixed Barren Land",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Tundra",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Shrub and Brush Tundra",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Herbaceous Tundra",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Bare Ground Tundra",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Wet Tundra",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Mixed Tundra",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Perennial Snow or Ice",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Perennial Snowfields",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Glaciers",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        },
+        {
+            "name": {
+                "fr": "Formes terrestres",
+                "en": ""
+            },
+            "code": "",
+            "value": [
+                {
+                    "name": {
+                        "fr": "Esker",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Moraine",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Pingo",
+                        "en": ""
+                    },
+                    "code": ""
+                },
+                {
+                    "name": {
+                        "fr": "Drumlin",
+                        "en": ""
+                    },
+                    "code": ""
+                }
+            ]
+        }
+    ]
 }
