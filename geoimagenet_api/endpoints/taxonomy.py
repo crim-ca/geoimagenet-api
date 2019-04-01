@@ -45,7 +45,7 @@ name_query = Query(
 )
 
 
-@router.get("/", response_model=List[TaxonomyGroup])
+@router.get("/", response_model=List[TaxonomyGroup], summary="Search")
 def search(name: str = name_query, version: str = None):
     if version and not name:
         raise HTTPException(400, "Please provide a `name` if you provide a `version`.")
@@ -93,7 +93,7 @@ name_slug_query = Query(
 )
 
 
-@router.get("/{name_slug}/{version}", response_model=Taxonomy)
+@router.get("/{name_slug}/{version}", response_model=Taxonomy, summary="Get by slug")
 def get_by_slug(name_slug: str, version: str):
     for taxonomy in aggregated_taxonomies():
         ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy

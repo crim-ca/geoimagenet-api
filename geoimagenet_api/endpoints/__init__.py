@@ -7,16 +7,16 @@ from geoimagenet_api.endpoints import taxonomy, taxonomy_classes, users, batches
 
 router = APIRouter()
 
-router.include_router(users.router, prefix="/users", tags=["users"])
-router.include_router(taxonomy.router, prefix="/taxonomy", tags=["taxonomy"])
+router.include_router(users.router, prefix="/users", tags=["Users"])
+router.include_router(taxonomy.router, prefix="/taxonomy", tags=["Taxonomy"])
 router.include_router(
-    taxonomy_classes.router, prefix="/taxonomy_classes", tags=["taxonomy_classes"]
+    taxonomy_classes.router, prefix="/taxonomy_classes", tags=["Taxonomy_classes"]
 )
-router.include_router(batches.router, prefix="/batches", tags=["batches"])
-router.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
+router.include_router(batches.router, prefix="/batches", tags=["Batches"])
+router.include_router(annotations.router, prefix="/annotations", tags=["Annotations"])
 
 
-@router.get("/", response_model=ApiInfo)
+@router.get("/", response_model=ApiInfo, summary="General information")
 def get(request: Request):
     docs_url = str(request.url) + "docs"
     changelog_url = str(request.url) + "changelog"

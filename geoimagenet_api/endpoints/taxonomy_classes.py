@@ -12,7 +12,7 @@ from geoimagenet_api.database.connection import connection_manager
 router = APIRouter()
 
 
-@router.get("/", response_model=List[TaxonomyClass])
+@router.get("/", response_model=List[TaxonomyClass], summary="Search")
 def search(taxonomy_name: str, name: str, depth: int = -1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
@@ -57,7 +57,7 @@ def search(taxonomy_name: str, name: str, depth: int = -1):
     return [taxonomy_class]
 
 
-@router.get("/{id}", response_model=TaxonomyClass)
+@router.get("/{id}", response_model=TaxonomyClass, summary="Get by id")
 def get(id: int, depth: int = -1):
     with connection_manager.get_db_session() as session:
         taxonomy_class = (

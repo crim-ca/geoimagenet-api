@@ -9,7 +9,7 @@ from geoimagenet_api.database.connection import connection_manager
 router = APIRouter()
 
 
-@router.get("/", response_model=List[User])
+@router.get("/", response_model=List[User], summary="Search")
 def search(username: str = None, name: str = None):
     with connection_manager.get_db_session() as session:
         query = session.query(Person)
@@ -24,7 +24,7 @@ def search(username: str = None, name: str = None):
         return users_all
 
 
-@router.get("/{username}", response_model=User)
+@router.get("/{username}", response_model=User, summary="Get user by username")
 def get(username: str):
     with connection_manager.get_db_session() as session:
         person = session.query(Person).filter_by(username=username).first()
