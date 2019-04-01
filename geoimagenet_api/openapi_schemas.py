@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Union, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Schema
 
 from geoimagenet_api.database.models import AnnotationStatus
 
@@ -26,7 +26,8 @@ class TaxonomyClass(BaseModel):
     name_fr: str
     name_en: str
     taxonomy_id: int
-    children: List[TaxonomyClass] = []
+    # Workaround OpenAPI recursive reference, using Any
+    children: List[Any] = Schema([], description="A list of 'TaxonomyClass' objects.")
 
 
 TaxonomyClass.update_forward_refs()
