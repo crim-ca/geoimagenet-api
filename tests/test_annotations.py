@@ -14,7 +14,7 @@ from geoimagenet_api.database.models import (
     TaxonomyClass,
 )
 from geoimagenet_api.openapi_schemas import AnnotationProperties
-from tests.utils import random_user_name, api_url
+from tests.utils import random_user_name
 
 wkt_string = {
     "Point": "POINT(100 0)",

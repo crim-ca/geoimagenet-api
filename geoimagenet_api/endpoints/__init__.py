@@ -18,7 +18,7 @@ router.include_router(annotations.router, prefix="/annotations", tags=["annotati
 
 @router.get("/", response_model=ApiInfo)
 def get(request: Request):
-    docs_url = str(request.url) + "ui"
+    docs_url = str(request.url) + "docs"
     changelog_url = str(request.url) + "changelog"
     return ApiInfo(
         name="GeoImageNet API",

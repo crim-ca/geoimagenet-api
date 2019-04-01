@@ -6,7 +6,6 @@ import requests
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Annotation, AnnotationStatus
-from tests.utils import api_url
 from .test_annotations import write_annotation
 
 

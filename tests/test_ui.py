@@ -1,8 +1,5 @@
-from tests.utils import api_url
-
-
 def test_ensure_ui_loads(client):
-    r = client.get(api_url("/ui/"), follow_redirects=True)
+    r = client.get("/ui", allow_redirects=True)
 
     # The ui is rendered in javascript... so the response is always 200
     # even if the openapi schema is malformed
