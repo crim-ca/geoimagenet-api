@@ -1,3 +1,4 @@
+import contextlib
 import json
 
 import pytest
@@ -67,7 +68,11 @@ def random_user():
 
 
 def write_annotation(
-    user_id=1, taxonomy_class=2, status=AnnotationStatus.new, image_name="my image"
+    user_id=1,
+    taxonomy_class=2,
+    status=AnnotationStatus.new,
+    image_name="my image",
+    review_requested=False,
 ):
     with connection_manager.get_db_session() as session:
         annotation = Annotation(
@@ -75,6 +80,7 @@ def write_annotation(
             geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
             taxonomy_class_id=taxonomy_class,
             image_name=image_name,
+            review_requested=review_requested,
             status=status,
         )
         session.add(annotation)
@@ -418,46 +424,126 @@ def test_annotation_count(client):
         counts = r[str(taxonomy_class_id)]
         assert counts[status] == expected
 
+    def add(taxonomy_class_id, status):
+        write_annotation(taxonomy_class=taxonomy_class_id, status=status)
+
+    with _clean_annotation_session():
+        add(3, "released")
+        add(3, "released")
+        add(9, "validated")
+        add(9, "rejected")
+        add(1, "deleted")
+
+        add(3, "review")
+        add(3, "review")
+        add(9, "review")
+        add(1, "review")
+        add(2, "review")
+
+        assert_count(3, "released", 2)
+        assert_count(1, "released", 2)
+        assert_count(1, "new", 0)
+        assert_count(1, "pre_released", 0)
+        assert_count(1, "review", 5)
+        assert_count(2, "review", 3)
+        assert_count(1, "validated", 1)
+        assert_count(9, "validated", 1)
+        assert_count(2, "validated", 0)
+        assert_count(1, "rejected", 1)
+        assert_count(9, "rejected", 1)
+        assert_count(2, "rejected", 0)
+        assert_count(1, "deleted", 1)
+
+        assert all(key.isdigit() for key in get_counts(1))
+
+
+def _get_annotations(client, params):
+    r = client.get(f"/annotations", params=params)
+    assert r.status_code == 200
+    return r.json()["features"]
+
+
+@contextlib.contextmanager
+def _clean_annotation_session():
+    """Clean all annotation before and after the session scope"""
     with connection_manager.get_db_session() as session:
         # make sure there are no other annotations
         session.query(Annotation).delete()
         session.commit()
-
-        def add(taxonomy_class_id, status):
-            write_annotation(taxonomy_class=taxonomy_class_id, status=status)
-
         try:
-            add(3, "released")
-            add(3, "released")
-            add(9, "validated")
-            add(9, "rejected")
-            add(1, "deleted")
-
-            add(3, "review")
-            add(3, "review")
-            add(9, "review")
-            add(1, "review")
-            add(2, "review")
-
-            assert_count(3, "released", 2)
-            assert_count(1, "released", 2)
-            assert_count(1, "new", 0)
-            assert_count(1, "pre_released", 0)
-            assert_count(1, "review", 5)
-            assert_count(2, "review", 3)
-            assert_count(1, "validated", 1)
-            assert_count(9, "validated", 1)
-            assert_count(2, "validated", 0)
-            assert_count(1, "rejected", 1)
-            assert_count(9, "rejected", 1)
-            assert_count(2, "rejected", 0)
-            assert_count(1, "deleted", 1)
-
-            assert all(key.isdigit() for key in get_counts(1))
+            yield session
         finally:
             # cleanup
             session.query(Annotation).delete()
             session.commit()
+
+
+def test_annotation_get_none(client):
+    with _clean_annotation_session():
+        annotations = _get_annotations(client, {})
+        assert not annotations
+
+
+def test_annotation_get_image_name(client):
+    with _clean_annotation_session():
+        write_annotation(image_name="test_image")
+        write_annotation(image_name="test_image2")
+
+        params = {"image_name": "test_image"}
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 1
+        assert annotations[0]["properties"]["image_name"] == "test_image"
+
+
+def test_annotation_get_status(client):
+    with _clean_annotation_session():
+        write_annotation(status=AnnotationStatus.validated)
+        write_annotation(status=AnnotationStatus.rejected)
+        params = {"status": "validated"}
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 1
+        assert annotations[0]["properties"]["status"] == "validated"
+
+
+def test_annotation_get_taxonomy_class_id(client):
+    with _clean_annotation_session():
+        write_annotation(taxonomy_class=1)
+        write_annotation(taxonomy_class=2)
+        params = {"taxonomy_class_id": 1}
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 1
+        assert annotations[0]["properties"]["taxonomy_class_id"] == 1
+
+
+def test_annotation_get_review_requested(client):
+    with _clean_annotation_session():
+        write_annotation(review_requested=True)
+        write_annotation(review_requested=False)
+        params = {"review_requested": True}
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 1
+        assert annotations[0]["properties"]["review_requested"]
+
+
+def test_annotation_get_current_user_only(client):
+    with _clean_annotation_session():
+        write_annotation(user_id=1)
+        write_annotation(user_id=2)
+        params = {"current_user_only": True}
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 1
+        assert annotations[0]["properties"]["annotator_id"] == 1
+
+
+def test_annotation_get_with_geometry(client):
+    with _clean_annotation_session():
+        write_annotation()
+        annotations = _get_annotations(client, {"with_geometry": True})
+        assert len(annotations) == 1
+        assert isinstance(annotations[0]["geometry"], dict)
+        annotations = _get_annotations(client, {"with_geometry": False})
+        assert len(annotations) == 1
+        assert "geometry" not in annotations[0]
 
 
 def test_annotation_counts_not_found(client):
@@ -486,50 +572,41 @@ def test_annotation_counts_by_image(client):
         counts = r[str(image_name)]
         assert counts[status] == expected
 
-    with connection_manager.get_db_session() as session:
-        # make sure there are no other annotations
-        session.query(Annotation).delete()
-        session.commit()
+    def add(taxonomy_class_id, status, image_name):
+        write_annotation(
+            taxonomy_class=taxonomy_class_id, status=status, image_name=image_name
+        )
 
-        def add(taxonomy_class_id, status, image_name):
-            write_annotation(
-                taxonomy_class=taxonomy_class_id, status=status, image_name=image_name
-            )
+    with _clean_annotation_session():
+        add(3, "released", "image_1")
+        add(3, "new", "image_1")
+        add(3, "validated", "image_1")
 
-        try:
-            add(3, "released", "image_1")
-            add(3, "new", "image_1")
-            add(3, "validated", "image_1")
+        add(2, "validated", "image_1")
+        add(2, "validated", "image_1")
 
-            add(2, "validated", "image_1")
-            add(2, "validated", "image_1")
+        add(9, "validated", "image_1")
+        add(9, "validated", "image_1")
 
-            add(9, "validated", "image_1")
-            add(9, "validated", "image_1")
+        add(3, "released", "image_2")
+        add(3, "new", "image_2")
+        add(3, "validated", "image_2")
 
-            add(3, "released", "image_2")
-            add(3, "new", "image_2")
-            add(3, "validated", "image_2")
+        add(2, "validated", "image_2")
+        add(2, "validated", "image_2")
 
-            add(2, "validated", "image_2")
-            add(2, "validated", "image_2")
+        add(9, "validated", "image_2")
+        add(9, "validated", "image_2")
 
-            add(9, "validated", "image_2")
-            add(9, "validated", "image_2")
+        assert_count(1, "released", "image_1", 1)
+        assert_count(1, "validated", "image_1", 5)
+        assert_count(2, "validated", "image_1", 3)
 
-            assert_count(1, "released", "image_1", 1)
-            assert_count(1, "validated", "image_1", 5)
-            assert_count(2, "validated", "image_1", 3)
+        assert_count(1, "released", "image_2", 1)
+        assert_count(1, "validated", "image_2", 5)
+        assert_count(2, "validated", "image_2", 3)
 
-            assert_count(1, "released", "image_2", 1)
-            assert_count(1, "validated", "image_2", 5)
-            assert_count(2, "validated", "image_2", 3)
-
-            assert set(get_counts(1)) == {"image_1", "image_2"}
-        finally:
-            # cleanup
-            session.query(Annotation).delete()
-            session.commit()
+        assert set(get_counts(1)) == {"image_1", "image_2"}
 
 
 def test_annotation_counts_current_user(client):
@@ -564,38 +641,28 @@ def test_annotation_counts_current_user(client):
             user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image"
         )
 
-    with connection_manager.get_db_session() as session:
-        # make sure there are no other annotations
-        session.query(Annotation).delete()
-        session.commit()
+    with _clean_annotation_session():
+        add(2, user_id=1)
+        add(2, user_id=1)
+        add(3, user_id=1)
+        add(3, user_id=1)
+        add(3, user_id=1)
 
-        try:
-            add(2, user_id=1)
-            add(2, user_id=1)
-            add(3, user_id=1)
-            add(3, user_id=1)
-            add(3, user_id=1)
+        add(3, user_id=2)
+        add(3, user_id=2)
+        add(3, user_id=2)
 
-            add(3, user_id=2)
-            add(3, user_id=2)
-            add(3, user_id=2)
+        # group_by_image=False
+        assert_count(2, True, False, 5)
+        assert_count(2, False, False, 8)
+        assert_count(3, True, False, 3)
+        assert_count(3, False, False, 6)
 
-            # group_by_image=False
-            assert_count(2, True, False, 5)
-            assert_count(2, False, False, 8)
-            assert_count(3, True, False, 3)
-            assert_count(3, False, False, 6)
-
-            # group_by_image=True
-            assert_count(2, True, True, 5)
-            assert_count(2, False, True, 8)
-            assert_count(3, True, True, 3)
-            assert_count(3, False, True, 6)
-
-        finally:
-            # cleanup
-            session.query(Annotation).delete()
-            session.commit()
+        # group_by_image=True
+        assert_count(2, True, True, 5)
+        assert_count(2, False, True, 8)
+        assert_count(3, True, True, 3)
+        assert_count(3, False, True, 6)
 
 
 def test_friendly_name(simple_annotation):

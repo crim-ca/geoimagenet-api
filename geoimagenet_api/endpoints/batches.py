@@ -24,12 +24,15 @@ from geoimagenet_api.openapi_schemas import (
     ExecuteIOHref,
     ExecuteIOValue,
 )
+from geoimagenet_api.utils import geojson_stream
 
 router = APIRouter()
 
 
 @router.get(
-    "/batches", response_model=GeoJsonFeatureCollection, summary="Get validated annotations"
+    "/batches",
+    response_model=GeoJsonFeatureCollection,
+    summary="Get validated annotations",
 )
 def get_annotations(taxonomy_id: int):
     if not _is_taxonomy_id_valid(taxonomy_id):
@@ -44,56 +47,18 @@ def get_annotations(taxonomy_id: int):
             func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"),
             DBAnnotation.image_name,
             DBAnnotation.taxonomy_class_id,
-        )
-
-        query = query.filter(
+        ).filter(
             and_(
                 DBAnnotation.status == AnnotationStatus.validated,
                 DBAnnotation.taxonomy_class_id.in_(taxonomy_ids),
             )
         )
 
-        # Stream the geojson features from the database
-        # so that the whole FeatureCollection is not built entirely in memory.
-        # The bulk of the json serialization (the geometries) takes place in the database
-        # doing all the serialization in the database is a very small
-        # performance improvement and I prefer to build the json in python than in sql.
-        async def geojson_stream():
-            feature_collection = json.dumps(
-                {
-                    "type": "FeatureCollection",
-                    "crs": {"type": "EPSG", "properties": {"code": 3857}},
-                    "features": [],
-                }
-            )
-            before_ending_brackets = feature_collection[:-2]
-            ending_brackets = feature_collection[-2:]
+        stream = geojson_stream(
+            query, properties=["image_name", "taxonomy_class_id"], with_geometry=True
+        )
 
-            yield before_ending_brackets
-            first_result = True
-            for r in query:
-                if not first_result:
-                    yield ","
-                else:
-                    first_result = False
-
-                data = json.dumps(
-                    {
-                        "type": "Feature",
-                        "geometry": "__geometry",
-                        "id": f"annotation.{r.id}",
-                        "properties": {
-                            "image_name": r.image_name,
-                            "taxonomy_class_id": r.taxonomy_class_id,
-                        },
-                    }
-                )
-                # geometry is already serialized
-                yield data.replace('"__geometry"', r.geometry)
-
-            yield ending_brackets
-
-        return StreamingResponse(geojson_stream(), media_type="application/json")
+        return StreamingResponse(stream, media_type="application/json")
 
 
 def _is_taxonomy_id_valid(taxonomy_id):

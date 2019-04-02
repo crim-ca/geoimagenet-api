@@ -80,7 +80,8 @@ def search(name: str = name_query, version: str = None):
         taxonomy_list.append(taxonomy_group)
 
     if not taxonomy_list:  # pragma: no cover
-        message = "Could't find any taxonomy."
+        message = ("Could't find any taxonomy. "
+                   "The data is not loaded in the database yet.")
         sentry_sdk.capture_exception(error=ValueError(message))
         raise HTTPException(
             503, message + " This error was reported to the developers."

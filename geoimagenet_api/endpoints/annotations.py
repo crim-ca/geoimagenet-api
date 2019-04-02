@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
+from starlette.responses import StreamingResponse
 
 from geoimagenet_api.openapi_schemas import (
     AnnotationCountByStatus,
@@ -30,7 +31,7 @@ from geoimagenet_api.endpoints.taxonomy_classes import (
     get_all_taxonomy_classes_ids,
 )
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import get_logged_user
+from geoimagenet_api.utils import get_logged_user, geojson_stream
 
 DEFAULT_SRID = 3857
 
@@ -57,6 +58,51 @@ def _serialize_geometry(geometry: AnyGeojsonGeometry, crs: int):
     if crs != DEFAULT_SRID:
         geom = func.ST_Transform(geom, DEFAULT_SRID)
     return geom
+
+
+@router.get(
+    "/annotations", response_model=GeoJsonFeatureCollection, summary="Get Details"
+)
+def get(
+    request: Request,
+    image_name: str = None,
+    status: str = None,
+    taxonomy_class_id: int = None,
+    review_requested: bool = False,
+    current_user_only: bool = False,
+    with_geometry: bool = False,
+):
+    with connection_manager.get_db_session() as session:
+        fields = [
+            DBAnnotation.id,
+            DBAnnotation.taxonomy_class_id,
+            DBAnnotation.annotator_id,
+            DBAnnotation.image_name,
+            DBAnnotation.name,
+            DBAnnotation.review_requested,
+            DBAnnotation.status,
+        ]
+        if with_geometry:
+            fields.append(func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"))
+        query = session.query(*fields)
+        if image_name:
+            query = query.filter_by(image_name=image_name)
+        if status:
+            query = query.filter_by(status=status)
+        if taxonomy_class_id:
+            query = query.filter_by(taxonomy_class_id=taxonomy_class_id)
+        if review_requested:
+            query = query.filter_by(review_requested=review_requested)
+        if current_user_only:
+            logged_user = get_logged_user(request)
+            query = query.filter_by(annotator_id=logged_user)
+
+        properties = [f.key for f in fields if f not in ["id", "geometry"]]
+        stream = geojson_stream(
+            query, properties=properties, with_geometry=with_geometry
+        )
+
+        return StreamingResponse(stream, media_type="application/json")
 
 
 @router.put("/annotations", status_code=204, summary="Modify")
@@ -92,7 +138,9 @@ def put(
             raise HTTPException(400, f"Error: {e}")
 
 
-@router.post("/annotations", response_model=List[int], status_code=201, summary="Create")
+@router.post(
+    "/annotations", response_model=List[int], status_code=201, summary="Create"
+)
 def post(
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
 ):
@@ -392,7 +440,10 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
 
 
 @router.post(
-    "/annotations/request_review", status_code=204, response_model=None, summary="Request review"
+    "/annotations/request_review",
+    status_code=204,
+    response_model=None,
+    summary="Request review",
 )
 def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""

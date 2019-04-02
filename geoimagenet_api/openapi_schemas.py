@@ -101,8 +101,8 @@ class AnnotationCountByStatus(BaseModel):
 annotation_ids_schema = Schema(
     ...,
     description="Must be an array of string like: "
-    "['annotation.1234', 'annotation.1235', ...]. "
-    "This is the standard OpenLayers format.",
+                "['annotation.1234', 'annotation.1235', ...]. "
+                "This is the standard OpenLayers format.",
 )
 
 
@@ -111,13 +111,6 @@ class AnnotationRequestReview(BaseModel):
     boolean: bool = Schema(
         ..., description="Boolean whether to turn on or off the review request."
     )
-
-
-class AnnotationProperties(BaseModel):
-    annotator_id: int
-    taxonomy_class_id: int
-    image_name: str
-    status: AnnotationStatus = AnnotationStatus.new
 
 
 class AnnotationStatusUpdateIds(BaseModel):
@@ -153,6 +146,15 @@ class MultiPolygon(BaseModel):
 
 
 AnyGeojsonGeometry = Union[Point, LineString, Polygon, MultiPolygon]
+
+
+class AnnotationProperties(BaseModel):
+    annotator_id: int
+    taxonomy_class_id: int
+    image_name: str
+    status: AnnotationStatus = AnnotationStatus.new
+    name: str = None
+    review_requested: Optional[bool] = None
 
 
 class GeoJsonFeature(BaseModel):
