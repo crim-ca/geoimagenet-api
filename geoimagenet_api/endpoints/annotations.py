@@ -371,7 +371,7 @@ def counts(
             )
 
         for group_by_field_name, status, count in annotation_counts_query:
-            setattr(annotation_count_dict[group_by_field_name], status, count)
+            setattr(annotation_count_dict[str(group_by_field_name)], status, count)
 
         if not group_by_image:
             # add annotation count to parent objects
