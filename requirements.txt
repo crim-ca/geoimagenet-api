@@ -9,5 +9,6 @@ click
 loguru
 pyyaml
 https://github.com/boundlessgeo/gsconfig/archive/master.zip#egg=gsconfig
-
-fastapi[all]
+fastapi
+requests
+uvicorn
