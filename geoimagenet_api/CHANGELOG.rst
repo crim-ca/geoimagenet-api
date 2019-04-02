@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.14.0 (2019-04-02)
+------------
+
+New
+~~~
+- Add GET /annotations to get a geojson with parameters. [David Caron]
+
 
 0.13.0 (2019-03-29)
 ------------------
