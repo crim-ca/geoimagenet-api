@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Any
+from typing import List, Union, Any, Optional
 
 from pydantic import BaseModel, Schema
 
@@ -25,7 +25,7 @@ class User(BaseModel):
 class TaxonomyClass(BaseModel):
     id: int
     name_fr: str
-    name_en: str
+    name_en: Optional[str] = ""
     taxonomy_id: int
     # Workaround OpenAPI recursive reference, using Any
     children: List[Any] = Schema([], description="A list of 'TaxonomyClass' objects.")
@@ -37,7 +37,7 @@ TaxonomyClass.update_forward_refs()
 class Taxonomy(BaseModel):
     id: int
     name_fr: str
-    name_en: str
+    name_en: Optional[str] = ""
     slug: str
     version: str
     root_taxonomy_class_id: int
@@ -51,7 +51,7 @@ class TaxonomyVersion(BaseModel):
 
 class TaxonomyGroup(BaseModel):
     name_fr: str
-    name_en: str
+    name_en: Optional[str] = ""
     slug: str
     versions: List[TaxonomyVersion]
 
