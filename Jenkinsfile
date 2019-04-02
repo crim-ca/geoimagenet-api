@@ -69,7 +69,7 @@ pipeline {
                      color: 'good',
                      message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *successful* on git branch `${env.GIT_LOCAL_BRANCH}` :tada: (<${env.BUILD_URL}|View>)\n(Test coverage: *${coverage}*)"
        }
-       failure {
+       unsuccessful {
            slackSend channel: '#geoimagenet-dev', color: 'danger', message: "*GeoImageNet API*: Build #${env.BUILD_NUMBER} *failed* on git branch `${env.GIT_LOCAL_BRANCH}` :sweat_smile: (<${env.BUILD_URL}|View>)"
        }
        always {
