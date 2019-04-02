@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from starlette.responses import PlainTextResponse, RedirectResponse
+from starlette.middleware.cors import CORSMiddleware
 
 import sentry_sdk
 
@@ -33,6 +34,7 @@ if sentry_dsn:
     sentry_sdk.init(dsn=sentry_dsn)
 
 application = FastAPI()
+application.add_middleware(CORSMiddleware, allow_origins=["*"])
 app = FastAPI(
     openapi_prefix="/api/v1",
     title="GeoImageNet Annotations API",
