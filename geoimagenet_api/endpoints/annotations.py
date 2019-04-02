@@ -315,7 +315,7 @@ def counts(
         False, description="If true, count only the current user's annotations"
     ),
     with_taxonomy_children: bool = Query(
-        None, description="Include the children of the provided taxonomy class id"
+        True, description="Include the children of the provided taxonomy class id"
     ),
     review_requested: bool = Query(
         None, description="Filter annotations by the review_requested attribute"
