@@ -670,6 +670,39 @@ def test_annotation_counts_current_user(client):
         assert_count(3, False, True, 6)
 
 
+def test_annotation_counts_review_requested(client):
+    """
+    Taxonomy classes tree:
+    1
+    --2
+      --3
+    --9
+
+    """
+
+    def get_counts(taxonomy_class_id, review_requested=None):
+        params = {}
+        if review_requested is not None:
+            params["review_requested"] = review_requested
+        r = client.get(f"/annotations/counts/{taxonomy_class_id}", params=params)
+        assert r.status_code == 200
+        return r.json()
+
+    def assert_count(taxonomy_class_id, review_requested, expected):
+        r = get_counts(taxonomy_class_id, review_requested)
+        counts = r[str(taxonomy_class_id)]
+        assert counts["new"] == expected
+
+    with _clean_annotation_session():
+        write_annotation(taxonomy_class=2, review_requested=True)
+        write_annotation(taxonomy_class=3, review_requested=True)
+        write_annotation(taxonomy_class=3, review_requested=False)
+
+        assert_count(2, review_requested=True, expected=2)
+        assert_count(2, review_requested=False, expected=1)
+        assert_count(2, review_requested=None, expected=3)
+
+
 def test_friendly_name(simple_annotation):
     assert simple_annotation.name == "NONE_+000.500000_+000.500000"
 

@@ -299,23 +299,6 @@ def update_status_delete(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.deleted, request)
 
 
-group_by_image_type = Query(
-    False,
-    description=(
-        "The key of the returned json will either be the taxonomy class "
-        "if this value is false, or the image name if it's true."
-    ),
-)
-
-current_user_only_type = Query(
-    False,
-    description=(
-        "If true, the counts only reflect the currently "
-        "logged in user's annotations."
-    ),
-)
-
-
 @router.get(
     "/annotations/counts/{taxonomy_class_id}",
     response_model=Dict[str, AnnotationCountByStatus],
@@ -325,9 +308,18 @@ current_user_only_type = Query(
 def counts(
     request: Request,
     taxonomy_class_id: int,
-    group_by_image: bool = group_by_image_type,
-    current_user_only: bool = current_user_only_type,
-    with_taxonomy_children: bool = True,
+    group_by_image: bool = Query(
+        False, description="Group by taxonomy class id or by image_name"
+    ),
+    current_user_only: bool = Query(
+        False, description="If true, count only the current user's annotations"
+    ),
+    with_taxonomy_children: bool = Query(
+        None, description="Include the children of the provided taxonomy class id"
+    ),
+    review_requested: bool = Query(
+        None, description="Filter annotations by the review_requested attribute"
+    ),
 ):
     """Return annotation counts for the given taxonomy class along with its children.
     If group_by_image is True, the counts are grouped by image name instead of
@@ -353,7 +345,7 @@ def counts(
 
         annotation_count_dict = defaultdict(AnnotationCountByStatus)
 
-        annotation_counts_query = (
+        query = (
             session.query(
                 group_by_field,
                 DBAnnotation.status.name,
@@ -366,11 +358,12 @@ def counts(
 
         if current_user_only:
             logged_user = get_logged_user(request)
-            annotation_counts_query = annotation_counts_query.filter_by(
-                annotator_id=logged_user
-            )
+            query = query.filter_by(annotator_id=logged_user)
 
-        for group_by_field_name, status, count in annotation_counts_query:
+        if review_requested is not None:
+            query = query.filter_by(review_requested=review_requested)
+
+        for group_by_field_name, status, count in query:
             setattr(annotation_count_dict[str(group_by_field_name)], status, count)
 
         if not group_by_image:
