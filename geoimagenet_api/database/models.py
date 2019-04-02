@@ -29,13 +29,13 @@ class Person(Base):
 
 
 class AnnotationStatus(enum.Enum):
-    new = 1
-    pre_released = 2
-    released = 3
-    review = 4
-    validated = 5
-    rejected = 6
-    deleted = 7
+    new = "new"
+    pre_released = "pre_released"
+    released = "released"
+    review = "review"
+    validated = "validated"
+    rejected = "rejected"
+    deleted = "deleted"
 
 
 class Annotation(Base):

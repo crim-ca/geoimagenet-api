@@ -1,5 +1,6 @@
 from typing import List, Union
 
+from fastapi import APIRouter, HTTPException, Query
 from slugify import slugify
 from collections import defaultdict
 
@@ -7,22 +8,36 @@ from geoimagenet_api.openapi_schemas import TaxonomyClass
 from geoimagenet_api.database.models import TaxonomyClass as DBTaxonomyClass
 from geoimagenet_api.database.models import Taxonomy as DBTaxonomy
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import dataclass_from_object
+
+router = APIRouter()
 
 
-def search(taxonomy_name, name, depth=-1):
+taxonomy_name_query = Query(
+    ...,
+    description=(
+        "Full name or sluggified name of the taxonomy. "
+        "Example of name slug for 'Couverture de sol': "
+        "couverture-de-sol"
+    ),
+)
+
+
+@router.get("/taxonomy_classes", response_model=List[TaxonomyClass], summary="Search")
+def search(name: str, taxonomy_name: str = taxonomy_name_query, depth: int = -1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
             if taxonomy_name in (
                 t.name_fr,
                 slugify(t.name_fr),
                 t.name_en,
-                slugify(t.name_en),
+                slugify(t.name_en or ""),
             ):
                 taxonomy = t
                 break
         else:
-            return f"Taxonomy name or slug not found: {taxonomy_name}", 404
+            raise HTTPException(
+                404, f"Taxonomy name or slug not found: {taxonomy_name}"
+            )
 
         taxonomy_class = (
             session.query(
@@ -34,21 +49,26 @@ def search(taxonomy_name, name, depth=-1):
             .filter_by(taxonomy_id=taxonomy.id, name_fr=name)
             .first()
         )
-
         if not taxonomy_class:
-            return f"Taxonomy class name not found: {name}", 404
+            raise HTTPException(404, f"Taxonomy class name not found: {name}")
 
-        if depth == 0:
-            taxo = dataclass_from_object(TaxonomyClass, taxonomy_class)
-        else:
-            taxo = get_taxonomy_classes_tree(
+        if depth != 0:
+            taxonomy_class = get_taxonomy_classes_tree(
                 session, taxonomy_class_id=taxonomy_class.id
             )
+        else:
+            taxonomy_class = TaxonomyClass(
+                id=taxonomy_class.id,
+                name_fr=taxonomy_class.name_fr,
+                name_en=taxonomy_class.name_en,
+                taxonomy_id=taxonomy_class.taxonomy_id,
+            )
 
-    return [taxo]
+    return [taxonomy_class]
 
 
-def get(id, depth=-1):
+@router.get("/taxonomy_classes/{id}", response_model=TaxonomyClass, summary="Get by id")
+def get(id: int, depth: int = -1):
     with connection_manager.get_db_session() as session:
         taxonomy_class = (
             session.query(
@@ -61,11 +81,19 @@ def get(id, depth=-1):
             .first()
         )
         if not taxonomy_class:
-            return "Taxonomy class id not found", 404
-        if depth == 0:
-            return dataclass_from_object(TaxonomyClass, taxonomy_class)
-        taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=id)
-    return taxo
+            raise HTTPException(404, "Taxonomy class id not found")
+        if depth != 0:
+            taxonomy_class = get_taxonomy_classes_tree(
+                session, taxonomy_class_id=taxonomy_class.id
+            )
+        else:
+            taxonomy_class = TaxonomyClass(
+                id=taxonomy_class.id,
+                name_fr=taxonomy_class.name_fr,
+                name_en=taxonomy_class.name_en,
+                taxonomy_id=taxonomy_class.taxonomy_id,
+            )
+    return taxonomy_class
 
 
 def get_all_taxonomy_classes_ids(session, taxonomy_class_id: int = None) -> List[int]:

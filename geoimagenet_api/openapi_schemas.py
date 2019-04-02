@@ -1,78 +1,90 @@
-from typing import List
-from datetime import datetime
+from __future__ import annotations
+from typing import List, Union, Any, Optional
 
-from dataclasses import dataclass, field
+from pydantic import BaseModel, Schema
 
 from geoimagenet_api.database.models import AnnotationStatus
 
 
-@dataclass
-class ApiInfo:
+class ApiInfo(BaseModel):
     name: str
     version: str
     authors: str
     email: str
-    documetation_url: str
+    documetation_url_swagger: str
+    documetation_url_redoc: str
     changelog_url: str
 
 
-@dataclass
-class User:
+class User(BaseModel):
     id: int
     username: str
     name: str
 
 
-@dataclass
-class TaxonomyClass:
+class TaxonomyClass(BaseModel):
     id: int
     name_fr: str
-    name_en: str
+    name_en: Optional[str] = ""
     taxonomy_id: int
-    children: List["TaxonomyClass"] = field(default_factory=list)
+    # Workaround OpenAPI recursive reference, using Any
+    children: List[Any] = Schema([], description="A list of 'TaxonomyClass' objects.")
 
 
-@dataclass
-class Taxonomy:
+TaxonomyClass.update_forward_refs()
+
+
+class Taxonomy(BaseModel):
     id: int
     name_fr: str
-    name_en: str
+    name_en: Optional[str] = ""
     slug: str
     version: str
     root_taxonomy_class_id: int
 
 
-@dataclass
-class TaxonomyVersion:
+class TaxonomyVersion(BaseModel):
     taxonomy_id: int
     root_taxonomy_class_id: int
     version: str
 
 
-@dataclass
-class TaxonomyGroup:
+class TaxonomyGroup(BaseModel):
     name_fr: str
-    name_en: str
+    name_en: Optional[str] = ""
     slug: str
     versions: List[TaxonomyVersion]
 
 
-@dataclass
-class BatchPost:
+class BatchPost(BaseModel):
     name: str
     taxonomy_id: int
-    overwrite: bool = field(default=False)
+    overwrite: bool = False
 
 
-@dataclass
-class AnnotationCountByStatus:
-    new: int = field(default=0)
-    pre_released: int = field(default=0)
-    released: int = field(default=0)
-    review: int = field(default=0)
-    validated: int = field(default=0)
-    rejected: int = field(default=0)
-    deleted: int = field(default=0)
+class ExecuteIOValue(BaseModel):
+    id: str
+    value: Union[str, int, float, bool]
+
+
+class ExecuteIOHref(BaseModel):
+    id: str
+    href: str
+
+
+class BatchPostForwarded(BaseModel):
+    inputs: List[Union[ExecuteIOValue, ExecuteIOHref]]
+    outputs: List[Union[ExecuteIOValue, ExecuteIOHref]] = []
+
+
+class AnnotationCountByStatus(BaseModel):
+    new: int = 0
+    pre_released: int = 0
+    released: int = 0
+    review: int = 0
+    validated: int = 0
+    rejected: int = 0
+    deleted: int = 0
 
     def __add__(self, other):
         return AnnotationCountByStatus(
@@ -86,42 +98,82 @@ class AnnotationCountByStatus:
         )
 
 
-@dataclass
-class AnnotationProperties:
+annotation_ids_schema = Schema(
+    ...,
+    description="Must be an array of string like: "
+                "['annotation.1234', 'annotation.1235', ...]. "
+                "This is the standard OpenLayers format.",
+)
+
+
+class AnnotationRequestReview(BaseModel):
+    annotation_ids: List[str] = annotation_ids_schema
+    boolean: bool = Schema(
+        ..., description="Boolean whether to turn on or off the review request."
+    )
+
+
+class AnnotationStatusUpdateIds(BaseModel):
+    annotation_ids: List[str] = annotation_ids_schema
+
+
+class AnnotationStatusUpdateTaxonomyClass(BaseModel):
+    taxonomy_class_id: int
+    with_taxonomy_children: bool = Schema(
+        True,
+        description="If true, the taxonomy_class_id will also include its children.",
+    )
+
+
+class Point(BaseModel):
+    type: str = Schema(..., regex="Point")
+    coordinates: List[float]
+
+
+class LineString(BaseModel):
+    type: str = Schema(..., regex="LineString")
+    coordinates: List[List[float]]
+
+
+class Polygon(BaseModel):
+    type: str = Schema(..., regex="Polygon")
+    coordinates: List[List[List[float]]]
+
+
+class MultiPolygon(BaseModel):
+    type: str = Schema(..., regex="MultiPolygon")
+    coordinates: List[List[List[List[float]]]]
+
+
+AnyGeojsonGeometry = Union[Point, LineString, Polygon, MultiPolygon]
+
+
+class AnnotationProperties(BaseModel):
     annotator_id: int
     taxonomy_class_id: int
     image_name: str
-    status: AnnotationStatus = field(default=AnnotationStatus.new)
+    status: AnnotationStatus = AnnotationStatus.new
+    name: str = None
+    review_requested: Optional[bool] = None
 
 
-@dataclass
-class AnnotationStatusUpdate:
-    annotation_ids: List[str] = field(default=None)
-    taxonomy_class_id: int = field(default=None)
-    with_taxonomy_children: bool = field(default=True)
-
-
-@dataclass
-class GeoJsonGeometry:
-    type: str
-    coordinates: List
-
-
-@dataclass
-class GeoJsonFeature:
-    type: str
-    geometry: GeoJsonGeometry
+class GeoJsonFeature(BaseModel):
+    type: str = Schema(..., regex="Feature")
+    geometry: AnyGeojsonGeometry
     properties: AnnotationProperties
-    id: str = field(default=None)
+    id: str = None
 
 
-@dataclass
-class GeoJsonFeatureCollection:
-    features: List[GeoJsonFeature]
-    type: str = field(default="FeatureCollection")
+class CRSCode(BaseModel):
+    code: int
 
 
-@dataclass
-class MultiPolygon:
-    coordinates: List[List[List[List[float]]]]
-    type: str = field(default="MultiPolygon")
+class CRS(BaseModel):
+    type: str = Schema(..., regex="EPSG")
+    properties: CRSCode
+
+
+class GeoJsonFeatureCollection(BaseModel):
+    type: str = Schema(..., regex="FeatureCollection")
+    crs: CRS = CRS(type="EPSG", properties=CRSCode(code=3857))
+    features: List[GeoJsonFeature] = []

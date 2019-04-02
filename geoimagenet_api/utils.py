@@ -1,54 +1,64 @@
-from collections import OrderedDict
+import enum
+import json
+from typing import List
 
-import dataclasses
-from connexion.apps.flask_app import FlaskJSONEncoder
-
-
-def dataclass_from_object(data_cls, source_obj, depth=0):
-    """Return a dataclass by matching property names in the source_obj.
-
-    If depth is negative, its considered infinite.
-    """
-    fields = [f.name for f in dataclasses.fields(data_cls)]
-    common_fields = [f for f in dir(source_obj) if f in fields]
-    properties = {}
-    for field in common_fields:
-        value = getattr(source_obj, field)
-        if (
-            isinstance(value, list)
-            and len(value)
-            and isinstance(value[0], type(source_obj))
-        ):
-            # recursive data type
-            if depth != 0:
-                value = [dataclass_from_object(data_cls, v, depth - 1) for v in value]
-            else:
-                value = []
-        properties[field] = value
-    return data_cls(**properties)
+import sqlalchemy.orm
+from starlette.requests import Request
 
 
-class DataclassEncoder(FlaskJSONEncoder):
-    def __init__(self, *args, **kwargs):
-        super(DataclassEncoder, self).__init__(*args, **kwargs)
-        self.sort_keys = False
-
-    def encode(self, obj):
-        if isinstance(obj, (tuple, list)):
-            obj = [_dataclass_to_dict(o) for o in obj]
-        else:
-            obj = _dataclass_to_dict(obj)
-
-        return super(DataclassEncoder, self).encode(obj)
-
-
-def _dataclass_to_dict(obj):
-    """Transforms dataclasses to a dict"""
-    if dataclasses.is_dataclass(obj):
-        obj = dataclasses.asdict(obj, dict_factory=OrderedDict)
-    return obj
-
-
-def get_logged_user(request) -> int:
+def get_logged_user(request: Request) -> int:
     # todo: use the id of the currently logged in user
     return 1
+
+
+async def geojson_stream(
+    query: sqlalchemy.orm.Query, properties: List, with_geometry: bool = True
+):
+    """Stream the geojson features from the database.
+
+    So that the whole FeatureCollection is not built entirely in memory.
+    The bulk of the json serialization (the geometries) takes place in the database
+    doing all the serialization in the database is a very small
+    performance improvement and I prefer to build the json in python than in sql.
+    """
+    feature_collection = json.dumps(
+        {
+            "type": "FeatureCollection",
+            "crs": {"type": "EPSG", "properties": {"code": 3857}},
+            "features": [],
+        }
+    )
+    before_ending_brackets = feature_collection[:-2]
+    ending_brackets = feature_collection[-2:]
+
+    yield before_ending_brackets
+    first_result = True
+    for r in query:
+        if not first_result:
+            yield ","
+        else:
+            first_result = False
+
+        data = {
+            "type": "Feature",
+            "id": f"annotation.{r.id}",
+            "properties": {p: _get_attr(r, p) for p in properties},
+        }
+
+        if with_geometry:
+            # geometry is already serialized
+            data["geometry"] = "__geometry"
+            data = json.dumps(data).replace('"__geometry"', r.geometry)
+        else:
+            data = json.dumps(data)
+
+        yield data
+
+    yield ending_brackets
+
+
+def _get_attr(object, name):
+    value = getattr(object, name)
+    if isinstance(value, enum.Enum):
+        value = value.value
+    return value

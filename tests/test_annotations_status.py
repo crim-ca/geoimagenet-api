@@ -7,7 +7,6 @@ from geoimagenet_api.database.models import (
     ValidationEvent,
     ValidationValue,
 )
-from tests.utils import api_url
 
 image_name_to_cleanup = "testing_annotation_status"
 
@@ -82,13 +81,13 @@ def make_taxonomy_class_payload(taxo_id, recurse=True):
 
 def post_taxonomy_class(client, action, taxonomy_class_id, recurse, expected_code=204):
     data = make_taxonomy_class_payload(taxonomy_class_id, recurse=recurse)
-    r = client.post(api_url(f"/annotations/{action}"), json=data)
+    r = client.post(f"/annotations/{action}", json=data)
     assert r.status_code == expected_code
 
 
 def post_annotation_ids(client, action, ids, expected_code=204):
     data = make_annotation_ids_payload(ids)
-    r = client.post(api_url(f"/annotations/{action}"), json=data)
+    r = client.post(f"/annotations/{action}", json=data)
     assert r.status_code == expected_code
 
 

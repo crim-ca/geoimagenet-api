@@ -2,9 +2,10 @@ import os
 
 import pytest
 from sqlalchemy_utils import drop_database, create_database, database_exists
+from starlette.testclient import TestClient
 
 from geoimagenet_api.database import migrations
-from geoimagenet_api import make_app
+from geoimagenet_api import app
 from geoimagenet_api.database.connection import connection_manager
 
 
@@ -47,15 +48,4 @@ def reset_test_database():
 
 @pytest.fixture(scope="module")
 def client():
-    app = make_app(validate_responses=True)
-
-    with app.app.test_client() as c:
-        yield c
-
-
-@pytest.fixture(scope="module")
-def client_no_response_validation():
-    app = make_app(validate_responses=False)
-
-    with app.app.test_client() as c:
-        yield c
+    yield TestClient(app)
