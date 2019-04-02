@@ -327,6 +327,7 @@ def counts(
     taxonomy_class_id: int,
     group_by_image: bool = group_by_image_type,
     current_user_only: bool = current_user_only_type,
+    with_taxonomy_children: bool = True,
 ):
     """Return annotation counts for the given taxonomy class along with its children.
     If group_by_image is True, the counts are grouped by image name instead of
@@ -334,63 +335,45 @@ def counts(
     """
 
     with connection_manager.get_db_session() as session:
-
         taxo = get_taxonomy_classes_tree(session, taxonomy_class_id=taxonomy_class_id)
-
         if not taxo:
             raise HTTPException(
                 404, f"Taxonomy class id not found: {taxonomy_class_id}"
             )
 
-        # Get annotation count only for these taxonomy class ids
-        queried_taxo_ids = flatten_taxonomy_classes_ids(taxo)
+        if with_taxonomy_children:
+            taxonomy_class_ids = flatten_taxonomy_classes_ids(taxo)
+        else:
+            taxonomy_class_ids = [taxonomy_class_id]
+
+        if group_by_image:
+            group_by_field = DBAnnotation.image_name
+        else:
+            group_by_field = DBAnnotation.taxonomy_class_id
 
         annotation_count_dict = defaultdict(AnnotationCountByStatus)
 
-        def add_filter_current_user(query):
+        annotation_counts_query = (
+            session.query(
+                group_by_field,
+                DBAnnotation.status.name,
+                func.count(DBAnnotation.id).label("annotation_count"),
+            )
+            .filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_class_ids))
+            .group_by(group_by_field)
+            .group_by(DBAnnotation.status.name)
+        )
+
+        if current_user_only:
             logged_user = get_logged_user(request)
-            query = query.filter_by(annotator_id=logged_user)
-            return query
-
-        if group_by_image:
-            annotation_counts_query = (
-                session.query(
-                    DBAnnotation.image_name,
-                    DBAnnotation.status.name,
-                    func.count(DBAnnotation.id).label("annotation_count"),
-                )
-                .filter(DBAnnotation.taxonomy_class_id.in_(queried_taxo_ids))
-                .group_by(DBAnnotation.image_name)
-                .group_by(DBAnnotation.status.name)
+            annotation_counts_query = annotation_counts_query.filter_by(
+                annotator_id=logged_user
             )
 
-            if current_user_only:
-                annotation_counts_query = add_filter_current_user(
-                    annotation_counts_query
-                )
+        for group_by_field_name, status, count in annotation_counts_query:
+            setattr(annotation_count_dict[group_by_field_name], status, count)
 
-            for image_name, status, count in annotation_counts_query:
-                setattr(annotation_count_dict[image_name], status, count)
-        else:
-            annotation_counts_query = (
-                session.query(
-                    DBAnnotation.taxonomy_class_id,
-                    DBAnnotation.status.name,
-                    func.count(DBAnnotation.id).label("annotation_count"),
-                )
-                .filter(DBAnnotation.taxonomy_class_id.in_(queried_taxo_ids))
-                .group_by(DBAnnotation.taxonomy_class_id)
-                .group_by(DBAnnotation.status.name)
-            )
-
-            if current_user_only:
-                annotation_counts_query = add_filter_current_user(
-                    annotation_counts_query
-                )
-
-            for class_id, status, count in annotation_counts_query:
-                setattr(annotation_count_dict[str(class_id)], status, count)
-
+        if not group_by_image:
             # add annotation count to parent objects
             def recurse_add_counts(obj):
                 for o in obj.children:

@@ -414,13 +414,14 @@ def test_annotation_count(client):
 
     """
 
-    def get_counts(taxonomy_class_id):
-        r = client.get(f"/annotations/counts/{taxonomy_class_id}")
+    def get_counts(taxonomy_class_id, with_taxonomy_children=True):
+        params = {"with_taxonomy_children": with_taxonomy_children}
+        r = client.get(f"/annotations/counts/{taxonomy_class_id}", params=params)
         assert r.status_code == 200
         return r.json()
 
-    def assert_count(taxonomy_class_id, status, expected):
-        r = get_counts(taxonomy_class_id)
+    def assert_count(taxonomy_class_id, status, with_taxonomy_children, expected):
+        r = get_counts(taxonomy_class_id, with_taxonomy_children)
         counts = r[str(taxonomy_class_id)]
         assert counts[status] == expected
 
@@ -440,19 +441,21 @@ def test_annotation_count(client):
         add(1, "review")
         add(2, "review")
 
-        assert_count(3, "released", 2)
-        assert_count(1, "released", 2)
-        assert_count(1, "new", 0)
-        assert_count(1, "pre_released", 0)
-        assert_count(1, "review", 5)
-        assert_count(2, "review", 3)
-        assert_count(1, "validated", 1)
-        assert_count(9, "validated", 1)
-        assert_count(2, "validated", 0)
-        assert_count(1, "rejected", 1)
-        assert_count(9, "rejected", 1)
-        assert_count(2, "rejected", 0)
-        assert_count(1, "deleted", 1)
+        assert_count(3, "released", True, 2)
+        assert_count(1, "released", True, 2)
+        assert_count(1, "new", True, 0)
+        assert_count(1, "pre_released", True, 0)
+        assert_count(1, "review", True, 5)
+        assert_count(2, "review", True, 3)
+        assert_count(1, "validated", True, 1)
+        assert_count(9, "validated", True, 1)
+        assert_count(2, "validated", True, 0)
+        assert_count(1, "rejected", True, 1)
+        assert_count(9, "rejected", True, 1)
+        assert_count(2, "rejected", True, 0)
+        assert_count(1, "deleted", True, 1)
+
+        assert_count(1, "review", False, 1)
 
         assert all(key.isdigit() for key in get_counts(1))
 
@@ -561,14 +564,14 @@ def test_annotation_counts_by_image(client):
 
     """
 
-    def get_counts(taxonomy_class_id):
-        params = {"group_by_image": True}
+    def get_counts(taxonomy_class_id, with_taxonomy_children=True):
+        params = {"group_by_image": True, "with_taxonomy_children": with_taxonomy_children}
         r = client.get(f"/annotations/counts/{taxonomy_class_id}", params=params)
         assert r.status_code == 200
         return r.json()
 
-    def assert_count(taxonomy_class_id, status, image_name, expected):
-        r = get_counts(taxonomy_class_id)
+    def assert_count(taxonomy_class_id, status, image_name, with_taxonomy_children, expected):
+        r = get_counts(taxonomy_class_id, with_taxonomy_children)
         counts = r[str(image_name)]
         assert counts[status] == expected
 
@@ -598,13 +601,15 @@ def test_annotation_counts_by_image(client):
         add(9, "validated", "image_2")
         add(9, "validated", "image_2")
 
-        assert_count(1, "released", "image_1", 1)
-        assert_count(1, "validated", "image_1", 5)
-        assert_count(2, "validated", "image_1", 3)
+        assert_count(1, "released", "image_1", True, 1)
+        assert_count(1, "validated", "image_1", True, 5)
+        assert_count(2, "validated", "image_1", True, 3)
 
-        assert_count(1, "released", "image_2", 1)
-        assert_count(1, "validated", "image_2", 5)
-        assert_count(2, "validated", "image_2", 3)
+        assert_count(1, "released", "image_2", True, 1)
+        assert_count(1, "validated", "image_2", True, 5)
+        assert_count(2, "validated", "image_2", True, 3)
+
+        assert_count(2, "validated", "image_2", False, 2)
 
         assert set(get_counts(1)) == {"image_1", "image_2"}
 
@@ -642,15 +647,15 @@ def test_annotation_counts_current_user(client):
         )
 
     with _clean_annotation_session():
-        add(2, user_id=1)
-        add(2, user_id=1)
-        add(3, user_id=1)
-        add(3, user_id=1)
-        add(3, user_id=1)
+        add(taxonomy_class_id=2, user_id=1)
+        add(taxonomy_class_id=2, user_id=1)
+        add(taxonomy_class_id=3, user_id=1)
+        add(taxonomy_class_id=3, user_id=1)
+        add(taxonomy_class_id=3, user_id=1)
 
-        add(3, user_id=2)
-        add(3, user_id=2)
-        add(3, user_id=2)
+        add(taxonomy_class_id=3, user_id=2)
+        add(taxonomy_class_id=3, user_id=2)
+        add(taxonomy_class_id=3, user_id=2)
 
         # group_by_image=False
         assert_count(2, True, False, 5)
