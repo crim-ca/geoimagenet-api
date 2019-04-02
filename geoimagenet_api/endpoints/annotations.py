@@ -61,7 +61,7 @@ def _serialize_geometry(geometry: AnyGeojsonGeometry, crs: int):
 
 
 @router.get(
-    "/annotations", response_model=GeoJsonFeatureCollection, summary="Get Details"
+    "/annotations", response_model=GeoJsonFeatureCollection, summary="Get as GeoJson"
 )
 def get(
     request: Request,
