@@ -12,7 +12,7 @@ def test_root(client):
     assert "authors" in r.json()
 
 
-def test_redirect():
+def test_redirect_v1():
     client = TestClient(base_app)
     r = client.get("/api", allow_redirects=True)
     assert r.status_code == 200

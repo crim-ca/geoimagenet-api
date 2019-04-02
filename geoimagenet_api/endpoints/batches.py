@@ -29,7 +29,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/", response_model=GeoJsonFeatureCollection, summary="Get validated annotations"
+    "/batches", response_model=GeoJsonFeatureCollection, summary="Get validated annotations"
 )
 def get_annotations(taxonomy_id: int):
     if not _is_taxonomy_id_valid(taxonomy_id):
@@ -113,7 +113,7 @@ def _get_batch_creation_url(request: Request):
     batches_url = config.get("batch_creation_url", str).strip("/")
     if not batches_url.startswith("http"):
         path = batches_url.strip("/")
-        batches_url = f"{request.url}{path}"
+        batches_url = f"{str(request.url).strip('/')}/{path}"
 
     return batches_url
 
@@ -126,7 +126,7 @@ post_description = (
 
 
 @router.post(
-    "/",
+    "/batches",
     response_model=BatchPostForwarded,
     status_code=202,
     summary="Create",

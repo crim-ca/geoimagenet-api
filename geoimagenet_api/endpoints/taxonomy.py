@@ -45,7 +45,7 @@ name_query = Query(
 )
 
 
-@router.get("/", response_model=List[TaxonomyGroup], summary="Search")
+@router.get("/taxonomy", response_model=List[TaxonomyGroup], summary="Search")
 def search(name: str = name_query, version: str = None):
     if version and not name:
         raise HTTPException(400, "Please provide a `name` if you provide a `version`.")
@@ -55,7 +55,7 @@ def search(name: str = name_query, version: str = None):
         ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy
         taxonomy_infos = list(zip(ids, root_taxonomy_class_ids, taxonomy_versions))
         if name is not None:
-            if name not in (name_fr, slugify(name_fr), name_en, slugify(name_en)):
+            if name not in (name_fr, slugify(name_fr), name_en, slugify(name_en or "")):
                 continue
         if version is not None:
             if version in taxonomy_versions:
@@ -93,7 +93,7 @@ name_slug_path = Path(
 )
 
 
-@router.get("/{name_slug}/{version}", response_model=Taxonomy, summary="Get by slug")
+@router.get("/taxonomy/{name_slug}/{version}", response_model=Taxonomy, summary="Get by slug")
 def get_by_slug(version: str, name_slug: str = name_slug_path):
     for taxonomy in aggregated_taxonomies():
         ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy

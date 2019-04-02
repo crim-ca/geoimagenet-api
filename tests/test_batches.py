@@ -26,7 +26,9 @@ def test_get_annotations(client):
     assert r.status_code == 200
     assert len(r.json()["features"]) == 3
     assert "crs" in r.json()
-    assert r.json()["features"][0]["id"] == f"annotation.{some_annotations_ids[0]}"
+    ids = set(f["id"] for f in r.json()["features"])
+    expected_ids = set(f"annotation.{i}" for i in some_annotations_ids)
+    assert ids == expected_ids
     first_feature = r.json()["features"][0]
     assert "image_name" in first_feature["properties"]
     assert "taxonomy_class_id" in first_feature["properties"]
@@ -65,7 +67,7 @@ def test_get_annotations_load_testing(client):
 
     # ----- when
     query = {"taxonomy_id": 1}
-    r = client.get("/batches/", params=query)
+    r = client.get("/batches", params=query)
     _ = r.json()  # consume the streamed json
 
     # ----- then
@@ -94,7 +96,7 @@ def test_mock_post(client):
                 {"id": "name", "value": data["name"]},
                 {
                     "id": "geojson_url",
-                    "href": "http://testserver/batches/?taxonomy_id=1",
+                    "href": "http://testserver/batches?taxonomy_id=1",
                 },
                 {"id": "overwrite", "value": data["overwrite"]},
             ],
@@ -102,7 +104,7 @@ def test_mock_post(client):
         }
 
         # ----- when
-        r = client.post("/batches/", json=data)
+        r = client.post("/batches", json=data)
 
         # ----- then
         assert r.status_code == 202
@@ -118,7 +120,7 @@ def test_mock_post_failure(client):
     with mock.patch("geoimagenet_api.endpoints.batches.requests") as mock_requests:
         mock_requests.exceptions.RequestException = requests.exceptions.RequestException
         mock_requests.post.side_effect = requests.exceptions.HTTPError
-        r = client.post("/batches/", json=data)
+        r = client.post("/batches", json=data)
 
     # ----- then
     assert r.status_code == 503
@@ -129,7 +131,7 @@ def test_post_404(client):
     data = {"name": "test_batch", "taxonomy_id": 9999, "overwrite": False}
 
     # ----- when
-    r = client.post("/batches/", json=data)
+    r = client.post("/batches", json=data)
 
     # ----- then
     assert r.status_code == 404
@@ -138,7 +140,7 @@ def test_post_404(client):
 def test_get_404(client):
     # ----- when
     query = {"taxonomy_id": 9999}
-    r = client.get("/batches/", params=query)
+    r = client.get("/batches", params=query)
 
     # ----- then
     assert r.status_code == 404

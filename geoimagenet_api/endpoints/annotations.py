@@ -59,7 +59,7 @@ def _serialize_geometry(geometry: AnyGeojsonGeometry, crs: int):
     return geom
 
 
-@router.put("/", status_code=204, summary="Modify")
+@router.put("/annotations", status_code=204, summary="Modify")
 def put(
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
 ):
@@ -92,7 +92,7 @@ def put(
             raise HTTPException(400, f"Error: {e}")
 
 
-@router.post("/", response_model=List[int], status_code=201, summary="Create")
+@router.post("/annotations", response_model=List[int], status_code=201, summary="Create")
 def post(
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
 ):
@@ -231,22 +231,22 @@ def _update_status(
         session.commit()
 
 
-@router.post("/release", status_code=204, summary="Release")
+@router.post("/annotations/release", status_code=204, summary="Release")
 def update_status_release(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.released, request)
 
 
-@router.post("/validate", status_code=204, summary="Validate")
+@router.post("/annotations/validate", status_code=204, summary="Validate")
 def update_status_validate(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.validated, request)
 
 
-@router.post("/reject", status_code=204, summary="Reject")
+@router.post("/annotations/reject", status_code=204, summary="Reject")
 def update_status_reject(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.rejected, request)
 
 
-@router.post("/delete", status_code=204, summary="Delete")
+@router.post("/annotations/delete", status_code=204, summary="Delete")
 def update_status_delete(update: status_update_type, request: Request):
     return _update_status(update, AnnotationStatus.deleted, request)
 
@@ -269,7 +269,7 @@ current_user_only_type = Query(
 
 
 @router.get(
-    "/counts/{taxonomy_class_id}",
+    "/annotations/counts/{taxonomy_class_id}",
     response_model=Dict[str, AnnotationCountByStatus],
     status_code=200,
     summary="Get counts",
@@ -392,7 +392,7 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
 
 
 @router.post(
-    "/request_review/", status_code=204, response_model=None, summary="Request review"
+    "/annotations/request_review", status_code=204, response_model=None, summary="Request review"
 )
 def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""

@@ -238,25 +238,25 @@ def test_log_delete_annotation():
 
 def test_annotations_put_not_found(client, geojson_geometry):
     geojson_geometry["id"] = "annotation.1234567"
-    r = client.put(f"/annotations/", json=geojson_geometry)
+    r = client.put(f"/annotations", json=geojson_geometry)
     assert r.status_code == 404
 
 
 def test_annotations_put_not_an_int(client, geojson_geometry):
     geojson_geometry["id"] = "annotation.not_an_int"
-    r = client.put(f"/annotations/", json=geojson_geometry)
+    r = client.put(f"/annotations", json=geojson_geometry)
     assert r.status_code == 400
 
 
 def test_annotations_put_id_required(client, geojson_geometry):
-    r = client.put(f"/annotations/", json=geojson_geometry)
+    r = client.put(f"/annotations", json=geojson_geometry)
     assert r.status_code == 400
 
 
 def test_annotations_post_srid(client, any_geojson):
     from_srid = 4326
     query = {"srid": from_srid}
-    r = client.post("/annotations/", json=any_geojson, params=query)
+    r = client.post("/annotations", json=any_geojson, params=query)
     written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
@@ -284,7 +284,7 @@ def test_annotations_put_srid(client, any_geojson, simple_annotation):
 
         from_srid = 4326
         query = {"srid": from_srid}
-        r = client.put(f"/annotations/", json=any_geojson, params=query)
+        r = client.put(f"/annotations", json=any_geojson, params=query)
         assert r.status_code == 204
 
         annotation = session.query(Annotation).filter_by(id=annotation_id).one()
@@ -309,7 +309,7 @@ def test_annotations_request_review(client, simple_annotation):
             "annotation_ids": [f"annotation.{simple_annotation.id}"],
             "boolean": boolean,
         }
-        r = client.post(f"/annotations/request_review/", json=data)
+        r = client.post(f"/annotations/request_review", json=data)
         assert r.status_code == 204
 
     request_review(True)
@@ -338,19 +338,19 @@ def test_annotations_request_review_not_authorized(client, simple_annotation_use
         "annotation_ids": [f"annotation.{simple_annotation_user_2.id}"],
         "boolean": True,
     }
-    r = client.post(f"/annotations/request_review/", json=data)
+    r = client.post(f"/annotations/request_review", json=data)
     assert r.status_code == 403
 
 
 def test_annotations_request_review_not_an_int(client):
     data = {"annotation_ids": [f"annotation.not_an_int"], "boolean": True}
-    r = client.post(f"/annotations/request_review/", json=data)
+    r = client.post(f"/annotations/request_review", json=data)
     assert r.status_code == 400
 
 
 def test_annotations_request_review_not_found(client, simple_annotation):
     data = {"annotation_ids": [f"annotation.1234"], "boolean": True}
-    r = client.post(f"/annotations/request_review/", json=data)
+    r = client.post(f"/annotations/request_review", json=data)
     assert r.status_code == 404
 
 
@@ -370,7 +370,7 @@ def test_annotations_put(client, any_geojson, simple_annotation_user_2):
             any_geojson["status"] = f"released"
             properties = AnnotationProperties(**any_geojson["properties"])
 
-        r = client.put(f"/annotations/", json=any_geojson)
+        r = client.put(f"/annotations", json=any_geojson)
         assert r.status_code == 204
 
         annotation2 = session.query(Annotation).filter_by(id=annotation_id).one()
@@ -391,7 +391,7 @@ def test_annotations_put(client, any_geojson, simple_annotation_user_2):
 
 
 def test_annotation_post(client, any_geojson):
-    r = client.post(f"/annotations/", json=any_geojson)
+    r = client.post(f"/annotations", json=any_geojson)
     written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:

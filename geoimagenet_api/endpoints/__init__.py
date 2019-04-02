@@ -4,17 +4,21 @@ from starlette.responses import RedirectResponse
 
 from geoimagenet_api import __version__, __author__, __email__
 from geoimagenet_api.openapi_schemas import ApiInfo
-from geoimagenet_api.endpoints import taxonomy, taxonomy_classes, users, batches, annotations
+from geoimagenet_api.endpoints import (
+    taxonomy,
+    taxonomy_classes,
+    users,
+    batches,
+    annotations,
+)
 
 router = APIRouter()
 
-router.include_router(users.router, prefix="/users", tags=["Users"])
-router.include_router(taxonomy.router, prefix="/taxonomy", tags=["Taxonomy"])
-router.include_router(
-    taxonomy_classes.router, prefix="/taxonomy_classes", tags=["Taxonomy Classes"]
-)
-router.include_router(batches.router, prefix="/batches", tags=["Batches"])
-router.include_router(annotations.router, prefix="/annotations", tags=["Annotations"])
+router.include_router(users.router, tags=["Users"])
+router.include_router(taxonomy.router, tags=["Taxonomy"])
+router.include_router(taxonomy_classes.router, tags=["Taxonomy Classes"])
+router.include_router(batches.router, tags=["Batches"])
+router.include_router(annotations.router, tags=["Annotations"])
 
 
 @router.get("/", response_model=ApiInfo, summary="General information")

@@ -22,7 +22,7 @@ taxonomy_name_query = Query(
 )
 
 
-@router.get("/", response_model=List[TaxonomyClass], summary="Search")
+@router.get("/taxonomy_classes", response_model=List[TaxonomyClass], summary="Search")
 def search(name: str, taxonomy_name: str = taxonomy_name_query, depth: int = -1):
     with connection_manager.get_db_session() as session:
         for t in session.query(DBTaxonomy):
@@ -30,7 +30,7 @@ def search(name: str, taxonomy_name: str = taxonomy_name_query, depth: int = -1)
                 t.name_fr,
                 slugify(t.name_fr),
                 t.name_en,
-                slugify(t.name_en),
+                slugify(t.name_en or ""),
             ):
                 taxonomy = t
                 break
@@ -67,7 +67,7 @@ def search(name: str, taxonomy_name: str = taxonomy_name_query, depth: int = -1)
     return [taxonomy_class]
 
 
-@router.get("/{id}", response_model=TaxonomyClass, summary="Get by id")
+@router.get("/taxonomy_classes/{id}", response_model=TaxonomyClass, summary="Get by id")
 def get(id: int, depth: int = -1):
     with connection_manager.get_db_session() as session:
         taxonomy_class = (
