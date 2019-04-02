@@ -49,11 +49,3 @@ def reset_test_database():
 @pytest.fixture(scope="module")
 def client():
     yield TestClient(app)
-
-
-@pytest.fixture(scope="module")
-def client_no_response_validation():
-    app = make_app(validate_responses=False)
-
-    with app.app.test_client() as c:
-        yield c
