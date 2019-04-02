@@ -1,6 +1,6 @@
 from starlette.testclient import TestClient
 
-from geoimagenet_api import base_app
+from geoimagenet_api import application
 
 
 def test_root(client):
@@ -13,7 +13,7 @@ def test_root(client):
 
 
 def test_redirect_v1():
-    client = TestClient(base_app)
+    client = TestClient(application)
     r = client.get("/api", allow_redirects=True)
     assert r.status_code == 200
     assert r.json()["name"] == "GeoImageNet API"

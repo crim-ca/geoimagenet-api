@@ -32,19 +32,19 @@ sentry_dsn = config.get("sentry_url", str)
 if sentry_dsn:
     sentry_sdk.init(dsn=sentry_dsn)
 
-base_app = FastAPI()
+application = FastAPI()
 app = FastAPI(
     openapi_prefix="/api/v1",
     title="GeoImageNet Annotations API",
     description="API for the GeoImageNet platform",
     version=__version__
 )
-base_app.mount("/api/v1", app)
+application.mount("/api/v1", app)
 
 logger.info("App initialized")
 
 
-@base_app.get("/api/", include_in_schema=False)
+@application.get("/api/", include_in_schema=False)
 def redirect_v1():
     return RedirectResponse(url="/api/v1")
 
@@ -59,4 +59,4 @@ app.include_router(endpoints.router)
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
-    uvicorn.run(base_app, host="0.0.0.0", port=8080)
+    uvicorn.run(application, host="0.0.0.0", port=8080)

@@ -17,4 +17,4 @@ EXPOSE 8080
 
 COPY . .
 
-CMD gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8080 geoimagenet_api:base_app
+CMD gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8080 geoimagenet_api:application
