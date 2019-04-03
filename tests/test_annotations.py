@@ -73,11 +73,12 @@ def write_annotation(
     status=AnnotationStatus.new,
     image_name="my image",
     review_requested=False,
+    geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
 ):
     with connection_manager.get_db_session() as session:
         annotation = Annotation(
             annotator_id=user_id,
-            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+            geometry=geometry,
             taxonomy_class_id=taxonomy_class,
             image_name=image_name,
             review_requested=review_requested,
@@ -565,12 +566,17 @@ def test_annotation_counts_by_image(client):
     """
 
     def get_counts(taxonomy_class_id, with_taxonomy_children=True):
-        params = {"group_by_image": True, "with_taxonomy_children": with_taxonomy_children}
+        params = {
+            "group_by_image": True,
+            "with_taxonomy_children": with_taxonomy_children,
+        }
         r = client.get(f"/annotations/counts/{taxonomy_class_id}", params=params)
         assert r.status_code == 200
         return r.json()
 
-    def assert_count(taxonomy_class_id, status, image_name, with_taxonomy_children, expected):
+    def assert_count(
+        taxonomy_class_id, status, image_name, with_taxonomy_children, expected
+    ):
         r = get_counts(taxonomy_class_id, with_taxonomy_children)
         counts = r[str(image_name)]
         assert counts[status] == expected
@@ -703,29 +709,41 @@ def test_annotation_counts_review_requested(client):
         assert_count(2, review_requested=None, expected=3)
 
 
-def test_friendly_name(simple_annotation):
-    assert simple_annotation.name == "NONE_+000.500000_+000.500000"
-
+def test_friendly_name():
     with connection_manager.get_db_session() as session:
+        geometry = "SRID=4326;POLYGON((-71 39,-71 41,-69 41,-69 39,-71 39))"
+        transformed_geometry = session.query(
+            func.ST_AsEWKT(func.ST_Transform(func.ST_GeomFromEWKT(geometry), 3857))
+        ).scalar()
+        annotation = write_annotation(geometry=transformed_geometry, taxonomy_class=12)
+
+        assert annotation.name == "NONE_+040.000000_-070.000000"
         taxo = (
             session.query(TaxonomyClass)
-            .filter_by(id=simple_annotation.taxonomy_class_id)
+            .filter_by(id=annotation.taxonomy_class_id)
             .first()
         )
         taxo.code = "TEST"
         session.commit()
 
-        session.add(simple_annotation)
+        session.add(annotation)
 
-        simple_annotation.taxonomy_class_id = 10
+        annotation.taxonomy_class_id = 10
         session.commit()
-        simple_annotation.taxonomy_class_id = taxo.id
-        session.commit()
-
-        assert simple_annotation.name == "TEST_+000.500000_+000.500000"
-
-        polygon_wkt = "SRID=3857;POLYGON((0 0,-2 0,-2 -2,0 -2,0 0))"
-        simple_annotation.geometry = polygon_wkt
+        annotation.taxonomy_class_id = taxo.id
         session.commit()
 
-        assert simple_annotation.name == "TEST_-001.000000_-001.000000"
+        assert annotation.name == "TEST_+040.000000_-070.000000"
+
+        geometry2 = "SRID=4326;POLYGON((-71 37,-71 41,-69 41,-69 37,-71 37))"
+        transformed_geometry2 = session.query(
+            func.ST_AsEWKT(func.ST_Transform(func.ST_GeomFromEWKT(geometry2), 3857))
+        ).scalar()
+
+        annotation.geometry = transformed_geometry2
+        session.commit()
+
+        assert annotation.name == "TEST_+039.000000_-070.000000"
+
+        session.query(Annotation).filter_by(id=annotation.id).delete()
+        session.commit()
