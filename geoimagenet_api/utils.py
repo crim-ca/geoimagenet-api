@@ -21,13 +21,14 @@ async def geojson_stream(
     doing all the serialization in the database is a very small
     performance improvement and I prefer to build the json in python than in sql.
     """
-    feature_collection = json.dumps(
-        {
-            "type": "FeatureCollection",
-            "crs": {"type": "EPSG", "properties": {"code": 3857}},
-            "features": [],
-        }
-    )
+
+    feature_collection = {"type": "FeatureCollection"}
+    if with_geometry:
+        feature_collection["crs"] = {"type": "EPSG", "properties": {"code": 3857}}
+    feature_collection["features"] = []
+
+    feature_collection = json.dumps(feature_collection)
+
     before_ending_brackets = feature_collection[:-2]
     ending_brackets = feature_collection[-2:]
 
