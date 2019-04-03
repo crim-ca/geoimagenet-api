@@ -12,7 +12,7 @@ def get_logged_user(request: Request) -> int:
 
 
 async def geojson_stream(
-    query: sqlalchemy.orm.Query, properties: List, with_geometry: bool = True
+    query: sqlalchemy.orm.Query, properties: List[str], with_geometry: bool = True
 ):
     """Stream the geojson features from the database.
 

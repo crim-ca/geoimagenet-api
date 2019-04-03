@@ -54,9 +54,8 @@ def get_annotations(taxonomy_id: int):
             )
         )
 
-        stream = geojson_stream(
-            query, properties=["image_name", "taxonomy_class_id"], with_geometry=True
-        )
+        properties = ["image_name", "taxonomy_class_id"]
+        stream = geojson_stream(query, properties=properties, with_geometry=True)
 
         return StreamingResponse(stream, media_type="application/json")
 
