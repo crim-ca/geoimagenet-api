@@ -23,11 +23,14 @@ def upgrade():
 
     annotation_update_name = """
         CREATE OR REPLACE FUNCTION annotation_update_name() RETURNS trigger AS $$ 
+            DECLARE
+                centroid geometry;
             BEGIN 
+                centroid := ST_Transform(ST_Centroid(NEW.geometry), 4326);
                 NEW.name := (SELECT COALESCE(code, '') FROM taxonomy_class WHERE id=NEW.taxonomy_class_id) || '_' || 
-                            to_char(ST_Y(ST_Centroid(NEW.geometry)), 'SG099.999990') || '_' || 
-                            to_char(ST_X(ST_Centroid(NEW.geometry)), 'SG099.999990');
-                RETURN NEW; 
+                            to_char(ST_Y(centroid), 'SG099.999999') || '_' || 
+                            to_char(ST_X(centroid), 'SG099.999999');
+                RETURN NEW;
             END;
         $$ LANGUAGE 'plpgsql';
 
