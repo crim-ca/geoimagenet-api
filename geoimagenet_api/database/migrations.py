@@ -45,12 +45,8 @@ def migrate():
 
 
 def get_names(names):
-    if isinstance(names, dict):
-        name_fr = names["fr"]
-        name_en = names["en"] or None
-    else:
-        name_fr = names
-        name_en = None
+    name_fr = names["fr"]
+    name_en = names["en"] or None
 
     return name_fr, name_en
 
