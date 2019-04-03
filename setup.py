@@ -52,7 +52,7 @@ setup(
     license="TBD",
     packages=["geoimagenet_api"],
     package_data=package_data,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     zip_safe=False,
     install_requires=read_requirements("requirements.txt"),
     tests_require=read_requirements("requirements_dev.txt"),
