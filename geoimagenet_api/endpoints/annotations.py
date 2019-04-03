@@ -70,7 +70,7 @@ def get(
     taxonomy_class_id: int = None,
     review_requested: bool = False,
     current_user_only: bool = False,
-    with_geometry: bool = False,
+    with_geometry: bool = True,
 ):
     with connection_manager.get_db_session() as session:
         fields = [
