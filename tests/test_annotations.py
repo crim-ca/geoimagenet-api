@@ -15,7 +15,6 @@ from geoimagenet_api.database.models import (
     TaxonomyClass,
 )
 from geoimagenet_api.openapi_schemas import AnnotationProperties
-from tests.utils import random_user_name
 
 wkt_string = {
     "Point": "POINT(100 0)",
@@ -57,17 +56,9 @@ def any_geojson(request, geojson_geometry):
         return geojson_geometry
 
 
-def random_user():
-    with connection_manager.get_db_session() as session:
-        username = random_user_name()
-        person = Person(username=username, name="Unit Tester")
-        session.add(person)
-        session.commit()
-
-        return person.id
-
-
 def write_annotation(
+    *,
+    session=None,
     user_id=1,
     taxonomy_class=2,
     status=AnnotationStatus.new,
@@ -75,7 +66,7 @@ def write_annotation(
     review_requested=False,
     geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
 ):
-    with connection_manager.get_db_session() as session:
+    def _write(_session):
         annotation = Annotation(
             annotator_id=user_id,
             geometry=geometry,
@@ -84,11 +75,17 @@ def write_annotation(
             review_requested=review_requested,
             status=status,
         )
-        session.add(annotation)
-        session.commit()
+        _session.add(annotation)
+        _session.commit()
         _ = annotation.id
 
-    return annotation
+        return annotation
+
+    if session is not None:
+        return _write(session)
+    else:
+        with connection_manager.get_db_session() as session:
+            return _write(session)
 
 
 def _delete_annotation(annotation_id):
@@ -113,134 +110,123 @@ def simple_annotation_user_2(request):
     return annotation
 
 
-def test_annotation_log_triggers():
-    with connection_manager.get_db_session() as session:
-        user_id = random_user()
+def assert_log_equals(
+    log,
+    *,
+    taxonomy_class_id=None,
+    image_name=None,
+    status=None,
+    review_requested=None,
+    geometry=None,
+    annotator_id=None,
+    annotation_id=None,
+    operation=AnnotationLogOperation.update,
+):
+    assert log.taxonomy_class_id == taxonomy_class_id
+    assert log.image_name == image_name
+    assert log.status == status
+    assert log.review_requested == review_requested
+    assert (
+        log.geometry is None and geometry is None or log.geometry.desc == geometry.desc
+    )
+    assert log.annotator_id == annotator_id
+    assert log.annotation_id == annotation_id
+    assert log.operation == operation
 
-        annotation = Annotation(
-            annotator_id=user_id,
-            geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-            taxonomy_class_id=1,
+
+def test_annotation_log_triggers():
+    with _clean_annotation_session() as session:
+        start_geometry = "SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))"
+        annotation = write_annotation(
+            session=session,
+            user_id=1,
+            geometry=start_geometry,
+            taxonomy_class=1,
             image_name="my image",
         )
         session.add(annotation)
-        session.commit()
 
-        inserted_id = session.query(Annotation.id).filter_by(id=annotation.id).one().id
-        assert inserted_id == annotation.id
+        def get_last_log():
+            return (
+                session.query(AnnotationLog).order_by(AnnotationLog.id.desc()).first()
+            )
 
-        log = session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()
-        assert len(log) == 1
-        assert log[0].taxonomy_class_id == annotation.taxonomy_class_id
-        assert log[0].image_name == annotation.image_name
-        assert log[0].status == AnnotationStatus.new
-        assert log[0].review_requested == annotation.review_requested
-        assert log[0].operation == AnnotationLogOperation.insert
+        assert session.query(AnnotationLog).count() == 1
+        wkt_geom = session.query(functions.ST_GeomFromEWKT(start_geometry)).scalar()
+        assert_log_equals(
+            get_last_log(),
+            taxonomy_class_id=annotation.taxonomy_class_id,
+            image_name=annotation.image_name,
+            status=AnnotationStatus.new,
+            review_requested=annotation.review_requested,
+            geometry=wkt_geom,
+            annotator_id=1,
+            annotation_id=annotation.id,
+            operation=AnnotationLogOperation.insert,
+        )
 
         # update image_name
         annotation.image_name = "something else"
         annotation.review_requested = True
-        session.add(annotation)
         session.commit()
-        log = session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()
 
-        assert log[1].annotator_id is None
-        assert log[1].geometry is None
-        assert log[1].status is None
-        assert log[1].taxonomy_class_id is None
-        assert log[1].image_name == "something else"
-        assert log[1].review_requested is True
-        assert log[1].operation == AnnotationLogOperation.update
+        assert_log_equals(
+            get_last_log(),
+            image_name="something else",
+            review_requested=True,
+            annotation_id=annotation.id,
+        )
 
         # update geometry
         polygon_wkt = "SRID=3857;POLYGON((0 0,1 0,2 1,0 1,0 0))"
         annotation.geometry = polygon_wkt
-        session.add(annotation)
         session.commit()
-        log = session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()
 
-        wkt_geom = (
-            "SRID=3857;" + session.query(functions.ST_AsText(log[2].geometry)).scalar()
+        wkt_geom = session.query(functions.ST_GeomFromEWKT(polygon_wkt)).scalar()
+        assert_log_equals(
+            get_last_log(), geometry=wkt_geom, annotation_id=annotation.id
         )
-        assert wkt_geom == polygon_wkt
-        assert log[2].annotator_id is None
-        assert log[2].status is None
-        assert log[2].taxonomy_class_id is None
-        assert log[2].image_name is None
-        assert log[2].review_requested is None
-        assert log[2].operation == AnnotationLogOperation.update
 
         # update annotator
-        user2_id = random_user()
-        annotation.annotator_id = user2_id
-        session.add(annotation)
+        annotation.annotator_id = 2
         session.commit()
-        log = (
-            session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()[-1]
-        )
-        assert log.annotator_id == user2_id
+
+        assert_log_equals(get_last_log(), annotator_id=2, annotation_id=annotation.id)
 
         # update status
         annotation.status = AnnotationStatus.released
-        session.add(annotation)
         session.commit()
-        log = (
-            session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()[-1]
+
+        assert_log_equals(
+            get_last_log(),
+            status=AnnotationStatus.released,
+            annotation_id=annotation.id,
         )
-        assert log.status == AnnotationStatus.released
-        annotation.status = AnnotationStatus.new
-        session.add(annotation)
-        session.commit()
 
         # update taxonomy_class_id
         annotation.taxonomy_class_id = 2
-        session.add(annotation)
         session.commit()
-        log = (
-            session.query(AnnotationLog).filter_by(annotation_id=inserted_id).all()[-1]
-        )
-        assert log.taxonomy_class_id == 2
 
-        # cleanup
-        session.query(Annotation).filter_by(id=inserted_id).delete()
-        session.commit()
-        session.query(AnnotationLog).filter_by(annotation_id=inserted_id).delete()
-        session.commit()
-        session.query(Person).filter(Person.id.in_([user_id, user2_id])).delete(
-            synchronize_session=False
+        assert_log_equals(
+            get_last_log(), taxonomy_class_id=2, annotation_id=annotation.id
         )
-        session.commit()
 
 
 def test_log_delete_annotation():
-    with connection_manager.get_db_session() as session:
-        user_id = random_user()
-
-        annotation = Annotation(
-            annotator_id=user_id,
+    with _clean_annotation_session() as session:
+        annotation = write_annotation(
+            session=session,
+            user_id=2,
             geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
-            taxonomy_class_id=1,
+            taxonomy_class=1,
             image_name="my image",
         )
-        session.add(annotation)
+        session.query(Annotation).filter_by(id=annotation.id).delete()
         session.commit()
 
-        session.delete(annotation)
-        session.commit()
+        log = session.query(AnnotationLog).order_by(AnnotationLog.id.desc()).first()
 
-        log = (
-            session.query(AnnotationLog)
-            .filter_by(annotation_id=annotation.id)
-            .all()[-1]
-        )
-        assert log.annotation_id == annotation.id
-        assert log.operation == AnnotationLogOperation.delete
-
-        # cleanup
-        session.query(AnnotationLog).filter_by(annotation_id=annotation.id).delete()
-        session.commit()
-        session.query(Person).filter(Person.id == user_id).delete()
-        session.commit()
+        assert_log_equals(log, annotation_id=annotation.id, operation=AnnotationLogOperation.delete)
 
 
 def test_annotations_put_not_found(client, geojson_geometry):
@@ -421,15 +407,13 @@ def test_annotation_count(client):
         assert r.status_code == 200
         return r.json()
 
-    def assert_count(taxonomy_class_id, status, with_taxonomy_children, expected):
-        r = get_counts(taxonomy_class_id, with_taxonomy_children)
-        counts = r[str(taxonomy_class_id)]
-        assert counts[status] == expected
+    with _clean_annotation_session() as session:
 
-    def add(taxonomy_class_id, status):
-        write_annotation(taxonomy_class=taxonomy_class_id, status=status)
+        def add(taxonomy_class_id, status):
+            write_annotation(
+                session=session, taxonomy_class=taxonomy_class_id, status=status
+            )
 
-    with _clean_annotation_session():
         add(3, "released")
         add(3, "released")
         add(9, "validated")
@@ -442,23 +426,27 @@ def test_annotation_count(client):
         add(1, "review")
         add(2, "review")
 
-        assert_count(3, "released", True, 2)
-        assert_count(1, "released", True, 2)
-        assert_count(1, "new", True, 0)
-        assert_count(1, "pre_released", True, 0)
-        assert_count(1, "review", True, 5)
-        assert_count(2, "review", True, 3)
-        assert_count(1, "validated", True, 1)
-        assert_count(9, "validated", True, 1)
-        assert_count(2, "validated", True, 0)
-        assert_count(1, "rejected", True, 1)
-        assert_count(9, "rejected", True, 1)
-        assert_count(2, "rejected", True, 0)
-        assert_count(1, "deleted", True, 1)
+        counts = get_counts(taxonomy_class_id=1, with_taxonomy_children=True)
 
-        assert_count(1, "review", False, 1)
+        assert counts["3"]["released"] == 2
+        assert counts["1"]["released"] == 2
+        assert counts["1"]["new"] == 0
+        assert counts["1"]["pre_released"] == 0
+        assert counts["1"]["review"] == 5
+        assert counts["2"]["review"] == 3
+        assert counts["1"]["validated"] == 1
+        assert counts["9"]["validated"] == 1
+        assert counts["2"]["validated"] == 0
+        assert counts["1"]["rejected"] == 1
+        assert counts["9"]["rejected"] == 1
+        assert counts["2"]["rejected"] == 0
+        assert counts["1"]["deleted"] == 1
 
-        assert all(key.isdigit() for key in get_counts(1))
+        counts_without_children = get_counts(taxonomy_class_id=1, with_taxonomy_children=False)
+        assert counts_without_children["1"]["review"] == 1
+
+        assert all(key.isdigit() for key in counts)
+        assert all(key.isdigit() for key in counts_without_children)
 
 
 def _get_annotations(client, params):
@@ -473,12 +461,14 @@ def _clean_annotation_session():
     with connection_manager.get_db_session() as session:
         # make sure there are no other annotations
         session.query(Annotation).delete()
+        session.query(AnnotationLog).delete()
         session.commit()
         try:
             yield session
         finally:
             # cleanup
             session.query(Annotation).delete()
+            session.query(AnnotationLog).delete()
             session.commit()
 
 
@@ -489,9 +479,9 @@ def test_annotation_get_none(client):
 
 
 def test_annotation_get_image_name(client):
-    with _clean_annotation_session():
-        write_annotation(image_name="test_image")
-        write_annotation(image_name="test_image2")
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, image_name="test_image")
+        write_annotation(session=session, image_name="test_image2")
 
         params = {"image_name": "test_image"}
         annotations = _get_annotations(client, params)
@@ -500,9 +490,9 @@ def test_annotation_get_image_name(client):
 
 
 def test_annotation_get_status(client):
-    with _clean_annotation_session():
-        write_annotation(status=AnnotationStatus.validated)
-        write_annotation(status=AnnotationStatus.rejected)
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, status=AnnotationStatus.validated)
+        write_annotation(session=session, status=AnnotationStatus.rejected)
         params = {"status": "validated"}
         annotations = _get_annotations(client, params)
         assert len(annotations) == 1
@@ -510,9 +500,9 @@ def test_annotation_get_status(client):
 
 
 def test_annotation_get_taxonomy_class_id(client):
-    with _clean_annotation_session():
-        write_annotation(taxonomy_class=1)
-        write_annotation(taxonomy_class=2)
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, taxonomy_class=1)
+        write_annotation(session=session, taxonomy_class=2)
         params = {"taxonomy_class_id": 1}
         annotations = _get_annotations(client, params)
         assert len(annotations) == 1
@@ -520,9 +510,9 @@ def test_annotation_get_taxonomy_class_id(client):
 
 
 def test_annotation_get_review_requested(client):
-    with _clean_annotation_session():
-        write_annotation(review_requested=True)
-        write_annotation(review_requested=False)
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, review_requested=True)
+        write_annotation(session=session, review_requested=False)
         params = {"review_requested": True}
         annotations = _get_annotations(client, params)
         assert len(annotations) == 1
@@ -537,9 +527,9 @@ def test_annotation_get_review_requested(client):
 
 
 def test_annotation_get_current_user_only(client):
-    with _clean_annotation_session():
-        write_annotation(user_id=1)
-        write_annotation(user_id=2)
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, user_id=1)
+        write_annotation(session=session, user_id=2)
         params = {"current_user_only": True}
         annotations = _get_annotations(client, params)
         assert len(annotations) == 1
@@ -547,8 +537,8 @@ def test_annotation_get_current_user_only(client):
 
 
 def test_annotation_get_with_geometry(client):
-    with _clean_annotation_session():
-        write_annotation()
+    with _clean_annotation_session() as session:
+        write_annotation(session=session)
         annotations = _get_annotations(client, {"with_geometry": False})
         assert len(annotations) == 1
         assert "geometry" not in annotations[0]
@@ -585,19 +575,16 @@ def test_annotation_counts_by_image(client):
         assert r.status_code == 200
         return r.json()
 
-    def assert_count(
-        taxonomy_class_id, status, image_name, with_taxonomy_children, expected
-    ):
-        r = get_counts(taxonomy_class_id, with_taxonomy_children)
-        counts = r[str(image_name)]
-        assert counts[status] == expected
+    with _clean_annotation_session() as session:
 
-    def add(taxonomy_class_id, status, image_name):
-        write_annotation(
-            taxonomy_class=taxonomy_class_id, status=status, image_name=image_name
-        )
+        def add(taxonomy_class_id, status, image_name):
+            write_annotation(
+                session=session,
+                taxonomy_class=taxonomy_class_id,
+                status=status,
+                image_name=image_name,
+            )
 
-    with _clean_annotation_session():
         add(3, "released", "image_1")
         add(3, "new", "image_1")
         add(3, "validated", "image_1")
@@ -618,17 +605,21 @@ def test_annotation_counts_by_image(client):
         add(9, "validated", "image_2")
         add(9, "validated", "image_2")
 
-        assert_count(1, "released", "image_1", True, 1)
-        assert_count(1, "validated", "image_1", True, 5)
-        assert_count(2, "validated", "image_1", True, 3)
+        counts = get_counts(taxonomy_class_id=1, with_taxonomy_children=True)
+        assert counts["image_1"]["released"] == 1
+        assert counts["image_1"]["validated"] == 5
+        assert counts["image_2"]["released"] == 1
+        assert counts["image_2"]["validated"] == 5
+        assert set(counts) == {"image_1", "image_2"}
 
-        assert_count(1, "released", "image_2", True, 1)
-        assert_count(1, "validated", "image_2", True, 5)
-        assert_count(2, "validated", "image_2", True, 3)
+        counts = get_counts(taxonomy_class_id=2, with_taxonomy_children=True)
+        assert counts["image_1"]["validated"] == 3
+        assert counts["image_2"]["validated"] == 3
+        assert set(counts) == {"image_1", "image_2"}
 
-        assert_count(2, "validated", "image_2", False, 2)
-
-        assert set(get_counts(1)) == {"image_1", "image_2"}
+        counts = get_counts(taxonomy_class_id=2, with_taxonomy_children=False)
+        assert counts["image_2"]["validated"] == 2
+        assert set(counts) == {"image_1", "image_2"}
 
 
 def test_annotation_counts_current_user(client):
@@ -658,12 +649,16 @@ def test_annotation_counts_current_user(client):
             counts = r[str(taxonomy_class_id)]
         assert counts["new"] == expected
 
-    def add(taxonomy_class_id, user_id):
-        write_annotation(
-            user_id=user_id, taxonomy_class=taxonomy_class_id, image_name="my image"
-        )
+    with _clean_annotation_session() as session:
 
-    with _clean_annotation_session():
+        def add(taxonomy_class_id, user_id):
+            write_annotation(
+                session=session,
+                user_id=user_id,
+                taxonomy_class=taxonomy_class_id,
+                image_name="my image",
+            )
+
         add(taxonomy_class_id=2, user_id=1)
         add(taxonomy_class_id=2, user_id=1)
         add(taxonomy_class_id=3, user_id=1)
@@ -710,10 +705,10 @@ def test_annotation_counts_review_requested(client):
         counts = r[str(taxonomy_class_id)]
         assert counts["new"] == expected
 
-    with _clean_annotation_session():
-        write_annotation(taxonomy_class=2, review_requested=True)
-        write_annotation(taxonomy_class=3, review_requested=True)
-        write_annotation(taxonomy_class=3, review_requested=False)
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, taxonomy_class=2, review_requested=True)
+        write_annotation(session=session, taxonomy_class=3, review_requested=True)
+        write_annotation(session=session, taxonomy_class=3, review_requested=False)
 
         assert_count(2, review_requested=True, expected=2)
         assert_count(2, review_requested=False, expected=1)
@@ -726,7 +721,9 @@ def test_friendly_name():
         transformed_geometry = session.query(
             func.ST_AsEWKT(func.ST_Transform(func.ST_GeomFromEWKT(geometry), 3857))
         ).scalar()
-        annotation = write_annotation(geometry=transformed_geometry, taxonomy_class=12)
+        annotation = write_annotation(
+            session=session, geometry=transformed_geometry, taxonomy_class=12
+        )
 
         assert annotation.name == "NONE_+040.000000_-070.000000"
         taxo = (
