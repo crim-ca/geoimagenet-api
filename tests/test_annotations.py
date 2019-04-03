@@ -558,6 +558,7 @@ def test_annotation_get_with_geometry(client):
         assert isinstance(annotations[0]["geometry"], dict)
 
         assert "geometry" not in annotations[0]["properties"]
+        assert "id" not in annotations[0]["properties"]
 
 
 def test_annotation_counts_not_found(client):

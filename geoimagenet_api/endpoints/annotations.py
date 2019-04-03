@@ -97,7 +97,7 @@ def get(
             logged_user = get_logged_user(request)
             query = query.filter_by(annotator_id=logged_user)
 
-        properties = [f.key for f in fields if f.key != "geometry"]
+        properties = [f.key for f in fields if f.key not in ["geometry", "id"]]
         stream = geojson_stream(
             query, properties=properties, with_geometry=with_geometry
         )
