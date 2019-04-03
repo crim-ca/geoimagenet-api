@@ -1,4 +1,5 @@
 import os
+import random
 
 import pytest
 from sqlalchemy_utils import drop_database, create_database, database_exists
@@ -44,6 +45,22 @@ def reset_test_database():
     # run migrations and initiate base data
     migrations.init_database_data()
     migrations.load_testing_data()
+
+    randomize_taxonomy_classes()
+
+
+def randomize_taxonomy_classes():
+    """Randomize the return value of TaxonomyClass. This is necessary to test some algorithms."""
+    from geoimagenet_api.database.models import TaxonomyClass
+
+    with connection_manager.get_db_session() as session:
+        ids = session.query(TaxonomyClass.id).all()
+        for n in range(len(ids)):
+            session.execute(
+                "UPDATE taxonomy_class SET id = id WHERE id = :id;",
+                {"id": random.choice(ids).id},
+            )
+        session.commit()
 
 
 @pytest.fixture(scope="module")
