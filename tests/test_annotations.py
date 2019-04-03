@@ -542,12 +542,15 @@ def test_annotation_get_current_user_only(client):
 def test_annotation_get_with_geometry(client):
     with _clean_annotation_session():
         write_annotation()
-        annotations = _get_annotations(client, {"with_geometry": True})
-        assert len(annotations) == 1
-        assert isinstance(annotations[0]["geometry"], dict)
         annotations = _get_annotations(client, {"with_geometry": False})
         assert len(annotations) == 1
         assert "geometry" not in annotations[0]
+
+        annotations = _get_annotations(client, {"with_geometry": True})
+        assert len(annotations) == 1
+        assert isinstance(annotations[0]["geometry"], dict)
+
+        assert "geometry" not in annotations[0]["properties"]
 
 
 def test_annotation_counts_not_found(client):
