@@ -68,7 +68,7 @@ def get(
     image_name: str = None,
     status: str = None,
     taxonomy_class_id: int = None,
-    review_requested: bool = False,
+    review_requested: bool = None,
     current_user_only: bool = False,
     with_geometry: bool = True,
 ):
@@ -91,7 +91,7 @@ def get(
             query = query.filter_by(status=status)
         if taxonomy_class_id:
             query = query.filter_by(taxonomy_class_id=taxonomy_class_id)
-        if review_requested:
+        if review_requested is not None:
             query = query.filter_by(review_requested=review_requested)
         if current_user_only:
             logged_user = get_logged_user(request)

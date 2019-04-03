@@ -528,6 +528,13 @@ def test_annotation_get_review_requested(client):
         assert len(annotations) == 1
         assert annotations[0]["properties"]["review_requested"]
 
+        params = {"review_requested": False}
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 1
+
+        annotations = _get_annotations(client, {})
+        assert len(annotations) == 2
+
 
 def test_annotation_get_current_user_only(client):
     with _clean_annotation_session():
