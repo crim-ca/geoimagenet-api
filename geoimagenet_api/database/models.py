@@ -50,7 +50,7 @@ class Annotation(Base):
     taxonomy_class_id = Column(
         Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
     )
-    image_name = Column(String, nullable=False)
+    image_id = Column(Integer, ForeignKey("image.id"), nullable=False, index=True)
     status = Column(
         Enum(AnnotationStatus, name="annotation_status_enum"),
         nullable=False,
@@ -82,7 +82,7 @@ class AnnotationLog(Base):
     geometry = Column(Geometry("GEOMETRY", srid=3857, spatial_index=False))
     created_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
-    image_name = Column(String)
+    image_id = Column(Integer, ForeignKey("image.id"), nullable=True, index=True)
     status = Column(Enum(AnnotationStatus, name="annotation_status_enum"), index=True)
     review_requested = Column(Boolean)
     operation = Column(
@@ -147,6 +147,17 @@ class ValidationEvent(Base):
         Enum(ValidationValue, name="validation_value_enum"), nullable=False, index=True
     )
     created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
+
+
+class Image(Base):
+    __tablename__ = "image"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_name = Column(String, nullable=False, index=True)
+    rgb_8bit_filename = Column(String, nullable=True, index=True, unique=True)
+    nrg_8bit_filename = Column(String, nullable=True, index=True, unique=True)
+    rgbn_8bit_filename = Column(String, nullable=True, index=True, unique=True)
+    rgbn_16bit_filename = Column(String, nullable=True, index=True, unique=True)
 
 
 class SpatialRefSys(Base):
