@@ -154,6 +154,8 @@ class Image(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_name = Column(String, nullable=False, index=True)
+
+    # filenames don't contain the extensions
     rgb_8bit_filename = Column(String, nullable=True, index=True, unique=True)
     nrg_8bit_filename = Column(String, nullable=True, index=True, unique=True)
     rgbn_8bit_filename = Column(String, nullable=True, index=True, unique=True)

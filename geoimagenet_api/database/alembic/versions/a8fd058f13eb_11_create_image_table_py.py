@@ -5,6 +5,8 @@ Revises: 2dd1abf5cb94
 Create Date: 2019-04-05 13:29:25.105437
 
 """
+from pathlib import Path
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import table, Integer, String, column, select, func
@@ -32,6 +34,43 @@ image = table(
     column("rgbn_8bit_filename", String),
     column("rgbn_16bit_filename", String),
 )
+
+trigger_annotation_save = """
+            CREATE OR REPLACE FUNCTION annotation_save_event() RETURNS trigger AS $$ 
+                BEGIN 
+                    INSERT INTO annotation_log
+                    (annotation_id, annotator_id, geometry, taxonomy_class_id, image_id, status, operation)
+                    VALUES (
+                        NEW.id, 
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.annotator_id 
+                             WHEN OLD.annotator_id = NEW.annotator_id THEN NULL 
+                             ELSE NEW.annotator_id 
+                        END, 
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.geometry 
+                             WHEN st_equals(OLD.geometry, NEW.geometry) THEN NULL 
+                             ELSE NEW.geometry 
+                        END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.taxonomy_class_id 
+                             WHEN OLD.taxonomy_class_id = NEW.taxonomy_class_id THEN NULL 
+                             ELSE NEW.taxonomy_class_id 
+                        END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.image_id 
+                             WHEN OLD.image_id = NEW.image_id THEN NULL 
+                             ELSE NEW.image_id 
+                        END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.status::annotation_status_enum
+                             WHEN OLD.status = NEW.status THEN NULL 
+                             ELSE NEW.status 
+                        END,
+                        lower(tg_op)::annotation_log_operation_enum
+                    );
+                    RETURN NEW; 
+                END;
+            $$ LANGUAGE 'plpgsql';
+
+            CREATE TRIGGER log_annotation_action AFTER INSERT OR UPDATE ON annotation
+            FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
+        """
 
 
 def upgrade():
@@ -136,6 +175,13 @@ def upgrade():
         op.f("ix_taxonomy_class_code"), "taxonomy_class", ["code"], unique=False
     )
 
+    # ---------
+    # Triggers
+    # ---------
+    op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
+
+    op.execute(trigger_annotation_save)
+
 
 def downgrade():
     # add index for taxonomy class code
@@ -190,3 +236,15 @@ def downgrade():
     op.drop_index(op.f("ix_image_rgb_8bit_filename"), table_name="image")
     op.drop_index(op.f("ix_image_nrg_8bit_filename"), table_name="image")
     op.drop_table("image")
+
+    # ---------
+    # Triggers
+    # ---------
+
+    op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
+    import sys
+
+    sys.path.append(str(Path(__file__).parent))
+    from fba33e3dbe70_03_indices_and_annotation_status import trigger_annotation_save as old_trigger
+
+    op.execute(old_trigger)
