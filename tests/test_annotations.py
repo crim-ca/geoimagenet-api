@@ -43,7 +43,7 @@ def geojson_geometry(request):
         "properties": {
             "annotator_id": 1,
             "taxonomy_class_id": 1,
-            "image_name": "my image name",
+            "image_name": "test_image.tif",
         },
     }
 
@@ -226,7 +226,9 @@ def test_log_delete_annotation():
 
         log = session.query(AnnotationLog).order_by(AnnotationLog.id.desc()).first()
 
-        assert_log_equals(log, annotation_id=annotation.id, operation=AnnotationLogOperation.delete)
+        assert_log_equals(
+            log, annotation_id=annotation.id, operation=AnnotationLogOperation.delete
+        )
 
 
 def test_annotations_put_not_found(client, geojson_geometry):
@@ -243,6 +245,12 @@ def test_annotations_put_not_an_int(client, geojson_geometry):
 
 def test_annotations_put_id_required(client, geojson_geometry):
     r = client.put(f"/annotations", json=geojson_geometry)
+    assert r.status_code == 400
+
+
+def test_annotations_post_image_doesnt_exist(client, geojson_geometry):
+    geojson_geometry["properties"]["image_name"] = "doesnt exist"
+    r = client.post(f"/annotations", json=geojson_geometry)
     assert r.status_code == 400
 
 
@@ -442,7 +450,9 @@ def test_annotation_count(client):
         assert counts["2"]["rejected"] == 0
         assert counts["1"]["deleted"] == 1
 
-        counts_without_children = get_counts(taxonomy_class_id=1, with_taxonomy_children=False)
+        counts_without_children = get_counts(
+            taxonomy_class_id=1, with_taxonomy_children=False
+        )
         assert counts_without_children["1"]["review"] == 1
 
         assert all(key.isdigit() for key in counts)

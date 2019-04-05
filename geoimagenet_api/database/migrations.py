@@ -118,6 +118,8 @@ def load_testing_data():
         session.add(demo_annotateur)
         demo_validateur = models.Person(username="validateur", name="Demo validateur")
         session.add(demo_validateur)
+        test_image = models.Image(sensor_name="Pleiades", rgbn_8bit_filename="test_image.tif")
+        session.add(test_image)
         try:
             session.commit()
         except IntegrityError:  # pragma: no cover
