@@ -106,7 +106,7 @@ def upgrade():
             or "Pleiades" not in image_name
         ):
             raise ValueError(f"Image name is unexpected: {image_name}")
-        filename = image_name.split("_", 1)[1] + ".tif"
+        filename = image_name.split("_", 1)[1]
 
         images_data.append({"sensor_name": "Pleiades", "rgbn_8bit_filename": filename})
 
@@ -114,7 +114,7 @@ def upgrade():
 
     for annotation_table in (annotation, annotation_log):
         subselect = select([image.c.id]).where(
-            image.c.rgbn_8bit_filename == func.concat(func.substr(annotation_table.c.image_name, 5), ".tif")
+            image.c.rgbn_8bit_filename == func.substr(annotation_table.c.image_name, 5)
         )
         query = annotation_table.update().values({"image_id": subselect})
 
@@ -159,7 +159,7 @@ def downgrade():
     conn = op.get_bind()
 
     for annotation_table in (annotation, annotation_log):
-        subquery = select([func.concat("NRG_", func.replace(image.c.rgbn_8bit_filename, '.tif', ''))]).where(
+        subquery = select([func.concat("NRG_", image.c.rgbn_8bit_filename)]).where(
             annotation_table.c.image_id == image.c.id
         )
         conn.execute(annotation_table.update().values({"image_name": subquery}))
