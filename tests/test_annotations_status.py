@@ -8,7 +8,7 @@ from geoimagenet_api.database.models import (
     ValidationValue,
 )
 
-image_name_to_cleanup = "testing_annotation_status"
+image_id_to_cleanup = 3
 
 
 def make_annotation(id, user_id, taxonomy_class, status):
@@ -17,7 +17,7 @@ def make_annotation(id, user_id, taxonomy_class, status):
         annotator_id=user_id,
         geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
         taxonomy_class_id=taxonomy_class,
-        image_name=image_name_to_cleanup,
+        image_id=image_id_to_cleanup,
         status=status,
     )
 
@@ -52,7 +52,7 @@ def cleanup_annotations(request):
         with connection_manager.get_db_session() as session:
             session.query(ValidationEvent).delete()
             session.query(Annotation).filter_by(
-                image_name=image_name_to_cleanup
+                image_id=image_id_to_cleanup
             ).delete()
             session.commit()
 

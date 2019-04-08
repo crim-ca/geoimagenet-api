@@ -4,6 +4,7 @@ from typing import Tuple, Dict, Union, List
 from fastapi import APIRouter, Query
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -24,6 +25,7 @@ from geoimagenet_api.database.models import (
     TaxonomyClass as DBTaxonomyClass,
     ValidationEvent,
     ValidationValue,
+    Image,
 )
 from geoimagenet_api.endpoints.taxonomy_classes import (
     flatten_taxonomy_classes_ids,
@@ -77,7 +79,7 @@ def get(
             DBAnnotation.id,
             DBAnnotation.taxonomy_class_id,
             DBAnnotation.annotator_id,
-            DBAnnotation.image_name,
+            DBAnnotation.image_id,
             DBAnnotation.name,
             DBAnnotation.review_requested,
             DBAnnotation.status,
@@ -86,7 +88,8 @@ def get(
             fields.append(func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"))
         query = session.query(*fields)
         if image_name:
-            query = query.filter_by(image_name=image_name)
+            image_id = image_id_from_image_name(session, image_name)
+            query = query.filter_by(image_id=image_id)
         if status:
             query = query.filter_by(status=status)
         if taxonomy_class_id:
@@ -130,12 +133,24 @@ def put(
             # You can't change the annotator_id of an annotation
             # Use specific endpoints to change the status (ex: /annotations/release)
             annotation.taxonomy_class_id = properties.taxonomy_class_id
-            annotation.image_name = properties.image_name
+            annotation.image_id = image_id_from_image_name(
+                session, properties.image_name
+            )
             annotation.geometry = geom
         try:
             session.commit()
         except IntegrityError as e:  # pragma: no cover
             raise HTTPException(400, f"Error: {e}")
+
+
+def image_id_from_image_name(session: Session, image_name: str) -> int:
+    image_id = (
+        session.query(Image.id).filter(Image.layer_name == image_name).first()
+    )
+    if not image_id:
+        raise HTTPException(400, f"Image layer name not found: {image_name}")
+
+    return image_id[0]
 
 
 @router.post(
@@ -151,11 +166,12 @@ def post(
         for feature in features:
             geom = _serialize_geometry(feature.geometry, srid)
             properties = feature.properties
+            image_id = image_id_from_image_name(session, properties.image_name)
             annotation = DBAnnotation(
                 annotator_id=properties.annotator_id,
                 geometry=geom,
                 taxonomy_class_id=properties.taxonomy_class_id,
-                image_name=properties.image_name,
+                image_id=image_id,
             )
             session.add(annotation)
             written_annotations.append(annotation)
@@ -338,30 +354,34 @@ def counts(
         else:
             taxonomy_class_ids = [taxonomy_class_id]
 
+        annotation_count_dict = defaultdict(AnnotationCountByStatus)
+
         if group_by_image:
-            group_by_field = DBAnnotation.image_name
+            group_by_field = Image.layer_name
         else:
             group_by_field = DBAnnotation.taxonomy_class_id
 
-        annotation_count_dict = defaultdict(AnnotationCountByStatus)
-
-        query = (
-            session.query(
-                group_by_field,
-                DBAnnotation.status.name,
-                func.count(DBAnnotation.id).label("annotation_count"),
+        query = session.query(
+            group_by_field,
+            DBAnnotation.status.name,
+            func.count(DBAnnotation.id).label("annotation_count"),
+        )
+        if group_by_image:
+            query = query.select_from(DBAnnotation).join(
+                Image, Image.id == DBAnnotation.image_id
             )
-            .filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_class_ids))
+        query = (
+            query.filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_class_ids))
             .group_by(group_by_field)
             .group_by(DBAnnotation.status.name)
         )
 
         if current_user_only:
             logged_user = get_logged_user(request)
-            query = query.filter_by(annotator_id=logged_user)
+            query = query.filter(DBAnnotation.annotator_id == logged_user)
 
         if review_requested is not None:
-            query = query.filter_by(review_requested=review_requested)
+            query = query.filter(DBAnnotation.review_requested == review_requested)
 
         for group_by_field_name, status, count in query:
             setattr(annotation_count_dict[str(group_by_field_name)], status, count)

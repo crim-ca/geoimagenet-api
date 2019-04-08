@@ -10,12 +10,13 @@ import sentry_sdk
 from sqlalchemy import func, and_
 
 from geoimagenet_api.config import config
+from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image
 from geoimagenet_api.endpoints.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
     AnnotationStatus,
     Taxonomy,
-)
+    Image)
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.openapi_schemas import (
     GeoJsonFeatureCollection,
@@ -42,12 +43,14 @@ def get_annotations(taxonomy_id: int):
 
         taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
 
+        subquery = query_rgbn_16_bit_image(session)
+
         query = session.query(
             DBAnnotation.id,
             func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"),
-            DBAnnotation.image_name,
+            subquery.c.image_name,
             DBAnnotation.taxonomy_class_id,
-        ).filter(
+        ).outerjoin(subquery, subquery.c.image_id == DBAnnotation.image_id).filter(
             and_(
                 DBAnnotation.status == AnnotationStatus.validated,
                 DBAnnotation.taxonomy_class_id.in_(taxonomy_ids),

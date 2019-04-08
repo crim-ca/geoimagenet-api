@@ -29,17 +29,17 @@ image = table(
     "image",
     column("id", String),
     column("sensor_name", String),
-    column("rgb_8bit_filename", String),
-    column("nrg_8bit_filename", String),
-    column("rgbn_8bit_filename", String),
-    column("rgbn_16bit_filename", String),
+    column("bands", String),
+    column("bits", Integer),
+    column("filename", String),
+    column("extension", String),
 )
 
 trigger_annotation_save = """
             CREATE OR REPLACE FUNCTION annotation_save_event() RETURNS trigger AS $$ 
                 BEGIN 
                     INSERT INTO annotation_log
-                    (annotation_id, annotator_id, geometry, taxonomy_class_id, image_id, status, operation)
+                    (annotation_id, annotator_id, geometry, taxonomy_class_id, image_id, status, review_requested, operation)
                     VALUES (
                         NEW.id, 
                         CASE WHEN tg_op = 'INSERT' THEN NEW.annotator_id 
@@ -62,6 +62,10 @@ trigger_annotation_save = """
                              WHEN OLD.status = NEW.status THEN NULL 
                              ELSE NEW.status 
                         END,
+                        CASE WHEN tg_op = 'INSERT' THEN NEW.review_requested
+                             WHEN OLD.review_requested = NEW.review_requested THEN NULL 
+                             ELSE NEW.review_requested 
+                        END,
                         lower(tg_op)::annotation_log_operation_enum
                     );
                     RETURN NEW; 
@@ -70,6 +74,22 @@ trigger_annotation_save = """
 
             CREATE TRIGGER log_annotation_action AFTER INSERT OR UPDATE ON annotation
             FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
+        """
+
+trigger_image_name = """
+            CREATE OR REPLACE FUNCTION trigger_image_name() RETURNS trigger AS $$ 
+                BEGIN 
+                    NEW.sensor_name := UPPER(NEW.sensor_name);
+                    NEW.bands := UPPER(NEW.bands);
+                    NEW.layer_name := 
+                        NEW.sensor_name || '_' || NEW.bands || ':' ||
+                        NEW.filename;
+                    RETURN NEW; 
+                END;
+            $$ LANGUAGE 'plpgsql';
+
+            CREATE TRIGGER image_name BEFORE INSERT OR UPDATE ON image
+            FOR EACH ROW EXECUTE PROCEDURE trigger_image_name();
         """
 
 
@@ -81,30 +101,23 @@ def upgrade():
         "image",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("sensor_name", sa.String(), nullable=False),
-        sa.Column("rgb_8bit_filename", sa.String(), nullable=True),
-        sa.Column("nrg_8bit_filename", sa.String(), nullable=True),
-        sa.Column("rgbn_8bit_filename", sa.String(), nullable=True),
-        sa.Column("rgbn_16bit_filename", sa.String(), nullable=True),
+        sa.Column("bands", sa.String(), nullable=False),
+        sa.Column("bits", sa.Integer(), nullable=False),
+        sa.Column("filename", sa.String(), nullable=False),
+        sa.Column("extension", sa.String(), nullable=False),
+        sa.Column(
+            "layer_name",
+            sa.String(),
+            nullable=False,
+            comment="Must not be set explicitly, this column is updated by a trigger.",
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_image_nrg_8bit_filename"), "image", ["nrg_8bit_filename"], unique=True
-    )
-    op.create_index(
-        op.f("ix_image_rgb_8bit_filename"), "image", ["rgb_8bit_filename"], unique=True
-    )
-    op.create_index(
-        op.f("ix_image_rgbn_16bit_filename"),
-        "image",
-        ["rgbn_16bit_filename"],
-        unique=True,
-    )
-    op.create_index(
-        op.f("ix_image_rgbn_8bit_filename"),
-        "image",
-        ["rgbn_8bit_filename"],
-        unique=True,
-    )
+    op.create_index(op.f("ix_image_bands"), "image", ["bands"], unique=False)
+    op.create_index(op.f("ix_image_bits"), "image", ["bits"], unique=False)
+    op.create_index(op.f("ix_image_extension"), "image", ["extension"], unique=False)
+    op.create_index(op.f("ix_image_filename"), "image", ["filename"], unique=False)
+    op.create_index(op.f("ix_image_name"), "image", ["layer_name"], unique=True)
     op.create_index(
         op.f("ix_image_sensor_name"), "image", ["sensor_name"], unique=False
     )
@@ -127,6 +140,14 @@ def upgrade():
         "annotation_log_image_id_fkey", "annotation_log", "image", ["image_id"], ["id"]
     )
 
+    # ---------
+    # Triggers
+    # ---------
+    op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
+
+    op.execute(trigger_annotation_save)
+    op.execute(trigger_image_name)
+
     # ------
     # Migrate data
     # ------
@@ -144,16 +165,26 @@ def upgrade():
             or "8bit" not in image_name
             or "Pleiades" not in image_name
         ):
-            raise ValueError(f"Image name is unexpected: {image_name}")
-        filename = image_name.split("_", 1)[1]
+            raise ValueError(
+                f"Image name is unexpected (fix migration script): {image_name}"
+            )
+        filename = image_name.split("_", 1)[1]  # example: RGB_filename
 
-        images_data.append({"sensor_name": "Pleiades", "rgbn_8bit_filename": filename})
+        images_data.append(
+            {
+                "sensor_name": "Pleiades",
+                "bands": "RGB",
+                "bits": 8,
+                "filename": filename,
+                "extension": ".tif",
+            }
+        )
 
     op.bulk_insert(image, images_data)
 
     for annotation_table in (annotation, annotation_log):
         subselect = select([image.c.id]).where(
-            image.c.rgbn_8bit_filename == func.substr(annotation_table.c.image_name, 5)
+            image.c.filename == func.substr(annotation_table.c.image_name, 5)
         )
         query = annotation_table.update().values({"image_id": subselect})
 
@@ -175,12 +206,11 @@ def upgrade():
         op.f("ix_taxonomy_class_code"), "taxonomy_class", ["code"], unique=False
     )
 
-    # ---------
-    # Triggers
-    # ---------
-    op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
+    # ------
+    # Extension
+    # ------
+    op.execute("CREATE EXTENSION fuzzystrmatch;")
 
-    op.execute(trigger_annotation_save)
 
 
 def downgrade():
@@ -205,7 +235,7 @@ def downgrade():
     conn = op.get_bind()
 
     for annotation_table in (annotation, annotation_log):
-        subquery = select([func.concat("NRG_", image.c.rgbn_8bit_filename)]).where(
+        subquery = select([func.concat(image.c.bands, "_", image.c.filename)]).where(
             annotation_table.c.image_id == image.c.id
         )
         conn.execute(annotation_table.update().values({"image_name": subquery}))
@@ -231,20 +261,30 @@ def downgrade():
     # Drop Tables
     # ------
     op.drop_index(op.f("ix_image_sensor_name"), table_name="image")
-    op.drop_index(op.f("ix_image_rgbn_8bit_filename"), table_name="image")
-    op.drop_index(op.f("ix_image_rgbn_16bit_filename"), table_name="image")
-    op.drop_index(op.f("ix_image_rgb_8bit_filename"), table_name="image")
-    op.drop_index(op.f("ix_image_nrg_8bit_filename"), table_name="image")
+    op.drop_index(op.f("ix_image_name"), table_name="image")
+    op.drop_index(op.f("ix_image_filename"), table_name="image")
+    op.drop_index(op.f("ix_image_extension"), table_name="image")
+    op.drop_index(op.f("ix_image_bits"), table_name="image")
+    op.drop_index(op.f("ix_image_bands"), table_name="image")
     op.drop_table("image")
 
     # ---------
     # Triggers
     # ---------
 
+    op.execute("drop trigger if exists image_name on image cascade;")
+
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
     import sys
 
     sys.path.append(str(Path(__file__).parent))
-    from fba33e3dbe70_03_indices_and_annotation_status import trigger_annotation_save as old_trigger
+    from fba33e3dbe70_03_indices_and_annotation_status import (
+        trigger_annotation_save as old_trigger_annotation,
+    )
 
-    op.execute(old_trigger)
+    op.execute(old_trigger_annotation)
+
+    # ------
+    # Extension
+    # ------
+    op.execute("DROP EXTENSION IF EXISTS fuzzystrmatch;")

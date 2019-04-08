@@ -1,5 +1,4 @@
 import contextlib
-import json
 
 import pytest
 from geoalchemy2 import functions
@@ -8,7 +7,6 @@ from sqlalchemy import func
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import (
     Annotation,
-    Person,
     AnnotationLog,
     AnnotationLogOperation,
     AnnotationStatus,
@@ -43,7 +41,7 @@ def geojson_geometry(request):
         "properties": {
             "annotator_id": 1,
             "taxonomy_class_id": 1,
-            "image_name": "test_image.tif",
+            "image_name": "PLEIADES_RGB:test_image",
         },
     }
 
@@ -62,7 +60,7 @@ def write_annotation(
     user_id=1,
     taxonomy_class=2,
     status=AnnotationStatus.new,
-    image_name="my image",
+    image_id=1,
     review_requested=False,
     geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
 ):
@@ -71,13 +69,14 @@ def write_annotation(
             annotator_id=user_id,
             geometry=geometry,
             taxonomy_class_id=taxonomy_class,
-            image_name=image_name,
+            image_id=image_id,
             review_requested=review_requested,
             status=status,
         )
         _session.add(annotation)
         _session.commit()
-        _ = annotation.id
+        _session.refresh(annotation)
+        _session.expunge(annotation)
 
         return annotation
 
@@ -114,7 +113,7 @@ def assert_log_equals(
     log,
     *,
     taxonomy_class_id=None,
-    image_name=None,
+    image_id=None,
     status=None,
     review_requested=None,
     geometry=None,
@@ -123,7 +122,7 @@ def assert_log_equals(
     operation=AnnotationLogOperation.update,
 ):
     assert log.taxonomy_class_id == taxonomy_class_id
-    assert log.image_name == image_name
+    assert log.image_id == image_id
     assert log.status == status
     assert log.review_requested == review_requested
     assert (
@@ -142,7 +141,7 @@ def test_annotation_log_triggers():
             user_id=1,
             geometry=start_geometry,
             taxonomy_class=1,
-            image_name="my image",
+            image_id=1,
         )
         session.add(annotation)
 
@@ -156,7 +155,7 @@ def test_annotation_log_triggers():
         assert_log_equals(
             get_last_log(),
             taxonomy_class_id=annotation.taxonomy_class_id,
-            image_name=annotation.image_name,
+            image_id=annotation.image_id,
             status=AnnotationStatus.new,
             review_requested=annotation.review_requested,
             geometry=wkt_geom,
@@ -165,14 +164,14 @@ def test_annotation_log_triggers():
             operation=AnnotationLogOperation.insert,
         )
 
-        # update image_name
-        annotation.image_name = "something else"
+        # update image_id
+        annotation.image_id = 2
         annotation.review_requested = True
         session.commit()
 
         assert_log_equals(
             get_last_log(),
-            image_name="something else",
+            image_id=2,
             review_requested=True,
             annotation_id=annotation.id,
         )
@@ -219,7 +218,7 @@ def test_log_delete_annotation():
             user_id=2,
             geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
             taxonomy_class=1,
-            image_name="my image",
+            image_id=1,
         )
         session.query(Annotation).filter_by(id=annotation.id).delete()
         session.commit()
@@ -251,6 +250,16 @@ def test_annotations_put_id_required(client, geojson_geometry):
 def test_annotations_post_image_doesnt_exist(client, geojson_geometry):
     geojson_geometry["properties"]["image_name"] = "doesnt exist"
     r = client.post(f"/annotations", json=geojson_geometry)
+    assert r.status_code == 400
+
+
+def test_annotations_put_image_doesnt_exist(
+    client, geojson_geometry, simple_annotation
+):
+    annotation_id = simple_annotation.id
+    geojson_geometry["id"] = f"annotation.{annotation_id}"
+    geojson_geometry["properties"]["image_name"] = "doesnt exist"
+    r = client.put(f"/annotations", json=geojson_geometry)
     assert r.status_code == 400
 
 
@@ -376,7 +385,7 @@ def test_annotations_put(client, any_geojson, simple_annotation_user_2):
 
         annotation2 = session.query(Annotation).filter_by(id=annotation_id).one()
         assert annotation2.taxonomy_class_id == properties.taxonomy_class_id
-        assert annotation2.image_name == properties.image_name
+        assert annotation2.image_id == 1  # there should be an image of id 1 named test_image.tif
 
         # you can't change owner of an annotation
         assert annotation2.annotator_id == annotator_id
@@ -488,15 +497,17 @@ def test_annotation_get_none(client):
         assert not annotations
 
 
-def test_annotation_get_image_name(client):
+def test_annotation_get_image_id(client):
     with _clean_annotation_session() as session:
-        write_annotation(session=session, image_name="test_image")
-        write_annotation(session=session, image_name="test_image2")
+        write_annotation(session=session, image_id=1)
+        write_annotation(session=session, image_id=2)
 
-        params = {"image_name": "test_image"}
+        # todo: get image_names from api
+
+        params = {"image_name": "PLEIADES_RGB:test_image"}
         annotations = _get_annotations(client, params)
         assert len(annotations) == 1
-        assert annotations[0]["properties"]["image_name"] == "test_image"
+        assert annotations[0]["properties"]["image_id"] == 1
 
 
 def test_annotation_get_status(client):
@@ -587,49 +598,51 @@ def test_annotation_counts_by_image(client):
 
     with _clean_annotation_session() as session:
 
-        def add(taxonomy_class_id, status, image_name):
+        def add(taxonomy_class_id, status, image_id):
             write_annotation(
                 session=session,
                 taxonomy_class=taxonomy_class_id,
                 status=status,
-                image_name=image_name,
+                image_id=image_id,
             )
 
-        add(3, "released", "image_1")
-        add(3, "new", "image_1")
-        add(3, "validated", "image_1")
+        add(3, "released", 1)
+        add(3, "new", 1)
+        add(3, "validated", 1)
 
-        add(2, "validated", "image_1")
-        add(2, "validated", "image_1")
+        add(2, "validated", 1)
+        add(2, "validated", 1)
 
-        add(9, "validated", "image_1")
-        add(9, "validated", "image_1")
+        add(9, "validated", 1)
+        add(9, "validated", 1)
 
-        add(3, "released", "image_2")
-        add(3, "new", "image_2")
-        add(3, "validated", "image_2")
+        add(3, "released", 2)
+        add(3, "new", 2)
+        add(3, "validated", 2)
 
-        add(2, "validated", "image_2")
-        add(2, "validated", "image_2")
+        add(2, "validated", 2)
+        add(2, "validated", 2)
 
-        add(9, "validated", "image_2")
-        add(9, "validated", "image_2")
+        add(9, "validated", 2)
+        add(9, "validated", 2)
+
+        # todo: get image names from api
 
         counts = get_counts(taxonomy_class_id=1, with_taxonomy_children=True)
-        assert counts["image_1"]["released"] == 1
-        assert counts["image_1"]["validated"] == 5
-        assert counts["image_2"]["released"] == 1
-        assert counts["image_2"]["validated"] == 5
-        assert set(counts) == {"image_1", "image_2"}
+        assert counts["PLEIADES_RGB:test_image"]["released"] == 1
+        assert counts["PLEIADES_RGB:test_image"]["validated"] == 5
+        assert counts["PLEIADES_RGB:test_image2"]["released"] == 1
+        assert counts["PLEIADES_RGB:test_image2"]["validated"] == 5
+        assert set(counts) == {"PLEIADES_RGB:test_image", "PLEIADES_RGB:test_image2"}
 
         counts = get_counts(taxonomy_class_id=2, with_taxonomy_children=True)
-        assert counts["image_1"]["validated"] == 3
-        assert counts["image_2"]["validated"] == 3
-        assert set(counts) == {"image_1", "image_2"}
+        assert counts["PLEIADES_RGB:test_image"]["validated"] == 3
+        assert counts["PLEIADES_RGB:test_image2"]["validated"] == 3
+        assert set(counts) == {"PLEIADES_RGB:test_image", "PLEIADES_RGB:test_image2"}
 
         counts = get_counts(taxonomy_class_id=2, with_taxonomy_children=False)
-        assert counts["image_2"]["validated"] == 2
-        assert set(counts) == {"image_1", "image_2"}
+        assert counts["PLEIADES_RGB:test_image2"]["validated"] == 2
+        assert set(counts) == {"PLEIADES_RGB:test_image", "PLEIADES_RGB:test_image2"}
 
 
 def test_annotation_counts_current_user(client):
@@ -654,7 +667,7 @@ def test_annotation_counts_current_user(client):
     def assert_count(taxonomy_class_id, current_user_only, group_by_image, expected):
         r = get_counts(taxonomy_class_id, current_user_only, group_by_image)
         if group_by_image:
-            counts = r["my image"]
+            counts = r["PLEIADES_RGB:test_image"]
         else:
             counts = r[str(taxonomy_class_id)]
         assert counts["new"] == expected
@@ -666,7 +679,7 @@ def test_annotation_counts_current_user(client):
                 session=session,
                 user_id=user_id,
                 taxonomy_class=taxonomy_class_id,
-                image_name="my image",
+                image_id=1,
             )
 
         add(taxonomy_class_id=2, user_id=1)

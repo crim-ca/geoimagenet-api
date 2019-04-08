@@ -50,7 +50,9 @@ class Annotation(Base):
     taxonomy_class_id = Column(
         Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
     )
-    image_id = Column(Integer, ForeignKey("image.id"), nullable=False, index=True)
+    image_id = Column(
+        Integer, ForeignKey("image.id"), nullable=False, index=True
+    )
     status = Column(
         Enum(AnnotationStatus, name="annotation_status_enum"),
         nullable=False,
@@ -154,12 +156,19 @@ class Image(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_name = Column(String, nullable=False, index=True)
+    bands = Column(String, nullable=False, index=True)
+    bits = Column(Integer, nullable=False, index=True)
 
-    # filenames don't contain the extensions
-    rgb_8bit_filename = Column(String, nullable=True, index=True, unique=True)
-    nrg_8bit_filename = Column(String, nullable=True, index=True, unique=True)
-    rgbn_8bit_filename = Column(String, nullable=True, index=True, unique=True)
-    rgbn_16bit_filename = Column(String, nullable=True, index=True, unique=True)
+    filename = Column(String, nullable=False, index=True)
+    extension = Column(String, nullable=False, index=True)
+
+    layer_name = Column(
+        String,
+        nullable=False,
+        index=True,
+        unique=True,
+        comment="Must not be set explicitly, this column is updated by a trigger.",
+    )
 
 
 class SpatialRefSys(Base):

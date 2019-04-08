@@ -1,8 +1,9 @@
 # Paths can be relative to this file or absolute
 
-global:
-  delete_other_workspaces: false
-  overwrite_workspaces: false
+images_folder: /images_folder
+create_cached_layers: true
+generate_gwc_cache: false
+delete_other_images_in_workspace: false  # todo
 
 styles:
   - name: RGB
@@ -10,9 +11,9 @@ styles:
   - name: NRG
     path: ./styles/NRG.xml
 
-workspaces:
-  - name: Pleiades
-    uri: pleiades_uri
-    style: RGB
-    images_path: /pleiades
-    layer_group_name: Pleiades_group
+#workspaces:
+#  - name: Pleiades
+#    uri: pleiades_uri
+#    style: RGB
+#    images_path: /pleiades
+#    layer_group_name: Pleiades_group

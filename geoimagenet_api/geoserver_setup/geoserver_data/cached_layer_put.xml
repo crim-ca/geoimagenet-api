@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GeoServerLayer>
+  <enabled>true</enabled>
+  <inMemoryCached>true</inMemoryCached>
+  <name>{workspace_name}:{layer_name}</name>
+  <mimeFormats>
+    <string>image/png8</string>
+  </mimeFormats>
+  <gridSubsets>
+    <gridSubset>
+      <gridSetName>EPSG:3857</gridSetName>
+      <extent>
+        <coords>
+          <double>{minx}</double>
+          <double>{miny}</double>
+          <double>{maxx}</double>
+          <double>{maxy}</double>
+        </coords>
+      </extent>
+    </gridSubset>
+  </gridSubsets>
+  <metaWidthHeight>
+    <int>4</int>
+    <int>4</int>
+  </metaWidthHeight>
+  <expireCache>0</expireCache>
+  <expireClients>0</expireClients>
+  <parameterFilters>
+    <styleParameterFilter>
+      <key>STYLES</key>
+      <defaultValue/>
+    </styleParameterFilter>
+  </parameterFilters>
+  <gutter>0</gutter>
+</GeoServerLayer>

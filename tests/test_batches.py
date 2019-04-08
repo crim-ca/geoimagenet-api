@@ -1,4 +1,5 @@
 import json
+import random
 from unittest import mock
 import pytest
 
@@ -6,39 +7,58 @@ import requests
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Annotation, AnnotationStatus
-from .test_annotations import write_annotation
+from .test_annotations import write_annotation, _clean_annotation_session
+from .test_images import pleiades_images
 
 
 def test_get_annotations(client):
-    # ----- given
-    some_annotations_ids = []
-    for _ in range(3):
-        a = write_annotation(
-            user_id=1, status=AnnotationStatus.validated, image_name="my imagéé"
+    with _clean_annotation_session() as session:
+        # ----- given
+        some_annotations_ids = []
+        for _ in range(3):
+            a = write_annotation(
+                session=session,
+                user_id=1,
+                status=AnnotationStatus.validated,
+                image_id=2,
+            )
+            some_annotations_ids.append(a.id)
+
+        # ----- when
+        query = {"taxonomy_id": 1}
+        r = client.get("/batches", params=query)
+
+        # ----- then
+        assert r.status_code == 200
+        assert len(r.json()["features"]) == 3
+        assert "crs" in r.json()
+        ids = set(f["id"] for f in r.json()["features"])
+        expected_ids = set(f"annotation.{i}" for i in some_annotations_ids)
+        assert ids == expected_ids
+        first_feature = r.json()["features"][0]
+        assert "image_name" in first_feature["properties"]
+        assert "taxonomy_class_id" in first_feature["properties"]
+        image_names = [f["properties"]["image_name"] for f in r.json()["features"]]
+        assert image_names == [None, None, None]
+
+
+def test_get_annotation_images_16_bits(client, pleiades_images):
+    with _clean_annotation_session() as session:
+        # ----- given
+        random_image = random.choice([i for i in pleiades_images if i.bits == 8])
+        write_annotation(
+            session=session,
+            user_id=1,
+            status=AnnotationStatus.validated,
+            image_id=random_image.id,
         )
-        some_annotations_ids.append(a.id)
 
-    # ----- when
-    query = {"taxonomy_id": 1}
-    r = client.get("/batches", params=query)
-
-    # ----- then
-    assert r.status_code == 200
-    assert len(r.json()["features"]) == 3
-    assert "crs" in r.json()
-    ids = set(f["id"] for f in r.json()["features"])
-    expected_ids = set(f"annotation.{i}" for i in some_annotations_ids)
-    assert ids == expected_ids
-    first_feature = r.json()["features"][0]
-    assert "image_name" in first_feature["properties"]
-    assert "taxonomy_class_id" in first_feature["properties"]
-
-    # ----- cleanup
-    with connection_manager.get_db_session() as session:
-        session.query(Annotation).filter(
-            Annotation.id.in_(some_annotations_ids)
-        ).delete(synchronize_session=False)
-        session.commit()
+        # ----- when
+        query = {"taxonomy_id": 1}
+        r = client.get("/batches", params=query)
+        image_names = [f["properties"]["image_name"] for f in r.json()["features"]]
+        print(len(r.json()["features"]))
+        print(image_names)
 
 
 @pytest.mark.skip(msg="only for load testing purposes")
@@ -55,7 +75,7 @@ def test_get_annotations_load_testing(client):
                     annotator_id=1,
                     geometry="SRID=3857;POLYGON((0.001 0.001,1.001 0.001,1.001 1.001,0.001 1.001,0.001 0.001))",
                     taxonomy_class_id=2,
-                    image_name="my image",
+                    image_id=1,
                     status="validated",
                 )
             )

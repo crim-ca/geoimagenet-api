@@ -70,7 +70,7 @@ setup(
         "console_scripts": [
             "migrate = geoimagenet_api.database.migrations:migrate",
             "init_database = geoimagenet_api.database.migrations:init_database_data",
-            "geoserver_setup = geoimagenet_api.geoserver_setup.geoserver_setup:cli",
+            "geoserver_setup = geoimagenet_api.geoserver_setup.main:cli",
         ]
     },
 )
