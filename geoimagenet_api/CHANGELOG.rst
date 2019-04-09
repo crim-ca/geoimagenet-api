@@ -6,6 +6,10 @@ Changelog
 
 New
 ~~~
+- Add review_requested boolean filter to /annotations/counts/ [David
+  Caron]
+- Add with_taxonomy_children boolean to /annotations/counts/ [David
+  Caron]
 - Add GET /annotations to get a geojson with parameters. [David Caron]
 
 
