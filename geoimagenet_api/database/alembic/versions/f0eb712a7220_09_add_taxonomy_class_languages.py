@@ -43,7 +43,7 @@ def upgrade():
     # rename columns
     op.alter_column("taxonomy", "name", nullable=False, new_column_name="name_fr")
     op.alter_column("taxonomy_class", "name", nullable=False, new_column_name="name_fr")
-    op.drop_index(op.f("ix_taxonomy_class_name"), table_name="taxonomy_class")
+    op.execute('DROP INDEX IF EXISTS ix_taxonomy_class_name;')
     op.create_index(
         op.f("ix_taxonomy_class_name_fr"), "taxonomy_class", ["name_fr"], unique=False
     )
@@ -128,13 +128,12 @@ def downgrade():
     # rename columns
     op.alter_column("taxonomy", "name_fr", nullable=False, new_column_name="name")
     op.alter_column("taxonomy_class", "name_fr", nullable=False, new_column_name="name")
-    op.drop_index(op.f("ix_taxonomy_class_name_fr"), table_name="taxonomy_class")
+    op.execute('DROP INDEX IF EXISTS ix_taxonomy_class_name_fr;')
     op.create_index(
         op.f("ix_taxonomy_class_name"), "taxonomy_class", ["name"], unique=False
     )
 
     # remove columns
-    op.drop_index(op.f("ix_taxonomy_class_name_en"), table_name="taxonomy_class")
     op.drop_column("taxonomy_class", "name_en")
     op.drop_column("taxonomy", "name_en")
 
