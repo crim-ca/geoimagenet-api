@@ -75,7 +75,7 @@ class Workspace:
     layer_group_name: str = field(default="")
 
 
-class GeoServerConfiguration:
+class GeoServerDatastore:
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
 
     def __init__(
@@ -463,7 +463,7 @@ class GeoServerConfiguration:
 def main(geoserver_datastore_url: str, config: str, dry_run=False):
     logger.debug(f"Loading config file.")
 
-    geoserver_config = GeoServerConfiguration(geoserver_datastore_url, config, dry_run)
+    geoserver_config = GeoServerDatastore(geoserver_datastore_url, config, dry_run)
 
     geoserver_config.configure()
 
@@ -475,34 +475,68 @@ def main(geoserver_datastore_url: str, config: str, dry_run=False):
     is_flag=True,
     help="Only print actions to perform without changing the remote server.",
 )
+@click.option("--gs-yaml-config", help="Path to the yaml configuration file")
 @click.option(
-    "--geoserver-datastore-url",
+    "--gs-datastore-url",
     help="GeoServer instance where the GeoTIFF images are served from.",
 )
-@click.option("--yaml-config", help="Path to the yaml configuration file")
-def cli(dry_run, geoserver_datastore_url, yaml_config):
+@click.option(
+    "--gs-datastore-user",
+    prompt=True,
+    help="Username to connect to Geoserver datastore",
+)
+@click.password_option(
+    "--gs-datastore-password", help="Password to connect to Geoserver datastore"
+)
+@click.option(
+    "--gs-mirror-url",
+    help="GeoServer instance where the GeoTIFF images are served from.",
+)
+@click.option(
+    "--gs-mirror-user",
+    prompt=True,
+    help="Username to connect to Geoserver mirror service",
+)
+@click.password_option(
+    "--gs-mirror-password",
+    help="Password to connect to Geoserver mirror service",
+)
+def cli(
+    dry_run,
+    gs_yaml_config,
+    gs_datastore_url,
+    gs_datastore_user,
+    gs_datastore_password,
+    gs_mirror_url,
+    gs_mirror_user,
+    gs_mirror_password,
+):
     """Main entry point for the cli."""
 
-    if not yaml_config:
-        yaml_config = config.get("geoserver_yaml_config", str)
-        if not yaml_config:
-            yaml_config = Path(__file__).with_name("config.yaml")
+    def _set(variable, variable_name):
+        if not variable:
+            variable = config.get(variable_name, str)
+        if not variable:
+            logger.error(f"'{variable_name}' required, exiting.")
+            sys.exit(1)
+        return variable
 
-    yaml_config = Path(yaml_config)
+    gs_datastore_url = _set(gs_datastore_url, "gs_datastore_url")
+    gs_datastore_user = _set(gs_datastore_user, "gs_datastore_user")
+    gs_datastore_password = _set(gs_datastore_password, "gs_datastore_password")
+    gs_mirror_url = _set(gs_mirror_url, "gs_mirror_url")
+    gs_mirror_user = _set(gs_mirror_user, "gs_mirror_user")
+    gs_mirror_password = _set(gs_mirror_password, "gs_mirror_password")
+    gs_yaml_config = _set(gs_yaml_config, "gs_yaml_config")
+    if not gs_yaml_config:
+        gs_yaml_config = Path(__file__).with_name("config.yaml")
 
-    logger.debug(f"Started with input file: {yaml_config}")
-    if not yaml_config.exists():
-        logger.error(f"File doesn't exist: {yaml_config}.")
-        sys.exit(1)
+    gs_yaml_config = Path(gs_yaml_config)
 
-    if not geoserver_datastore_url:
-        geoserver_datastore_url = config.get("geoserver_datastore_url", str)
-    if not geoserver_datastore_url:
-        logger.error(f"Geoserver url not provided, exiting.")
-        sys.exit(1)
+    logger.debug(f"Started with input file: {gs_yaml_config}")
 
-    main(geoserver_datastore_url, yaml_config, dry_run)
+    main(gs_datastore_url, gs_yaml_config, dry_run)
 
 
 if __name__ == "__main__":
-    cli()
+    cli(auto_envver_prefix="GEOSERVER")
