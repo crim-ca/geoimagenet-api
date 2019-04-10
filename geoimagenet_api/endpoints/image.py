@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import func, String, cast, alias
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query, Session, aliased
 
 from geoimagenet_api.database.models import Image, Annotation
 
@@ -21,27 +21,51 @@ def query_rgbn_16_bit_image(session: Session) -> Query:
     Example: PLEIADES_RGBN_16
     See: :class:`geoimagenet_api.geoserver_setup.main.ImageData`
     """
-    image_alias = alias(Image)
+    image_alias1 = aliased(Image)
+    image_alias2 = aliased(Image)
 
-    subquery = (
-        session.query(
-            func.concat(
-                image_alias.c.sensor_name,
-                "_",
-                image_alias.c.bands,
-                "_",
-                cast(image_alias.c.bits, String),
-                os.path.sep,
-                image_alias.c.filename,
-            ).label("image_name_16_bits")
-        )
-        .filter(image_alias.c.bits == 16)
-        .filter(image_alias.c.bands == "RGBN")
-        .filter(image_alias.c.sensor_name == Image.sensor_name)
-        .order_by(func.levenshtein(Image.filename, image_alias.c.filename))
-        .limit(1)
-        .subquery()
+    # subquery = (
+    #     session.query(
+    #         func.concat(
+    #             image_alias2.sensor_name,
+    #             "_",
+    #             image_alias2.bands,
+    #             "_",
+    #             cast(image_alias2.bits, String),
+    #             os.path.sep,
+    #             image_alias2.filename,
+    #         ).label("image_name_16_bits")
+    #     )
+    #     .filter(image_alias2.bits == 16)
+    #     .filter(image_alias2.bands == "RGBN")
+    #     .filter(image_alias2.sensor_name == Image.sensor_name)
+    #     .order_by(func.levenshtein(image_alias1.filename, image_alias2.filename))
+    #     .limit(1)
+    #     .subquery()
+    # )
+    #
+    # query = session.query(
+    #     image_alias1.id.label("image_id"), subquery.c.image_name_16_bits
+    # )
+
+    image_name_16_bits = (
+        func.concat(
+            image_alias2.sensor_name,
+            "_",
+            image_alias2.bands,
+            "_",
+            cast(image_alias2.bits, String),
+            os.path.sep,
+            image_alias2.filename,
+        ).label("image_name")
     )
 
-    query = session.query(Image.id.label("image_id"), subquery.c.image_name_16_bits).subquery()
-    return query
+    id_with_16_bit_name = (
+        session.query(image_alias1.id.label("image_id"), image_name_16_bits)
+        .filter(image_alias2.bits == 16)
+        .filter(image_alias2.bands == "RGBN")
+        .filter(image_alias2.sensor_name == image_alias1.sensor_name)
+        .distinct(image_alias1.id)
+        .order_by(image_alias1.id, func.levenshtein(image_alias1.filename, image_alias2.filename))
+    ).subquery("id_with_16_bit_name")
+    return id_with_16_bit_name

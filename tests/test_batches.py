@@ -56,9 +56,13 @@ def test_get_annotation_images_16_bits(client, pleiades_images):
         # ----- when
         query = {"taxonomy_id": 1}
         r = client.get("/batches", params=query)
+
         image_names = [f["properties"]["image_name"] for f in r.json()["features"]]
-        print(len(r.json()["features"]))
-        print(image_names)
+        assert len(r.json()["features"]) == 1
+        assert (
+            image_names[0]
+            == f"PLEIADES_RGBN_16/{random_image.filename.replace('8bits', '16bits')}"
+        )
 
 
 @pytest.mark.skip(msg="only for load testing purposes")

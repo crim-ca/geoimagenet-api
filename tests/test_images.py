@@ -32,7 +32,7 @@ def write_image(sensor_name, bands, bits, filename, extension, *, session=None):
 
 
 @pytest.fixture
-def pleiades_images() -> List[Image]:
+def pleiades_images(request) -> List[Image]:
     images_list = """
     Pleiades_20120912_RGBN_50cm_8bits_AOI_35_Montreal_QC
     Pleiades_20140609_RGBN_50cm_8bits_AOI_35_Montreal_QC
@@ -85,34 +85,41 @@ def pleiades_images() -> List[Image]:
                 )
                 images.append(image)
 
-                filename_16 = filename_8.replace("8bits", "16bits").replace("AOI_", "")
+                filename_16 = filename_8.replace("8bits", "16bits")
                 image = write_image(
                     "PLEIADES", "RGBN", 16, filename_16, ".tif", session=session
                 )
                 images.append(image)
         session.expunge_all()
 
+    def finalizer():
+        with connection_manager.get_db_session() as session:
+            image_ids = [i.id for i in images]
+            session.query(Image).filter(Image.id.in_(image_ids)).delete(
+                synchronize_session=False
+            )
+            session.commit()
+
+    request.addfinalizer(finalizer)
     return images
 
 
 def test_get_rgbn_16_bit_image_prespatou(pleiades_images):
     with _clean_annotation_session() as session:
-        prespatou_8_id = [
-            i.id
-            for i in pleiades_images
-            if i.filename == "Pleiades_20141012_RGBN_50cm_8bits_AOI_14_Prespatou_BC"
-        ][0]
+        name = "Pleiades_20141012_RGBN_50cm_8bits_AOI_14_Prespatou_BC"
+        prespatou_8_id = next(i.id for i in pleiades_images if i.filename == name)
         write_annotation(session=session, image_id=prespatou_8_id)
 
-        subquery = query_rgbn_16_bit_image(session)
-        result = (
-            session.query("image_name")
-            .select_from(subquery)
-            .filter(subquery.c.image_id == presa)
-            .all()
+        id_with_16_bit_name = query_rgbn_16_bit_image(session)
+
+        query = session.query(id_with_16_bit_name.c.image_name).filter(
+            id_with_16_bit_name.c.image_id == prespatou_8_id
         )
+
+        result = query.all()
+
         assert len(result) == 1
         assert (
             result[0].image_name
-            == "PLEIADES_RGBN_16/Pleiades_20141012_RGBN_50cm_16bits_14_Prespatou_BC"
+            == "PLEIADES_RGBN_16/Pleiades_20141012_RGBN_50cm_16bits_AOI_14_Prespatou_BC"
         )
