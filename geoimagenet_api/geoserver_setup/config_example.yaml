@@ -2,7 +2,7 @@
 
 images_folder: /images_folder
 create_cached_layers: true
-generate_gwc_cache: false
+seed_gwc_cache: false
 delete_other_images_in_workspace: false  # todo
 
 styles:

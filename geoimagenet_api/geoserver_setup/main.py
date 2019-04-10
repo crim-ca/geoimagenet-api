@@ -10,7 +10,7 @@ import re
 import sys
 import urllib.parse
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict
 from dataclasses import dataclass, field
 
 import requests
@@ -50,11 +50,13 @@ class ImageData:
         self, sensor_name: str, bands: str, bits: str, images_list: List[Path]
     ):
         if not sensor_name.isupper():
-            raise ValueError(f"'sensor_name' must be all caps: {sensor_name}")
+            raise ValueError(
+                f"'sensor_name' must be all caps in folder name: {sensor_name}"
+            )
         if not bands.isupper():
-            raise ValueError(f"'bands' must be all caps: {bands}")
+            raise ValueError(f"'bands' must be all caps in folder name: {bands}")
         if not self.re_bits.match(bits):
-            raise ValueError(f"'bits' must be an integer: {bits}")
+            raise ValueError(f"'bits' must be an integer in folder name: {bits}")
         self.sensor_name = sensor_name
         self.bands = bands
         self.bits = int(bits)
@@ -112,14 +114,18 @@ class GeoServerConfiguration:
 
         image_data = self.parse_images()
 
-        self.create_workspaces(image_data)
-        self.create_styles(styles)
-        self.create_coverage_stores(image_data)
-        self.seed_cache(image_data)
+        image_data_8bit = [i for i in image_data if i.bits == 8]
+        image_data_not_8bit = [i for i in image_data if i.bits != 8]
 
-        self.write_postgis_image_info(image_data)
+        self.create_workspaces(image_data_8bit)
+        self.create_styles(styles)
+        self.create_coverage_stores(image_data_8bit)
+        self.seed_cache(image_data_8bit)
+
+        self.write_postgis_image_info(image_data_8bit + image_data_not_8bit)
 
     def write_postgis_image_info(self, image_data: List[ImageData]):
+        logger.info(f"Writing images information in database")
         with connection_manager.get_db_session() as session:
             for data in image_data:
                 for image_path in data.images_list:
@@ -134,11 +140,13 @@ class GeoServerConfiguration:
                     try:
                         session.flush()
                     except IntegrityError:
-                        # image already exists
+                        logger.info(f"Image already in database: {db_image}")
                         session.rollback()
+                    else:
+                        logger.info(f"Added Image information: {db_image}")
             session.commit()
 
-    def _request(self, method, url, data=None, gwc=False, json_=True):
+    def _request(self, method, url, data=None, gwc=False, json_=True) -> Dict:
         if not gwc:
             url = self.geoserver_url + url
         else:
@@ -152,9 +160,7 @@ class GeoServerConfiguration:
         )
         r.raise_for_status()
         if json_:
-            return r.json() if r.content else b""
-        else:
-            return r.content
+            return r.json()
 
     def _get_data_file(self, filename) -> Path:
         return Path(__file__).parent / "geoserver_data" / filename
@@ -178,7 +184,7 @@ class GeoServerConfiguration:
             logger.info(f"Gridset exists: EPSG:3857")
 
     def seed_cache(self, image_data: List[ImageData]):
-        if self.get_config("generate_gwc_cache"):
+        if self.get_config("seed_gwc_cache"):
             cached_layers = self._request("get", "/layers", gwc=True)
             sensor_names = list(set(i.sensor_name for i in image_data))
             layers_to_seed = [
@@ -366,6 +372,7 @@ class GeoServerConfiguration:
                         f"Layer doesn't exist ({layer_name}). Re-creating store."
                     )
                     self.catalog.delete(store)
+                    store = None
 
             if not store and not layer:
                 store = self.catalog.create_coveragestore(
@@ -388,7 +395,7 @@ class GeoServerConfiguration:
 
             if self.get_config("create_cached_layers"):
                 cached_layer_name = f"{workspace_name}:{layer.name}"
-                logger.info(f"CREATE layer cache: {layer_name}")
+                logger.info(f"CREATE cached layer: {layer_name}")
                 coverage_data = self._request(
                     "get", f"/workspaces/{workspace_name}/coverages/{layer.name}"
                 )
@@ -453,10 +460,10 @@ class GeoServerConfiguration:
         return stores
 
 
-def main(geoserver_url: str, config: str, dry_run=False):
+def main(geoserver_datastore_url: str, config: str, dry_run=False):
     logger.debug(f"Loading config file.")
 
-    geoserver_config = GeoServerConfiguration(geoserver_url, config, dry_run)
+    geoserver_config = GeoServerConfiguration(geoserver_datastore_url, config, dry_run)
 
     geoserver_config.configure()
 
@@ -469,11 +476,11 @@ def main(geoserver_url: str, config: str, dry_run=False):
     help="Only print actions to perform without changing the remote server.",
 )
 @click.option(
-    "--geoserver-url",
+    "--geoserver-datastore-url",
     help="GeoServer instance where the GeoTIFF images are served from.",
 )
 @click.option("--yaml-config", help="Path to the yaml configuration file")
-def cli(dry_run, geoserver_url, yaml_config):
+def cli(dry_run, geoserver_datastore_url, yaml_config):
     """Main entry point for the cli."""
 
     if not yaml_config:
@@ -488,13 +495,13 @@ def cli(dry_run, geoserver_url, yaml_config):
         logger.error(f"File doesn't exist: {yaml_config}.")
         sys.exit(1)
 
-    if not geoserver_url:
-        geoserver_url = config.get("geoserver_url", str)
-    if not geoserver_url:
+    if not geoserver_datastore_url:
+        geoserver_datastore_url = config.get("geoserver_datastore_url", str)
+    if not geoserver_datastore_url:
         logger.error(f"Geoserver url not provided, exiting.")
         sys.exit(1)
 
-    main(geoserver_url, yaml_config, dry_run)
+    main(geoserver_datastore_url, yaml_config, dry_run)
 
 
 if __name__ == "__main__":
