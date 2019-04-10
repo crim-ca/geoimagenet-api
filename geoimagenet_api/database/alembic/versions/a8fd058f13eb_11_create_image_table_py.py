@@ -9,7 +9,7 @@ from pathlib import Path
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import table, Integer, String, column, select, func
+from sqlalchemy import table, Integer, String, column, select, func, and_
 
 # revision identifiers, used by Alembic.
 revision = "a8fd058f13eb"
@@ -112,12 +112,15 @@ def upgrade():
             comment="Must not be set explicitly, this column is updated by a trigger.",
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "sensor_name", "bands", "bits", "filename", name="uc_image"
+        ),
     )
     op.create_index(op.f("ix_image_bands"), "image", ["bands"], unique=False)
     op.create_index(op.f("ix_image_bits"), "image", ["bits"], unique=False)
     op.create_index(op.f("ix_image_extension"), "image", ["extension"], unique=False)
     op.create_index(op.f("ix_image_filename"), "image", ["filename"], unique=False)
-    op.create_index(op.f("ix_image_name"), "image", ["layer_name"], unique=True)
+    op.create_index(op.f("ix_image_name"), "image", ["layer_name"], unique=False)
     op.create_index(
         op.f("ix_image_sensor_name"), "image", ["sensor_name"], unique=False
     )
@@ -210,7 +213,6 @@ def upgrade():
     # Extension
     # ------
     op.execute("CREATE EXTENSION fuzzystrmatch;")
-
 
 
 def downgrade():

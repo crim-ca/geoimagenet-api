@@ -166,8 +166,10 @@ class Image(Base):
         String,
         nullable=False,
         index=True,
-        unique=True,
         comment="Must not be set explicitly, this column is updated by a trigger.",
+    )
+    __table_args__ = (
+        UniqueConstraint("sensor_name", "bands", "bits", "filename", name="uc_image"),
     )
 
 
