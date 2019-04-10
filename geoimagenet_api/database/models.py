@@ -171,6 +171,8 @@ class Image(Base):
     __table_args__ = (
         UniqueConstraint("sensor_name", "bands", "bits", "filename", name="uc_image"),
     )
+    def __repr__(self):
+        return f"Image<info={self.sensor_name} {self.bands} {self.bits}, filename={self.filename}>"
 
 
 class SpatialRefSys(Base):
