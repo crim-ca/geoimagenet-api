@@ -171,12 +171,12 @@ def upgrade():
             raise ValueError(
                 f"Image name is unexpected (fix migration script): {image_name}"
             )
-        filename = image_name.split("_", 1)[1]  # example: RGB_filename
+        bands, filename = image_name.split("_", 1)  # example: RGB_filename
 
         images_data.append(
             {
                 "sensor_name": "Pleiades",
-                "bands": "RGB",
+                "bands": bands,
                 "bits": 8,
                 "filename": filename,
                 "extension": ".tif",
@@ -187,7 +187,10 @@ def upgrade():
 
     for annotation_table in (annotation, annotation_log):
         subselect = select([image.c.id]).where(
-            image.c.filename == func.substr(annotation_table.c.image_name, 5)
+            and_(
+                image.c.filename == func.substr(annotation_table.c.image_name, 5),
+                image.c.bands == func.left(annotation_table.c.image_name, 3),
+            )
         )
         query = annotation_table.update().values({"image_id": subselect})
 
