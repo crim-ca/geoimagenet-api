@@ -4,7 +4,7 @@
   <inMemoryCached>true</inMemoryCached>
   <name>{workspace_name}:{layer_name}</name>
   <mimeFormats>
-    <string>image/png8</string>
+    <string>image/png</string>
   </mimeFormats>
   <gridSubsets>
     <gridSubset>
