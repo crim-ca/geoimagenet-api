@@ -39,9 +39,6 @@ class GeoServerMirror(GeoServerDatastore):
 
     def create_wms_stores(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms stores")
-        # delete and recreate
-        # r = self._request("delete", f"/workspaces//wmsstores/{self.store_name}.json")
-        # r = self._request("get", "/workspaces//wmsstores")
 
         for image_data in image_data_8bit:
             for workspace_name in image_data.workspace_names():
@@ -81,74 +78,23 @@ class GeoServerMirror(GeoServerDatastore):
 
     def create_wms_layers(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms layers")
-        # r = self._request(
-        #     "get",
-        #     f"/workspaces//wmsstores/{self.store_name}/wmslayers.json",
-        # )
-        # print(r)
 
         data = {
             "wmsLayer": {
                 "name": "string",
                 "nativeName": "string",
-                # "namespace": {
-                #     "name": "string",
-                #     "link": "string"
-                # },
                 "title": "string",
-                # "abstract": "",
+                "abstract": "",
                 "description": "",
                 # "keywords": [
                 #     {
                 #         "string": "string"
                 #     }
                 # ],
-                # "metadatalinks": {
-                #     "metadataLink": [
-                #         {
-                #             "type": "string",
-                #             "metadataType": "string",
-                #             "content": "string"
-                #         }
-                #     ]
-                # },
-                # "dataLinks": {
-                #     "metadataLink": [
-                #         {
-                #             "type": "string",
-                #             "content": "string"
-                #         }
-                #     ]
-                # },
                 "nativeCRS": "string",
                 "srs": "string",
-                # "nativeBoundingBox": {
-                #     "minx": 0,
-                #     "maxx": 0,
-                #     "miny": 0,
-                #     "maxy": 0,
-                #     "crs": "string"
-                # },
-                # "latLonBoundingBox": {
-                #     "minx": 0,
-                #     "maxx": 0,
-                #     "miny": 0,
-                #     "maxy": 0,
-                #     "crs": "string"
-                # },
                 "projectionPolicy": "FORCE_DECLARED",
                 "enabled": True,
-                # "metadata": [
-                #     {
-                #         "@key": "regionateStrategy",
-                #         "text": "string"
-                #     }
-                # ],
-                # "store": {
-                #     "@class": "string",
-                #     "name": "string",
-                #     "href": "string"
-                # }
             }
         }
         for image_data in image_data_8bit:
