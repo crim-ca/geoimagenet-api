@@ -124,4 +124,4 @@ def cli(
 
 
 if __name__ == "__main__":
-    cli()
+    cli(auto_envvar_prefix="GEOIMAGENET")
