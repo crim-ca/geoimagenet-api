@@ -25,15 +25,6 @@ class Style:
     path: str
 
 
-@dataclass
-class Workspace:
-    name: str
-    uri: str
-    style: str
-    images_path: str = field(default="")
-    layer_group_name: str = field(default="")
-
-
 class GeoServerDatastore:
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
 
@@ -57,8 +48,6 @@ class GeoServerDatastore:
 
     def configure(self):
         """Launch the configuration of the remote GeoServer instance."""
-        # workspaces = [Workspace(**s) for s in self.yaml_config["workspaces"]]
-        # logger.debug("Read workspaces: " + ", ".join(w.name for w in workspaces))
         styles = [Style(**s) for s in self.yaml_config["styles"]]
         logger.debug("Read styles: " + ", ".join(s.name for s in styles))
 
@@ -233,7 +222,7 @@ class GeoServerDatastore:
 
     def remove_workspaces(
         self,
-        workspaces_to_create: List[Workspace],
+        workspace_names: List[str],
         delete_other_workspaces: bool,
         overwrite: bool,
     ):
@@ -241,10 +230,9 @@ class GeoServerDatastore:
         if delete_other_workspaces or overwrite:
             logger.debug(f"Removing workspaces")
             existing_workspaces = self.workspaces
-            workspaces_names_to_create = [w.name for w in workspaces_to_create]
 
             for workspace in existing_workspaces:
-                workspace_exists = workspace.name in workspaces_names_to_create
+                workspace_exists = workspace.name in workspace_names
                 if (
                     overwrite
                     and workspace_exists
