@@ -4,6 +4,7 @@ from loguru import logger
 
 from geoimagenet_api.geoserver_setup.geoserver_datastore import GeoServerDatastore
 from geoimagenet_api.geoserver_setup.image_data import ImageData
+from geoimagenet_api.geoserver_setup.utils import find_date
 
 
 class GeoServerMirror(GeoServerDatastore):
@@ -107,6 +108,7 @@ class GeoServerMirror(GeoServerDatastore):
                         "application": "GeoImageNet",
                         "sensor_name": "Pleiades",
                         "color": "RGB",
+                        "date": "the_date",
                     }
                 ],
                 "nativeBoundingBox": {
@@ -132,8 +134,10 @@ class GeoServerMirror(GeoServerDatastore):
                     wmslayer["title"] = store.name
                     wmslayer["nativeCRS"] = "EPSG:3857"
                     wmslayer["srs"] = "EPSG:3857"
-                    wmslayer["keywords"][0]["sensor_name"] = image_data.sensor_name
-                    wmslayer["keywords"][0]["color"] = workspace_name.split("_")[-1]
+                    keywords = wmslayer["keywords"][0]
+                    keywords["sensor_name"] = image_data.sensor_name
+                    keywords["color"] = workspace_name.split("_")[-1]
+                    keywords["date"] = find_date(store.name)
 
                     coverage_info = self.datastore._request(
                         "get",

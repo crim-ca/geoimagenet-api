@@ -4,6 +4,7 @@ psycopg2-binary
 sqlalchemy-utils
 text-unidecode
 python-slugify
+dateparser
 sentry-sdk
 click
 loguru
