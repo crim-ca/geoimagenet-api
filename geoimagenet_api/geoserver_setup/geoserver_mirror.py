@@ -36,6 +36,22 @@ class GeoServerMirror(GeoServerDatastore):
 
         self.create_wms_stores(image_data_8bit)
         self.create_wms_layers(image_data_8bit)
+        self.delete_cached_layers(image_data_8bit)
+
+    def delete_cached_layers(self, image_data_8bit: List[ImageData]):
+        for image_data in image_data_8bit:
+            for path in image_data.images_list:
+                layer_name = path.stem
+                for workspace_name in image_data.workspace_names():
+                    cached_layer_name = f"{workspace_name}:{layer_name}"
+                    logger.info(f"DELETE cached layer: {cached_layer_name}")
+                    if not self.dry_run:
+                        self._request(
+                            "delete",
+                            f"/layers/{cached_layer_name}",
+                            gwc=True,
+                            ignore_codes=[404],
+                        )
 
     def create_wms_stores(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms stores")
