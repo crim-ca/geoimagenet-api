@@ -59,7 +59,6 @@ def main(
 @click.option("--gs-datastore-user", help="Username to connect to Geoserver datastore")
 @click.option(
     "--gs-datastore-password",
-    prompt=True,
     hidden=True,
     help="Password to connect to Geoserver datastore",
 )
@@ -72,7 +71,6 @@ def main(
 )
 @click.option(
     "--gs-mirror-password",
-    prompt=True,
     hidden=True,
     help="Password to connect to Geoserver mirror service",
 )
