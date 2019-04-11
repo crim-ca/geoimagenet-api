@@ -88,7 +88,7 @@ class GeoServerDatastore:
             session.commit()
 
     def _request(
-        self, method, url, data=None, gwc=False, json_=True, params=None
+        self, method, url, data=None, gwc=False, json_=True, params=None, ignore_codes=None
     ) -> Dict:
         if gwc:
             url = self.gwc_url + url
@@ -108,9 +108,12 @@ class GeoServerDatastore:
         )
         try:
             r.raise_for_status()
-        except requests.exceptions.HTTPError:
-            logger.exception(f"Request content: {r.content}")
-            raise
+        except requests.exceptions.HTTPError as e:
+            if ignore_codes and e.response.status_code in ignore_codes:
+                pass
+            else:
+                logger.exception(f"Request content: {r.content}")
+                raise
         if json_:
             try:
                 return r.json()
