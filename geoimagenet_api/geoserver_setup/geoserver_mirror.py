@@ -109,6 +109,13 @@ class GeoServerMirror(GeoServerDatastore):
                         "color": "RGB",
                     }
                 ],
+                "nativeBoundingBox": {
+                    "minx": 0,
+                    "maxx": 0,
+                    "miny": 0,
+                    "maxy": 0,
+                    "crs": "EPSG:3857",
+                },
                 "nativeCRS": "string",
                 "srs": "string",
                 "projectionPolicy": "FORCE_DECLARED",
@@ -119,12 +126,6 @@ class GeoServerMirror(GeoServerDatastore):
             for workspace_name in image_data.workspace_names():
                 stores = self.datastore.get_stores(workspace_name)
                 for store in stores:
-                    if self.catalog.get_resource(
-                        name=store.name, workspace=workspace_name
-                    ):
-                        logger.info(f"Layer already exists: {store.name}")
-                        continue
-
                     wmslayer = data["wmsLayer"]
                     wmslayer["name"] = store.name
                     wmslayer["nativeName"] = f"{store.workspace.name}:{store.name}"
@@ -134,18 +135,40 @@ class GeoServerMirror(GeoServerDatastore):
                     wmslayer["keywords"][0]["sensor_name"] = image_data.sensor_name
                     wmslayer["keywords"][0]["color"] = workspace_name.split("_")[-1]
 
+                    coverage_info = self.datastore._request(
+                        "get",
+                        f"/workspaces/{store.workspace.name}/coveragestores/{store.name}/coverages/{store.name}.json",
+                    )
+                    bbox = coverage_info["coverage"]["nativeBoundingBox"]
+                    wmslayer["nativeBoundingBox"]["minx"] = bbox["minx"]
+                    wmslayer["nativeBoundingBox"]["maxx"] = bbox["maxx"]
+                    wmslayer["nativeBoundingBox"]["miny"] = bbox["miny"]
+                    wmslayer["nativeBoundingBox"]["maxy"] = bbox["maxy"]
+
                     logger.info(f"CREATE wms layer: {wmslayer['name']}")
 
                     if not self.dry_run:
                         store_name = workspace_name  # they have the same name
-                        self._request(
-                            "post",
-                            f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers.json",
-                            data=data,
-                        )
-                        self._request(
-                            "put",
-                            f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}",
-                            data={"wmsLayer": {}},
-                            params={"calculate": "latlonbbox"},
-                        )
+
+                        if self.catalog.get_resource(
+                            name=store.name, workspace=workspace_name
+                        ):
+                            logger.info(f"Layer already exists, updating: {store.name}")
+                            self._request(
+                                "put",
+                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}.json",
+                                data=data,
+                                params={"calculate": "latlonbbox"},
+                            )
+                        else:
+                            self._request(
+                                "post",
+                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers.json",
+                                data=data,
+                            )
+                            self._request(
+                                "put",
+                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}.json",
+                                data={"wmsLayer": {}},
+                                params={"calculate": "latlonbbox"},
+                            )
