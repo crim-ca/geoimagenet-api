@@ -102,11 +102,13 @@ class GeoServerMirror(GeoServerDatastore):
                 "title": "string",
                 "abstract": "",
                 "description": "",
-                # "keywords": [
-                #     {
-                #         "string": "string"
-                #     }
-                # ],
+                "keywords": [
+                    {
+                        "application": "GeoImageNet",
+                        "sensor_name": "Pleiades",
+                        "color": "RGB",
+                    }
+                ],
                 "nativeCRS": "string",
                 "srs": "string",
                 "projectionPolicy": "FORCE_DECLARED",
@@ -129,6 +131,8 @@ class GeoServerMirror(GeoServerDatastore):
                     wmslayer["title"] = store.name
                     wmslayer["nativeCRS"] = "EPSG:3857"
                     wmslayer["srs"] = "EPSG:3857"
+                    wmslayer["keywords"][0]["sensor_name"] = image_data.sensor_name
+                    wmslayer["keywords"][0]["color"] = workspace_name.split("_")[-1]
 
                     logger.info(f"CREATE wms layer: {wmslayer['name']}")
 
