@@ -1,16 +1,13 @@
 """
 Command line script to configure geoserver from a configuration file.
-
-Use the configuration parameters:
-- geoserver_yaml_config
-- geoserver_url
 """
 import json
 import re
 import sys
 import urllib.parse
+from json import JSONDecodeError
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 from dataclasses import dataclass, field
 
 import requests
@@ -62,8 +59,16 @@ class ImageData:
         self.bits = int(bits)
         self.images_list = images_list
 
-    def workspace_name(self, bands=None):
-        return f"{self.sensor_name}_{bands or self.bands}"
+    def workspace_names(self, bands=None):
+        names = []
+        bands_list = [self.bands]
+        if bands:
+            bands_list = [bands]
+        elif self.bands == "RGBN":
+            bands_list = ["RGB", "NRG"]
+        for bands in bands_list:
+            names.append(f"{self.sensor_name}_{bands}")
+        return names
 
 
 @dataclass
@@ -78,15 +83,8 @@ class Workspace:
 class GeoServerDatastore:
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
 
-    def __init__(
-        self,
-        geoserver_url,
-        yaml_path,
-        dry_run=False,
-        user="admin",
-        password="geoserver",
-    ):
-        self.geoserver_url = geoserver_url.rstrip("/")
+    def __init__(self, url, user, password, yaml_path, dry_run=False):
+        self.geoserver_url = url.rstrip("/")
         if not self.geoserver_url.endswith("/rest"):
             self.geoserver_url += "/rest"
 
@@ -104,7 +102,7 @@ class GeoServerDatastore:
         self._existing_styles = None
 
     def configure(self):
-        """Launch the configuration fo the remote GeoServer instance."""
+        """Launch the configuration of the remote GeoServer instance."""
         # workspaces = [Workspace(**s) for s in self.yaml_config["workspaces"]]
         # logger.debug("Read workspaces: " + ", ".join(w.name for w in workspaces))
         styles = [Style(**s) for s in self.yaml_config["styles"]]
@@ -146,24 +144,38 @@ class GeoServerDatastore:
                         logger.info(f"Added Image information: {db_image}")
             session.commit()
 
-    def _request(self, method, url, data=None, gwc=False, json_=True) -> Dict:
-        if not gwc:
-            url = self.geoserver_url + url
-        else:
+    def _request(
+        self, method, url, data=None, gwc=False, json_=True, params=None
+    ) -> Dict:
+        if gwc:
             url = self.gwc_url + url
+        else:
+            url = self.geoserver_url + url
         content_type = "application/json" if json_ else "application/xml"
         headers = {"Accept": content_type, "Content-type": content_type}
         if json_:
             data = json.dumps(data)
         r = requests.request(
-            method, url, data=data, auth=(self.user, self.password), headers=headers
+            method,
+            url,
+            data=data,
+            auth=(self.user, self.password),
+            headers=headers,
+            params=params,
         )
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError:
+            logger.exception(f"Request content: {r.content}")
+            raise
         if json_:
-            return r.json()
+            try:
+                return r.json()
+            except JSONDecodeError:
+                return r.content
 
     def _get_data_file(self, filename) -> Path:
-        return Path(__file__).parent / "geoserver_data" / filename
+        return Path(__file__).parent / "geoserver_requests" / filename
 
     def ensure_gwc_gridset(self):
         epsg_3857_gridset = self._get_data_file("epsg_3857_gridset.xml").read_text()
@@ -199,7 +211,7 @@ class GeoServerDatastore:
                         "name": layer,
                         "gridSetId": "EPSG:3857",
                         "zoomStart": 0,
-                        "zoomStop": 20,
+                        "zoomStop": 19,
                         "type": "seed",
                         "threadCount": 8,
                     }
@@ -295,12 +307,7 @@ class GeoServerDatastore:
         existing_workspaces_names = [w.name for w in existing_workspaces]
 
         for data in image_data:
-            bands_list = [data.bands]
-            if data.bands == "RGBN":
-                bands_list = ["RGB", "NRG"]
-            for bands in bands_list:
-                workspace_name = data.workspace_name(bands=bands)
-
+            for workspace_name in data.workspace_names():
                 if workspace_name not in existing_workspaces_names:
                     logger.info(
                         f"CREATE workspace: name={workspace_name}, uri={workspace_name}"
@@ -344,13 +351,11 @@ class GeoServerDatastore:
 
             for path in data.images_list:
                 logger.debug(f"Found image: {path}")
-                if data.bands == "RGBN":
-                    for style in ("RGB", "NRG"):
-                        self.create_coverage_store(
-                            path, data.workspace_name(bands=style), style
-                        )
-                else:
-                    self.create_coverage_store(path, data.workspace_name())
+                for workspace_name in data.workspace_names():
+                    style = None
+                    if data.bands == "RGBN":
+                        style = workspace_name.split("_")[-1]
+                    self.create_coverage_store(path, workspace_name, style)
 
     def create_coverage_store(self, path: Path, workspace_name: str, style: str = None):
         image_name = path.stem
@@ -366,7 +371,9 @@ class GeoServerDatastore:
             store = self.catalog.get_store(name=image_name, workspace=workspace_name)
             if store:
                 logger.info(f"Store already exists: {workspace_name}:{image_name}")
-                layer = self.catalog.get_layer(layer_name)
+                layer = self.catalog.get_resource(
+                    name=layer_name, workspace=workspace_name
+                )
                 if layer is None:
                     logger.info(
                         f"Layer doesn't exist ({layer_name}). Re-creating store."
@@ -375,7 +382,7 @@ class GeoServerDatastore:
                     store = None
 
             if not store and not layer:
-                store = self.catalog.create_coveragestore(
+                layer = self.catalog.create_coveragestore(
                     image_name,
                     workspace=workspace_name,
                     path=str(path),
@@ -386,12 +393,14 @@ class GeoServerDatastore:
                 )
 
                 logger.info(f"SET layer properties: {layer_name}")
-                layer = self.catalog.get_layer(layer_name)
-                if style:
-                    layer.default_style = self.existing_styles[style]
-                store.projection = "EPSG:3857"
-                self.catalog.save(store)
+                layer.projection = "EPSG:3857"
                 self.catalog.save(layer)
+                if style:
+                    logger.debug(f"Applying style {style}")
+                    url = f"/workspaces/{workspace_name}/layers/{layer_name}"
+                    data = {"layer": {"defaultStyle": {"name": style}}}
+                    self._request("put", url, data=data)
+                    layer.default_style = self.existing_styles[style]
 
             if self.get_config("create_cached_layers"):
                 cached_layer_name = f"{workspace_name}:{layer.name}"
@@ -460,12 +469,215 @@ class GeoServerDatastore:
         return stores
 
 
-def main(geoserver_datastore_url: str, config: str, dry_run=False):
-    logger.debug(f"Loading config file.")
+class GeoServerMirror(GeoServerDatastore):
+    def __init__(
+        self,
+        gs_datastore_url,
+        gs_datastore_user,
+        gs_datastore_password,
+        gs_mirror_url,
+        gs_mirror_user,
+        gs_mirror_password,
+        gs_yaml_config,
+        dry_run,
+    ):
+        self.datastore = GeoServerDatastore(
+            gs_datastore_url,
+            gs_datastore_user,
+            gs_datastore_password,
+            gs_yaml_config,
+            dry_run,
+        )
+        super().__init__(
+            gs_mirror_url, gs_mirror_user, gs_mirror_password, gs_yaml_config, dry_run
+        )
 
-    geoserver_config = GeoServerDatastore(geoserver_datastore_url, config, dry_run)
+    def configure(self):
+        image_data = self.parse_images()
+        image_data_8bit = [i for i in image_data if i.bits == 8]
+        self.create_workspaces(image_data_8bit)
 
-    geoserver_config.configure()
+        self.create_wms_stores(image_data_8bit)
+        self.create_wms_layers(image_data_8bit)
+
+    def create_wms_stores(self, image_data_8bit: List[ImageData]):
+        logger.info("Creating wms stores")
+        # delete and recreate
+        # r = self._request("delete", f"/workspaces//wmsstores/{self.store_name}.json")
+        # r = self._request("get", "/workspaces//wmsstores")
+
+        for image_data in image_data_8bit:
+            for workspace_name in image_data.workspace_names():
+                r = self._request("get", f"/workspaces/{workspace_name}/wmsstores")
+                existing_wms_stores_names = []
+                if r["wmsStores"]:
+                    existing_wms_stores_names = [
+                        w["name"] for w in r["wmsStores"]["wmsStore"]
+                    ]
+
+                store_name = workspace_name  # they have the same name
+
+                if store_name not in existing_wms_stores_names:
+                    capabilities_url = (
+                        self.datastore.geoserver_url.replace("/rest", "")
+                        + "/gwc/service/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=getcapabilities&TILED=true"
+                    )
+                    data = {
+                        "wmsStore": {
+                            "name": store_name,
+                            "type": "WMS",
+                            "capabilitiesURL": capabilities_url,
+                            "user": self.datastore.user,
+                            "password": self.datastore.password,
+                            "maxConnections": 6,
+                            "readTimeout": 60,
+                            "connectTimeout": 30,
+                        }
+                    }
+                    logger.info(f"CREATE wms store: {store_name}")
+                    if not self.dry_run:
+                        self._request(
+                            "post",
+                            f"/workspaces/{workspace_name}/wmsstores.json",
+                            data=data,
+                        )
+
+    def create_wms_layers(self, image_data_8bit: List[ImageData]):
+        logger.info("Creating wms layers")
+        # r = self._request(
+        #     "get",
+        #     f"/workspaces//wmsstores/{self.store_name}/wmslayers.json",
+        # )
+        # print(r)
+
+        data = {
+            "wmsLayer": {
+                "name": "string",
+                "nativeName": "string",
+                # "namespace": {
+                #     "name": "string",
+                #     "link": "string"
+                # },
+                "title": "string",
+                # "abstract": "",
+                "description": "",
+                # "keywords": [
+                #     {
+                #         "string": "string"
+                #     }
+                # ],
+                # "metadatalinks": {
+                #     "metadataLink": [
+                #         {
+                #             "type": "string",
+                #             "metadataType": "string",
+                #             "content": "string"
+                #         }
+                #     ]
+                # },
+                # "dataLinks": {
+                #     "metadataLink": [
+                #         {
+                #             "type": "string",
+                #             "content": "string"
+                #         }
+                #     ]
+                # },
+                "nativeCRS": "string",
+                "srs": "string",
+                # "nativeBoundingBox": {
+                #     "minx": 0,
+                #     "maxx": 0,
+                #     "miny": 0,
+                #     "maxy": 0,
+                #     "crs": "string"
+                # },
+                # "latLonBoundingBox": {
+                #     "minx": 0,
+                #     "maxx": 0,
+                #     "miny": 0,
+                #     "maxy": 0,
+                #     "crs": "string"
+                # },
+                "projectionPolicy": "FORCE_DECLARED",
+                "enabled": True,
+                # "metadata": [
+                #     {
+                #         "@key": "regionateStrategy",
+                #         "text": "string"
+                #     }
+                # ],
+                # "store": {
+                #     "@class": "string",
+                #     "name": "string",
+                #     "href": "string"
+                # }
+            }
+        }
+        for image_data in image_data_8bit:
+            for workspace_name in image_data.workspace_names():
+                stores = self.datastore.get_stores(workspace_name)
+                for store in stores:
+                    if self.catalog.get_resource(
+                        name=store.name, workspace=workspace_name
+                    ):
+                        logger.info(f"Layer already exists: {store.name}")
+                        continue
+
+                    wmslayer = data["wmsLayer"]
+                    wmslayer["name"] = store.name
+                    wmslayer["nativeName"] = f"{store.workspace.name}:{store.name}"
+                    wmslayer["title"] = store.name
+                    wmslayer["nativeCRS"] = "EPSG:3857"
+                    wmslayer["srs"] = "EPSG:3857"
+
+                    logger.info(f"CREATE wms layer: {wmslayer['name']}")
+
+                    if not self.dry_run:
+                        store_name = workspace_name  # they have the same name
+                        self._request(
+                            "post",
+                            f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers.json",
+                            data=data,
+                        )
+                        self._request(
+                            "put",
+                            f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}",
+                            data={"wmsLayer": {}},
+                            params={"calculate": "latlonbbox"},
+                        )
+
+
+def main(
+    gs_datastore_url: str,
+    gs_datastore_user: str,
+    gs_datastore_password: str,
+    gs_mirror_url: str,
+    gs_mirror_user: str,
+    gs_mirror_password: str,
+    gs_yaml_config: str,
+    dry_run=False,
+):
+    logger.info(f"## Configuring datastore")
+    GeoServerDatastore(
+        gs_datastore_url,
+        gs_datastore_user,
+        gs_datastore_password,
+        gs_yaml_config,
+        dry_run,
+    ).configure()
+
+    logger.info(f"## Configuring GeoServer mirror instance")
+    GeoServerMirror(
+        gs_datastore_url,
+        gs_datastore_user,
+        gs_datastore_password,
+        gs_mirror_url,
+        gs_mirror_user,
+        gs_mirror_password,
+        gs_yaml_config,
+        dry_run,
+    ).configure()
 
 
 @click.command()
@@ -480,25 +692,24 @@ def main(geoserver_datastore_url: str, config: str, dry_run=False):
     "--gs-datastore-url",
     help="GeoServer instance where the GeoTIFF images are served from.",
 )
+@click.option("--gs-datastore-user", help="Username to connect to Geoserver datastore")
 @click.option(
-    "--gs-datastore-user",
+    "--gs-datastore-password",
     prompt=True,
-    help="Username to connect to Geoserver datastore",
-)
-@click.password_option(
-    "--gs-datastore-password", help="Password to connect to Geoserver datastore"
+    hidden=True,
+    help="Password to connect to Geoserver datastore",
 )
 @click.option(
     "--gs-mirror-url",
     help="GeoServer instance where the GeoTIFF images are served from.",
 )
 @click.option(
-    "--gs-mirror-user",
-    prompt=True,
-    help="Username to connect to Geoserver mirror service",
+    "--gs-mirror-user", help="Username to connect to Geoserver mirror service"
 )
-@click.password_option(
+@click.option(
     "--gs-mirror-password",
+    prompt=True,
+    hidden=True,
     help="Password to connect to Geoserver mirror service",
 )
 def cli(
@@ -527,16 +738,26 @@ def cli(
     gs_mirror_url = _set(gs_mirror_url, "gs_mirror_url")
     gs_mirror_user = _set(gs_mirror_user, "gs_mirror_user")
     gs_mirror_password = _set(gs_mirror_password, "gs_mirror_password")
-    gs_yaml_config = _set(gs_yaml_config, "gs_yaml_config")
+
     if not gs_yaml_config:
         gs_yaml_config = Path(__file__).with_name("config.yaml")
-
-    gs_yaml_config = Path(gs_yaml_config)
+        if not gs_yaml_config.exists():
+            gs_yaml_config = None
+    gs_yaml_config = Path(_set(gs_yaml_config, "gs_yaml_config"))
 
     logger.debug(f"Started with input file: {gs_yaml_config}")
 
-    main(gs_datastore_url, gs_yaml_config, dry_run)
+    main(
+        gs_datastore_url,
+        gs_datastore_user,
+        gs_datastore_password,
+        gs_mirror_url,
+        gs_mirror_user,
+        gs_mirror_password,
+        gs_yaml_config,
+        dry_run,
+    )
 
 
 if __name__ == "__main__":
-    cli(auto_envver_prefix="GEOSERVER")
+    cli()
