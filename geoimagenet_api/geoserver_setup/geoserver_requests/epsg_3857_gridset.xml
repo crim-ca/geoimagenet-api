@@ -34,7 +34,6 @@
     <double>1.194328566789627</double>
     <double>0.5971642833948135</double>
     <double>0.2985821416974068</double>
-    <double>0.1492910708487034</double>
   </resolutions>
   <metersPerUnit>1.0</metersPerUnit>
   <pixelSize>2.8E-4</pixelSize>
@@ -59,7 +58,6 @@
     <string>EPSG:3857:17</string>
     <string>EPSG:3857:18</string>
     <string>EPSG:3857:19</string>
-    <string>EPSG:3857:20</string>
   </scaleNames>
   <tileHeight>256</tileHeight>
   <tileWidth>256</tileWidth>

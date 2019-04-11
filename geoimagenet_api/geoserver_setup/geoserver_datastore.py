@@ -85,10 +85,18 @@ class GeoServerDatastore:
                         session.rollback()
                     else:
                         logger.info(f"Added Image information: {db_image}")
-            session.commit()
+            if not self.dry_run:
+                session.commit()
 
     def _request(
-        self, method, url, data=None, gwc=False, json_=True, params=None, ignore_codes=None
+        self,
+        method,
+        url,
+        data=None,
+        gwc=False,
+        json_=True,
+        params=None,
+        ignore_codes=None,
     ) -> Dict:
         if gwc:
             url = self.gwc_url + url
@@ -151,18 +159,19 @@ class GeoServerDatastore:
 
             logger.info(f"Generating layer cache for {len(layers_to_seed)} layers")
 
-            for layer in layers_to_seed:
-                data = {
-                    "seedRequest": {
-                        "name": layer,
-                        "gridSetId": "EPSG:3857",
-                        "zoomStart": 0,
-                        "zoomStop": 19,
-                        "type": "seed",
-                        "threadCount": 8,
+            if not self.dry_run:
+                for layer in layers_to_seed:
+                    data = {
+                        "seedRequest": {
+                            "name": layer,
+                            "gridSetId": "EPSG:3857",
+                            "zoomStart": 0,
+                            "zoomStop": 19,
+                            "type": "seed",
+                            "threadCount": 8,
+                        }
                     }
-                }
-                self._request("post", f"/seed/{layer}.json", data=data, gwc=True)
+                    self._request("post", f"/seed/{layer}.json", data=data, gwc=True)
 
     def _get_absolute_path(self, path):
         """Paths can be relative to the config.yaml file or absolute"""
@@ -224,10 +233,7 @@ class GeoServerDatastore:
         return catalog.get_workspaces()
 
     def remove_workspaces(
-        self,
-        workspace_names: List[str],
-        delete_other_workspaces: bool,
-        overwrite: bool,
+        self, workspace_names: List[str], delete_other_workspaces: bool, overwrite: bool
     ):
         """Not used. If required, remove existing workspaces."""
         if delete_other_workspaces or overwrite:
