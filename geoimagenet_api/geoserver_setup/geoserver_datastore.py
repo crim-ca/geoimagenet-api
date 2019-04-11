@@ -205,7 +205,7 @@ class GeoServerDatastore:
             match = re.match(r"^([^_]+)_([^_]+)_([^_]+)$", name)
             if not match:
                 raise ValueError(
-                    f"Folder name not of the format 'sensor_bands_bits': {name}"
+                    f"Folder name not of the format '{{sensor}}_{{bands}}_{{bits}}': {name}"
                 )
             return match.groups()
 
@@ -297,10 +297,12 @@ class GeoServerDatastore:
 
         for data in image_data:
             if data.bands == "RGBN":
-                for i in image_data:
-                    if i.sensor_name == data.sensor_name and i.bands in ("RGB", "NRG"):
-                        # if RGB or NRG images exist, don't load RGBN images
-                        continue
+                if any(
+                    i.sensor_name == data.sensor_name and i.bands in ("RGB", "NRG")
+                    for i in image_data
+                ):
+                    # if RGB or NRG images exist, don't load RGBN images
+                    continue
 
             for path in data.images_list:
                 logger.debug(f"Found image: {path}")
