@@ -189,7 +189,9 @@ class GeoServerDatastore:
     def catalog(self):
         if self._catalog is None:
             logger.debug(f"Getting catalog from {self.geoserver_url}")
-            self._catalog = Catalog(self.geoserver_url)
+            self._catalog = Catalog(
+                self.geoserver_url, username=self.user, password=self.password
+            )
         return self._catalog
 
     @property
