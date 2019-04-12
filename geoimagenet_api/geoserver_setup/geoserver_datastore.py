@@ -88,7 +88,7 @@ class GeoServerDatastore:
             if not self.dry_run:
                 session.commit()
 
-    def _request(
+    def request(
         self,
         method,
         url,
@@ -134,12 +134,12 @@ class GeoServerDatastore:
     def ensure_gwc_gridset(self):
         epsg_3857_gridset = self._get_data_file("epsg_3857_gridset.xml").read_text()
 
-        existing_gridsets = self._request("get", "/gridsets", gwc=True)
+        existing_gridsets = self.request("get", "/gridsets", gwc=True)
         if "EPSG:3857" not in existing_gridsets:
             logger.info(f"CREATE gridset: EPSG:3857")
             if not self.dry_run:
                 name = urllib.parse.quote("EPSG:3857")
-                self._request(
+                self.request(
                     "put",
                     f"/gridsets/{name}",
                     data=epsg_3857_gridset,
@@ -151,7 +151,7 @@ class GeoServerDatastore:
 
     def seed_cache(self, image_data: List[ImageData]):
         if self.get_config("seed_gwc_cache"):
-            cached_layers = self._request("get", "/layers", gwc=True)
+            cached_layers = self.request("get", "/layers", gwc=True)
             sensor_names = list(set(i.sensor_name for i in image_data))
             layers_to_seed = [
                 c for c in cached_layers if any(c.startswith(s) for s in sensor_names)
@@ -171,7 +171,7 @@ class GeoServerDatastore:
                             "threadCount": 8,
                         }
                     }
-                    self._request("post", f"/seed/{layer}.json", data=data, gwc=True)
+                    self.request("post", f"/seed/{layer}.json", data=data, gwc=True)
 
     def _get_absolute_path(self, path):
         """Paths can be relative to the config.yaml file or absolute"""
@@ -296,13 +296,12 @@ class GeoServerDatastore:
         logger.debug(f"Creating stores")
 
         for data in image_data:
-            if data.bands == "RGBN":
-                if any(
-                    i.sensor_name == data.sensor_name and i.bands in ("RGB", "NRG")
-                    for i in image_data
-                ):
-                    # if RGB or NRG images exist, don't load RGBN images
-                    continue
+            if data.bands == "RGBN" and any(
+                i.sensor_name == data.sensor_name and i.bands in ("RGB", "NRG")
+                for i in image_data
+            ):
+                # if RGB or NRG images exist, don't load RGBN images
+                continue
 
             for path in data.images_list:
                 logger.debug(f"Found image: {path}")
@@ -354,13 +353,13 @@ class GeoServerDatastore:
                     logger.debug(f"Applying style {style}")
                     url = f"/workspaces/{workspace_name}/layers/{layer_name}"
                     data = {"layer": {"defaultStyle": {"name": style}}}
-                    self._request("put", url, data=data)
+                    self.request("put", url, data=data)
                     layer.default_style = self.existing_styles[style]
 
             if self.get_config("create_cached_layers"):
                 cached_layer_name = f"{workspace_name}:{layer.name}"
                 logger.info(f"CREATE cached layer: {layer_name}")
-                coverage_data = self._request(
+                coverage_data = self.request(
                     "get", f"/workspaces/{workspace_name}/coverages/{layer.name}"
                 )
                 bbox = coverage_data["coverage"]["nativeBoundingBox"]
@@ -380,7 +379,7 @@ class GeoServerDatastore:
                 )
                 name = urllib.parse.quote(cached_layer_name)
 
-                self._request(
+                self.request(
                     "put", f"/layers/{name}", data=data, gwc=True, json_=False
                 )
 

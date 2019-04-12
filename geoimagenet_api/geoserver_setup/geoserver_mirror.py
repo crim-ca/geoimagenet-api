@@ -47,7 +47,7 @@ class GeoServerMirror(GeoServerDatastore):
                     cached_layer_name = f"{workspace_name}:{layer_name}"
                     logger.info(f"DELETE cached layer: {cached_layer_name}")
                     if not self.dry_run:
-                        self._request(
+                        self.request(
                             "delete",
                             f"/layers/{cached_layer_name}",
                             gwc=True,
@@ -59,7 +59,7 @@ class GeoServerMirror(GeoServerDatastore):
 
         for image_data in image_data_8bit:
             for workspace_name in image_data.workspace_names():
-                r = self._request("get", f"/workspaces/{workspace_name}/wmsstores")
+                r = self.request("get", f"/workspaces/{workspace_name}/wmsstores")
                 existing_wms_stores_names = []
                 if r["wmsStores"]:
                     existing_wms_stores_names = [
@@ -87,7 +87,7 @@ class GeoServerMirror(GeoServerDatastore):
                     }
                     logger.info(f"CREATE wms store: {store_name}")
                     if not self.dry_run:
-                        self._request(
+                        self.request(
                             "post",
                             f"/workspaces/{workspace_name}/wmsstores.json",
                             data=data,
@@ -139,7 +139,7 @@ class GeoServerMirror(GeoServerDatastore):
                     keywords["color"] = workspace_name.split("_")[-1]
                     keywords["date"] = find_date(store.name)
 
-                    coverage_info = self.datastore._request(
+                    coverage_info = self.datastore.request(
                         "get",
                         f"/workspaces/{store.workspace.name}/coveragestores/{store.name}/coverages/{store.name}.json",
                     )
@@ -158,19 +158,19 @@ class GeoServerMirror(GeoServerDatastore):
                             name=store.name, workspace=workspace_name
                         ):
                             logger.info(f"Layer already exists, updating: {store.name}")
-                            self._request(
+                            self.request(
                                 "put",
                                 f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}.json",
                                 data=data,
                                 params={"calculate": "latlonbbox"},
                             )
                         else:
-                            self._request(
+                            self.request(
                                 "post",
                                 f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers.json",
                                 data=data,
                             )
-                            self._request(
+                            self.request(
                                 "put",
                                 f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}.json",
                                 data={"wmsLayer": {}},
