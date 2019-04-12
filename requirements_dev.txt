@@ -4,3 +4,5 @@ pp-ez
 pytest-icdiff
 gitchangelog
 pytest-cov
+sphinxcontrib-confluencebuilder
+sphinx-click

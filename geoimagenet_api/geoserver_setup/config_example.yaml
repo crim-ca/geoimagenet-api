@@ -1,18 +1,15 @@
 # Paths can be relative to this file or absolute
 
+# Base path with the folders containing raster images
 images_folder: /images_folder
-create_cached_layers: true
-delete_other_images_in_workspace: false  # todo
 
+# Create the cached layers or not on the datastore
+create_cached_layers: true
+
+# A list of styles to upload on the server
+# The default style located in ./styles/DEFAULT_RASTER.xml will always be added
 styles:
   - name: RGB
     path: ./styles/RGB.xml
   - name: NRG
     path: ./styles/NRG.xml
-
-#workspaces:
-#  - name: Pleiades
-#    uri: pleiades_uri
-#    style: RGB
-#    images_path: /pleiades
-#    layer_group_name: Pleiades_group
