@@ -305,7 +305,7 @@ class GeoServerDatastore:
         for style in styles + [default_style]:
             name, path = style.name, self._get_absolute_path(style.path)
             if not path.exists():
-                logger.error(f"Path to style {name} doesn't exists: {path}")
+                logger.error(f"Path to style {name} doesn't exist: {path}")
                 sys.exit(1)
 
             data = path.read_text()
@@ -326,7 +326,7 @@ class GeoServerDatastore:
         if self.thread_pool_size > 1:
             t = ThreadPool(processes=self.thread_pool_size)
             for i in iterable:
-                t.apply_async(func, (i, ))
+                t.apply_async(func, (i,))
             t.close()
             t.join()
         else:
@@ -353,7 +353,9 @@ class GeoServerDatastore:
 
             self.map_threadded(_create_coverage_store, data.images_list)
 
-    def create_coverage_store(self, path: Path, workspace_name: str, style: str = default_style.name):
+    def create_coverage_store(
+        self, path: Path, workspace_name: str, style: str = default_style.name
+    ):
         image_name = path.stem
         type_ = self.extensions.get(path.suffix.lower())
         if type_ is None:
@@ -421,9 +423,7 @@ class GeoServerDatastore:
                 )
                 name = urllib.parse.quote(cached_layer_name)
 
-                self.request(
-                    "put", f"/layers/{name}", data=data, gwc=True, json_=False
-                )
+                self.request("put", f"/layers/{name}", data=data, gwc=True, json_=False)
 
     def create_layergroup(self, workspace):
         """Not used."""
