@@ -271,6 +271,7 @@ class GeoServerDatastore:
                         self.catalog.create_workspace(
                             name=workspace_name, uri=workspace_name
                         )
+                        existing_workspaces_names.append(workspace_name)
 
     def create_styles(self, styles: List[Style]):
         logger.debug(f"Creating styles")
