@@ -83,6 +83,7 @@ def main(
 )
 @click.option(
     "--seed-cache-only",
+    is_flag=True,
     default=False,
     help="The servers are already configured, only seed the tile cache on the datastore.",
 )
