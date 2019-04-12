@@ -117,7 +117,7 @@ class GeoServerMirror(GeoServerDatastore):
                             "description": "",
                             "keywords": [
                                 {
-                                    "application": "GeoImageNet",
+                                    "application": "GEOIMAGENET",
                                     "sensor_name": image_data.sensor_name,
                                     "color": workspace_name.split("_")[-1],
                                     "date": find_date(store.name),
