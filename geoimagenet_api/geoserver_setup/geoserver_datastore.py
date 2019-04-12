@@ -26,6 +26,9 @@ class Style:
     path: str
 
 
+default_style = Style(name="DEFAULT_STYLE", path="./styles/DEFAULT_STYLE.xml")
+
+
 class GeoServerDatastore:
     thread_pool_size = 4
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
@@ -275,7 +278,7 @@ class GeoServerDatastore:
 
     def create_styles(self, styles: List[Style]):
         logger.debug(f"Creating styles")
-        for style in styles:
+        for style in styles + [default_style]:
             name, path = style.name, self._get_absolute_path(style.path)
             if not path.exists():
                 logger.error(f"Path to style {name} doesn't exists: {path}")
@@ -326,7 +329,7 @@ class GeoServerDatastore:
 
             self.map_threadded(_create_coverage_store, data.images_list)
 
-    def create_coverage_store(self, path: Path, workspace_name: str, style: str = None):
+    def create_coverage_store(self, path: Path, workspace_name: str, style: str = default_style.name):
         image_name = path.stem
         type_ = self.extensions.get(path.suffix.lower())
         if type_ is None:
