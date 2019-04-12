@@ -215,7 +215,8 @@ class GeoServerDatastore:
                 logger.info(f"Launching {concurrent_seeds} tasks for layer: {layer}")
                 self.request("post", f"/seed/{layer}.json", data=data, gwc=True)
 
-                time.sleep(2)
+                # if the tiles are already generated, wait a bit less before checking
+                time.sleep(10)
 
     def _get_absolute_path(self, path):
         """Paths can be relative to the config.yaml file or absolute"""
