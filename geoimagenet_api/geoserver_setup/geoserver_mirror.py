@@ -41,7 +41,7 @@ class GeoServerMirror(GeoServerDatastore):
 
     def delete_cached_layers(self, image_data_8bit: List[ImageData]):
         for image_data in image_data_8bit:
-            for path in image_data.images_list:
+            def _delete_cached_layers(path):
                 layer_name = path.stem
                 for workspace_name in image_data.workspace_names():
                     cached_layer_name = f"{workspace_name}:{layer_name}"
@@ -53,6 +53,8 @@ class GeoServerMirror(GeoServerDatastore):
                             gwc=True,
                             ignore_codes=[404],
                         )
+
+            self.map_threadded(_delete_cached_layers, image_data.images_list)
 
     def create_wms_stores(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms stores")
@@ -96,60 +98,46 @@ class GeoServerMirror(GeoServerDatastore):
     def create_wms_layers(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms layers")
 
-        data = {
-            "wmsLayer": {
-                "name": "string",
-                "nativeName": "string",
-                "title": "string",
-                "abstract": "",
-                "description": "",
-                "keywords": [
-                    {
-                        "application": "GeoImageNet",
-                        "sensor_name": "Pleiades",
-                        "color": "RGB",
-                        "date": "the_date",
-                    }
-                ],
-                "nativeBoundingBox": {
-                    "minx": 0,
-                    "maxx": 0,
-                    "miny": 0,
-                    "maxy": 0,
-                    "crs": "EPSG:3857",
-                },
-                "nativeCRS": "string",
-                "srs": "string",
-                "projectionPolicy": "FORCE_DECLARED",
-                "enabled": True,
-            }
-        }
         for image_data in image_data_8bit:
             for workspace_name in image_data.workspace_names():
-                stores = self.datastore.get_stores(workspace_name)
-                for store in stores:
-                    wmslayer = data["wmsLayer"]
-                    wmslayer["name"] = store.name
-                    wmslayer["nativeName"] = f"{store.workspace.name}:{store.name}"
-                    wmslayer["title"] = store.name
-                    wmslayer["nativeCRS"] = "EPSG:3857"
-                    wmslayer["srs"] = "EPSG:3857"
-                    keywords = wmslayer["keywords"][0]
-                    keywords["sensor_name"] = image_data.sensor_name
-                    keywords["color"] = workspace_name.split("_")[-1]
-                    keywords["date"] = find_date(store.name)
 
+                def _create_wms_layers(store):
                     coverage_info = self.datastore.request(
                         "get",
                         f"/workspaces/{store.workspace.name}/coveragestores/{store.name}/coverages/{store.name}.json",
                     )
                     bbox = coverage_info["coverage"]["nativeBoundingBox"]
-                    wmslayer["nativeBoundingBox"]["minx"] = bbox["minx"]
-                    wmslayer["nativeBoundingBox"]["maxx"] = bbox["maxx"]
-                    wmslayer["nativeBoundingBox"]["miny"] = bbox["miny"]
-                    wmslayer["nativeBoundingBox"]["maxy"] = bbox["maxy"]
 
-                    logger.info(f"CREATE wms layer: {wmslayer['name']}")
+                    data = {
+                        "wmsLayer": {
+                            "name": store.name,
+                            "nativeName": f"{store.workspace.name}:{store.name}",
+                            "title": store.name,
+                            "abstract": "",
+                            "description": "",
+                            "keywords": [
+                                {
+                                    "application": "GeoImageNet",
+                                    "sensor_name": image_data.sensor_name,
+                                    "color": workspace_name.split("_")[-1],
+                                    "date": find_date(store.name),
+                                }
+                            ],
+                            "nativeBoundingBox": {
+                                "minx": bbox["minx"],
+                                "maxx": bbox["maxx"],
+                                "miny": bbox["miny"],
+                                "maxy": bbox["maxy"],
+                                "crs": "EPSG:3857",
+                            },
+                            "nativeCRS": "EPSG:3857",
+                            "srs": "EPSG:3857",
+                            "projectionPolicy": "FORCE_DECLARED",
+                            "enabled": True,
+                        }
+                    }
+
+                    logger.info(f"CREATE wms layer: {store.name}")
 
                     if not self.dry_run:
                         store_name = workspace_name  # they have the same name
@@ -160,7 +148,7 @@ class GeoServerMirror(GeoServerDatastore):
                             logger.info(f"Layer already exists, updating: {store.name}")
                             self.request(
                                 "put",
-                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}.json",
+                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{store.name}.json",
                                 data=data,
                                 params={"calculate": "latlonbbox"},
                             )
@@ -172,7 +160,10 @@ class GeoServerMirror(GeoServerDatastore):
                             )
                             self.request(
                                 "put",
-                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{wmslayer['name']}.json",
+                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{store.name}.json",
                                 data={"wmsLayer": {}},
                                 params={"calculate": "latlonbbox"},
                             )
+
+                stores = self.datastore.get_stores(workspace_name)
+                self.map_threadded(_create_wms_layers, stores)

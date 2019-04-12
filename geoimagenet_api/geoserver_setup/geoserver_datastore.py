@@ -2,8 +2,9 @@ import json
 import re
 import sys
 import urllib.parse
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from json import JSONDecodeError
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import List, Dict, Union
 
@@ -26,6 +27,7 @@ class Style:
 
 
 class GeoServerDatastore:
+    thread_pool_size = 3
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
 
     def __init__(self, url, user, password, yaml_path, dry_run=False):
@@ -292,6 +294,13 @@ class GeoServerDatastore:
                 )
         self._existing_styles = None
 
+    def map_threadded(self, func, iterable):
+        if self.thread_pool_size > 1:
+            t = ThreadPool(processes=self.thread_pool_size)
+            t.map(func, iterable)
+        else:
+            list(map(func, iterable))
+
     def create_coverage_stores(self, image_data: List[ImageData]):
         logger.debug(f"Creating stores")
 
@@ -303,13 +312,15 @@ class GeoServerDatastore:
                 # if RGB or NRG images exist, don't load RGBN images
                 continue
 
-            for path in data.images_list:
+            def _create_coverage_store(path):
                 logger.debug(f"Found image: {path}")
                 for workspace_name in data.workspace_names():
                     style = None
                     if data.bands == "RGBN":
                         style = workspace_name.split("_")[-1]
                     self.create_coverage_store(path, workspace_name, style)
+
+            self.map_threadded(_create_coverage_store, data.images_list)
 
     def create_coverage_store(self, path: Path, workspace_name: str, style: str = None):
         image_name = path.stem
@@ -325,10 +336,10 @@ class GeoServerDatastore:
             store = self.catalog.get_store(name=image_name, workspace=workspace_name)
             if store:
                 logger.info(f"Store already exists: {workspace_name}:{image_name}")
-                layer = self.catalog.get_resource(
-                    name=layer_name, workspace=workspace_name
-                )
-                if layer is None:
+                layer = [r for r in store.get_resources() if r.name == layer_name]
+                if layer:
+                    layer = layer[0]
+                else:
                     logger.info(
                         f"Layer doesn't exist ({layer_name}). Re-creating store."
                     )
@@ -357,10 +368,10 @@ class GeoServerDatastore:
                     layer.default_style = self.existing_styles[style]
 
             if self.get_config("create_cached_layers"):
-                cached_layer_name = f"{workspace_name}:{layer.name}"
+                cached_layer_name = f"{workspace_name}:{layer_name}"
                 logger.info(f"CREATE cached layer: {layer_name}")
                 coverage_data = self.request(
-                    "get", f"/workspaces/{workspace_name}/coverages/{layer.name}"
+                    "get", f"/workspaces/{workspace_name}/coverages/{layer_name}"
                 )
                 bbox = coverage_data["coverage"]["nativeBoundingBox"]
                 assert bbox["crs"]["$"] == "EPSG:3857"
