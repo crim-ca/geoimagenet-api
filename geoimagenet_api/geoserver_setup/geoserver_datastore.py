@@ -193,7 +193,7 @@ class GeoServerDatastore:
                         f"Tasks running: {n_running} | "
                         f"Tiles: {tiles_estimated} estimated, "
                         f"{tiles_processed} processed, "
-                        f"{tiles_remaining} remaining | "
+                        f"{tiles_remaining} remaining (not accurate) | "
                         f"Sleeping for {wait_secs} seconds"
                     )
                     logger.info(message)
