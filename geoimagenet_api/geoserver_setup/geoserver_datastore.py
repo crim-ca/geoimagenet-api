@@ -322,7 +322,7 @@ class GeoServerDatastore:
             def _create_coverage_store(path):
                 logger.debug(f"Found image: {path}")
                 for workspace_name in data.workspace_names():
-                    style = None
+                    style = default_style.name
                     if data.bands == "RGBN":
                         style = workspace_name.split("_")[-1]
                     self.create_coverage_store(path, workspace_name, style)
