@@ -20,28 +20,35 @@ def main(
     gs_mirror_user: str,
     gs_mirror_password: str,
     gs_yaml_config: str,
+    seed_cache_only=False,
     dry_run=False,
 ):
     logger.info(f"## Configuring datastore")
-    GeoServerDatastore(
-        gs_datastore_url,
-        gs_datastore_user,
-        gs_datastore_password,
-        gs_yaml_config,
-        dry_run,
-    ).configure()
 
-    logger.info(f"## Configuring GeoServer mirror instance")
-    GeoServerMirror(
+    datastore = GeoServerDatastore(
         gs_datastore_url,
         gs_datastore_user,
         gs_datastore_password,
-        gs_mirror_url,
-        gs_mirror_user,
-        gs_mirror_password,
         gs_yaml_config,
         dry_run,
-    ).configure()
+    )
+
+    if seed_cache_only:
+        datastore.seed_cache()
+    else:
+        datastore.configure()
+
+        logger.info(f"## Configuring GeoServer mirror instance")
+        GeoServerMirror(
+            gs_datastore_url,
+            gs_datastore_user,
+            gs_datastore_password,
+            gs_mirror_url,
+            gs_mirror_user,
+            gs_mirror_password,
+            gs_yaml_config,
+            dry_run,
+        ).configure()
 
 
 @click.command()
@@ -74,6 +81,11 @@ def main(
     hidden=True,
     help="Password to connect to Geoserver mirror service",
 )
+@click.option(
+    "--seed-cache-only",
+    default=False,
+    help="The servers are already configured, only seed the tile cache on the datastore.",
+)
 def cli(
     dry_run,
     gs_yaml_config,
@@ -83,6 +95,7 @@ def cli(
     gs_mirror_url,
     gs_mirror_user,
     gs_mirror_password,
+    seed_cache_only,
 ):
     """Main entry point for the cli."""
 
@@ -117,6 +130,7 @@ def cli(
         gs_mirror_user,
         gs_mirror_password,
         gs_yaml_config,
+        seed_cache_only,
         dry_run,
     )
 

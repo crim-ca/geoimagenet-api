@@ -1,7 +1,9 @@
 import json
 import re
 import sys
+import time
 import urllib.parse
+from collections import namedtuple
 from dataclasses import dataclass
 from json import JSONDecodeError
 from multiprocessing.pool import ThreadPool
@@ -66,7 +68,6 @@ class GeoServerDatastore:
         self.create_workspaces(image_data_8bit)
         self.create_styles(styles)
         self.create_coverage_stores(image_data_8bit)
-        self.seed_cache(image_data_8bit)
 
         self.write_postgis_image_info(image_data_8bit + image_data_not_8bit)
 
@@ -154,29 +155,52 @@ class GeoServerDatastore:
         else:
             logger.info(f"Gridset exists: EPSG:3857")
 
-    def seed_cache(self, image_data: List[ImageData]):
-        if self.get_config("seed_gwc_cache"):
-            cached_layers = self.request("get", "/layers", gwc=True)
-            sensor_names = list(set(i.sensor_name for i in image_data))
-            layers_to_seed = [
-                c for c in cached_layers if any(c.startswith(s) for s in sensor_names)
-            ]
+    def seed_cache(self, image_data: List[ImageData] = None):
+        if image_data is None:
+            image_data = self.parse_images()
 
-            logger.info(f"Generating layer cache for {len(layers_to_seed)} layers")
+        cached_layers = self.request("get", "/layers", gwc=True)
+        sensor_names = list(set(i.sensor_name for i in image_data))
+        layers_to_seed = [
+            c for c in cached_layers if any(c.startswith(s) for s in sensor_names)
+        ]
 
-            if not self.dry_run:
-                for layer in layers_to_seed:
-                    data = {
-                        "seedRequest": {
-                            "name": layer,
-                            "gridSetId": "EPSG:3857",
-                            "zoomStart": 0,
-                            "zoomStop": 19,
-                            "type": "seed",
-                            "threadCount": 8,
-                        }
+        logger.info(f"Generating layer cache for {len(layers_to_seed)} layers")
+
+        SeedTask = namedtuple("SeedTask", "processed total remaining id status")
+        # seed_status = {-1: "ABORTED", 0: "PENDING", 1: "RUNNING", 2: "DONE"}
+        concurrent_seeds = 8
+        wait_secs = 30
+
+        if not self.dry_run:
+
+            def count_running():
+                response = self.request("get", "rest/seed.json", gwc=True)
+                seeds = [SeedTask(*r) for r in response["long-array-array"]]
+                return sum(1 for s in seeds if s.status == 1)
+
+            while layers_to_seed:
+
+                n_running = count_running()
+                while n_running:
+                    logger.info(f"There are {n_running} runnning tasks. Waiting for {wait_secs} seconds.")
+                    time.sleep(wait_secs)
+                    n_running = count_running()
+
+                layer = layers_to_seed.pop(0)
+                data = {
+                    "seedRequest": {
+                        "name": layer,
+                        "gridSetId": "EPSG:3857",
+                        "zoomStart": 0,
+                        "zoomStop": 19,
+                        "type": "seed",
+                        "threadCount": concurrent_seeds,
                     }
-                    self.request("post", f"/seed/{layer}.json", data=data, gwc=True)
+                }
+                self.request("post", f"/seed/{layer}.json", data=data, gwc=True)
+
+                time.sleep(2)
 
     def _get_absolute_path(self, path):
         """Paths can be relative to the config.yaml file or absolute"""
