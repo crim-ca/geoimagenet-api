@@ -190,11 +190,11 @@ class GeoServerDatastore:
                 n_running, tiles_estimated, tiles_remaining, tiles_processed = count_running()
                 while n_running:
                     message = (
-                        f"Tasks running: {n_running}. "
+                        f"Tasks running: {n_running} | "
                         f"Tiles: {tiles_estimated} estimated, "
                         f"{tiles_processed} processed, "
-                        f"{tiles_remaining} remaining. "
-                        f"Sleeping for {wait_secs} seconds."
+                        f"{tiles_remaining} remaining | "
+                        f"Sleeping for {wait_secs} seconds"
                     )
                     logger.info(message)
                     time.sleep(wait_secs)
