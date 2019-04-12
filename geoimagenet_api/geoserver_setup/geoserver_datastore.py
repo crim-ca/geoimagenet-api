@@ -27,7 +27,7 @@ class Style:
 
 
 class GeoServerDatastore:
-    thread_pool_size = 3
+    thread_pool_size = 4
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
 
     def __init__(self, url, user, password, yaml_path, dry_run=False):
@@ -298,7 +298,10 @@ class GeoServerDatastore:
     def map_threadded(self, func, iterable):
         if self.thread_pool_size > 1:
             t = ThreadPool(processes=self.thread_pool_size)
-            t.map(func, iterable)
+            for i in iterable:
+                t.apply_async(func, (i, ))
+            t.close()
+            t.join()
         else:
             list(map(func, iterable))
 
