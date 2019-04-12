@@ -104,6 +104,8 @@ class GeoServerDatastore:
         params=None,
         ignore_codes=None,
     ) -> Dict:
+        if not url.startswith("/"):
+            url = "/" + url
         if gwc:
             url = self.gwc_url + url
         else:
@@ -175,18 +177,30 @@ class GeoServerDatastore:
         if not self.dry_run:
 
             def count_running():
-                response = self.request("get", "rest/seed.json", gwc=True)
+                response = self.request("get", "/seed.json", gwc=True)
                 seeds = [SeedTask(*r) for r in response["long-array-array"]]
-                return sum(1 for s in seeds if s.status == 1)
+                n_running = sum(1 for s in seeds if s.status == 1)
+                tiles_estimated = sum(s.total for s in seeds if s.status == 1)
+                tiles_remaining = sum(s.remaining for s in seeds if s.status == 1)
+                tiles_processed = sum(s.processed for s in seeds if s.status == 1)
+                return n_running, tiles_estimated, tiles_remaining, tiles_processed
 
             while layers_to_seed:
 
-                n_running = count_running()
+                n_running, tiles_estimated, tiles_remaining, tiles_processed = count_running()
                 while n_running:
-                    logger.info(f"There are {n_running} runnning tasks. Waiting for {wait_secs} seconds.")
+                    message = (
+                        f"Tasks running: {n_running}. "
+                        f"Tiles: {tiles_estimated} estimated, "
+                        f"{tiles_processed} processed, "
+                        f"{tiles_remaining} remaining. "
+                        f"Sleeping for {wait_secs} seconds."
+                    )
+                    logger.info(message)
                     time.sleep(wait_secs)
-                    n_running = count_running()
+                    n_running, tiles_estimated, tiles_remaining, tiles_processed = count_running()
 
+                logger.info(f"There are {len(layers_to_seed)} layers left to seed")
                 layer = layers_to_seed.pop(0)
                 data = {
                     "seedRequest": {
@@ -198,6 +212,7 @@ class GeoServerDatastore:
                         "threadCount": concurrent_seeds,
                     }
                 }
+                logger.info(f"Launching {concurrent_seeds} tasks for layer: {layer}")
                 self.request("post", f"/seed/{layer}.json", data=data, gwc=True)
 
                 time.sleep(2)
