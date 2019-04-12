@@ -2,12 +2,6 @@ FROM python:3.7-alpine3.8
 
 LABEL Description="GeoImageNet API" Vendor="CRIM" Maintainer="david.caron@crim.ca"
 
-# set timezone
-RUN apk add tzdata && \
-    cp /usr/share/zoneinfo/America/Montreal /etc/localtime && \
-    echo "America/Montreal" > /etc/timezone && \
-    apk del tzdata
-
 WORKDIR /code
 COPY geoimagenet_api/__init__.py geoimagenet_api/__about__.py ./geoimagenet_api/
 COPY requirements* setup.py README.md ./
