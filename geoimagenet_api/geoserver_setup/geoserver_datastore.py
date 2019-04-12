@@ -26,7 +26,7 @@ class Style:
     path: str
 
 
-default_style = Style(name="DEFAULT_STYLE", path="./styles/DEFAULT_RASTER.xml")
+default_style = Style(name="DEFAULT_RASTER", path="./styles/DEFAULT_RASTER.xml")
 
 
 class GeoServerDatastore:
