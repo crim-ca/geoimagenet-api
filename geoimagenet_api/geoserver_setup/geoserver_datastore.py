@@ -130,7 +130,7 @@ class GeoServerDatastore:
 
         try:
             response = _request()
-            if response.status_code < 400:
+            if response.status_code >= 400:
                 while retry:
                     wait_secs = 2
                     logger.info(
