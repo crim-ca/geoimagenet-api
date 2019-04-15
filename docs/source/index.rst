@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to GeoImageNet Annotation API's documentation!
-======================================================
+Annotation API
+==============
 
 .. toctree::
    :maxdepth: 3
@@ -13,12 +13,4 @@ Welcome to GeoImageNet Annotation API's documentation!
    database
    tests
    configuration
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   geoserver

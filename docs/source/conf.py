@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -40,6 +40,8 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+master_doc = "index"
+
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -56,9 +58,13 @@ html_static_path = ['_static']
 # -- Options for confluence -------------------------------------------------
 
 confluence_publish = True
-confluence_space_name = 'GeoImageNet'
-confluence_parent_page = 'Annotation API et configuration GeoServer'
-confluence_server_url = 'https://www.crim.ca/confluence'
+confluence_space_name = 'GEOIM'
+confluence_parent_page = 'Annotation REST API'
+confluence_server_url = 'https://www.crim.ca/confluence/'
 confluence_server_user = 'caronda'
 confluence_server_pass = ''
 confluence_ask_password = True
+confluence_max_doc_depth = 2
+confluence_master_homepage = True
+confluence_disable_autogen_title = True
+confluence_disable_notifications = True
