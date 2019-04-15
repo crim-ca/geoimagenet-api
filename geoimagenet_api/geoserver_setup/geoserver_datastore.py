@@ -132,7 +132,12 @@ class GeoServerDatastore:
             response = _request()
             if response.status_code < 400:
                 while retry:
-                    time.sleep(2)
+                    wait_secs = 2
+                    logger.info(
+                        f"Got a {response.status_code} code for url {url}. "
+                        f"Retrying in {wait_secs} seconds."
+                    )
+                    time.sleep(wait_secs)
                     retry -= 1
                     response = _request()
                     if response.status_code < 400:
@@ -144,6 +149,7 @@ class GeoServerDatastore:
             else:
                 logger.exception(f"Request content: {e.response.content}")
                 raise
+
         if json_:
             try:
                 return response.json()
@@ -201,18 +207,18 @@ class GeoServerDatastore:
 
             while layers_to_seed:
 
-                n_running, tiles_estimated, tiles_remaining, tiles_processed = count_running()
+                n_running, estimated, remaining, processed = count_running()
                 while n_running:
                     message = (
                         f"Tasks running: {n_running} | "
-                        f"Tiles: {tiles_estimated} estimated, "
-                        f"{tiles_processed} processed, "
-                        f"{tiles_remaining} remaining (not accurate) | "
+                        f"Tiles: {estimated} estimated, "
+                        f"{processed} processed, "
+                        f"{remaining} remaining (not accurate) | "
                         f"Sleeping for {wait_secs} seconds"
                     )
                     logger.info(message)
                     time.sleep(wait_secs)
-                    n_running, tiles_estimated, tiles_remaining, tiles_processed = count_running()
+                    n_running, estimated, remaining, processed = count_running()
 
                 logger.info(f"There are {len(layers_to_seed)} layers left to seed")
                 layer = layers_to_seed.pop(0)
@@ -227,7 +233,9 @@ class GeoServerDatastore:
                     }
                 }
                 logger.info(f"Launching {concurrent_seeds} tasks for layer: {layer}")
-                self.request("post", f"/seed/{layer}.json", data=data, gwc=True, retry=5)
+                self.request(
+                    "post", f"/seed/{layer}.json", data=data, gwc=True, retry=5
+                )
 
                 # if the tiles are already generated, wait a bit less before checking
                 time.sleep(15)
