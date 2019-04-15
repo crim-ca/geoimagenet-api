@@ -4,12 +4,12 @@ from typing import Tuple, Dict, Union, List
 from fastapi import APIRouter, Query
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 
+from geoimagenet_api.endpoints.image import image_id_from_image_name
 from geoimagenet_api.openapi_schemas import (
     AnnotationCountByStatus,
     GeoJsonFeature,
@@ -141,16 +141,6 @@ def put(
             session.commit()
         except IntegrityError as e:  # pragma: no cover
             raise HTTPException(400, f"Error: {e}")
-
-
-def image_id_from_image_name(session: Session, image_name: str) -> int:
-    image_id = (
-        session.query(Image.id).filter(Image.layer_name == image_name).first()
-    )
-    if not image_id:
-        raise HTTPException(400, f"Image layer name not found: {image_name}")
-
-    return image_id[0]
 
 
 @router.post(

@@ -1,9 +1,10 @@
 import os
 
-from sqlalchemy import func, String, cast, alias
+from sqlalchemy import func, String, cast
 from sqlalchemy.orm import Query, Session, aliased
+from starlette.exceptions import HTTPException
 
-from geoimagenet_api.database.models import Image, Annotation
+from geoimagenet_api.database.models import Image
 
 
 def query_rgbn_16_bit_image(session: Session) -> Query:
@@ -70,3 +71,13 @@ def query_rgbn_16_bit_image(session: Session) -> Query:
         .order_by(image_alias1.id, func.levenshtein(image_alias1.filename, image_alias2.filename))
     ).subquery("id_with_16_bit_name")
     return id_with_16_bit_name
+
+
+def image_id_from_image_name(session: Session, image_name: str) -> int:
+    image_id = (
+        session.query(Image.id).filter(Image.layer_name == image_name).first()
+    )
+    if not image_id:
+        raise HTTPException(400, f"Image layer name not found: {image_name}")
+
+    return image_id[0]

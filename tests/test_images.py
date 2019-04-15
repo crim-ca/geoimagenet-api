@@ -4,7 +4,7 @@ import pytest
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Image, Annotation
-from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image
+from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image, image_id_from_image_name
 from tests.test_annotations import write_annotation, _clean_annotation_session
 
 
@@ -84,6 +84,14 @@ def pleiades_images(request) -> List[Image]:
                     "PLEIADES", "RGBN", 8, filename_8, ".tif", session=session
                 )
                 images.append(image)
+                image = write_image(
+                    "PLEIADES", "RGB", 8, filename_8, ".tif", session=session
+                )
+                images.append(image)
+                image = write_image(
+                    "PLEIADES", "NRG", 8, filename_8, ".tif", session=session
+                )
+                images.append(image)
 
                 filename_16 = filename_8.replace("8bits", "16bits")
                 image = write_image(
@@ -123,3 +131,10 @@ def test_get_rgbn_16_bit_image_prespatou(pleiades_images):
             result[0].image_name
             == "PLEIADES_RGBN_16/Pleiades_20141012_RGBN_50cm_16bits_AOI_14_Prespatou_BC.tif"
         )
+
+
+def test_image_id_from_image_name(pleiades_images):
+    image_name = "PLEIADES_NRG:Pleiades_20150917_RGBN_50cm_8bits_AOI_5_Edmunston_NB"
+    with _clean_annotation_session() as session:
+        id_ = image_id_from_image_name(session, image_name)
+        assert id_
