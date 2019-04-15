@@ -56,36 +56,35 @@ def main(
     "-d",
     "--dry-run",
     is_flag=True,
-    help="Only print actions to perform without changing the remote server.",
+    help="Only log actions to perform without changing anything on the remote servers.",
 )
-@click.option("--gs-yaml-config", help="Path to the yaml configuration file")
+@click.option(
+    "--gs-yaml-config",
+    help="Path to the yaml configuration file. Defaults to :file:`geoimagenet_api/geoserver_setup/config.yaml`",
+)
 @click.option(
     "--gs-datastore-url",
-    help="GeoServer instance where the GeoTIFF images are served from.",
+    help="Url to the GeoServer datastore instance where the GeoTIFF images are served from.",
 )
 @click.option("--gs-datastore-user", help="Username to connect to Geoserver datastore")
 @click.option(
-    "--gs-datastore-password",
-    hidden=True,
-    help="Password to connect to Geoserver datastore",
+    "--gs-datastore-password", help="Password to connect to Geoserver datastore."
 )
 @click.option(
     "--gs-mirror-url",
-    help="GeoServer instance where the GeoTIFF images are served from.",
+    help="Url to the GeoServer instance where the cascading WMS service is located.",
 )
 @click.option(
-    "--gs-mirror-user", help="Username to connect to Geoserver mirror service"
+    "--gs-mirror-user", help="Username to connect to Geoserver mirror service."
 )
 @click.option(
-    "--gs-mirror-password",
-    hidden=True,
-    help="Password to connect to Geoserver mirror service",
+    "--gs-mirror-password", help="Password to connect to Geoserver mirror service."
 )
 @click.option(
     "--seed-cache-only",
     is_flag=True,
     default=False,
-    help="The servers are already configured, only seed the tile cache on the datastore.",
+    help="If the servers are already configured, only launch the tile caching on the datastore.",
 )
 def cli(
     dry_run,
@@ -98,7 +97,19 @@ def cli(
     gs_mirror_password,
     seed_cache_only,
 ):
-    """Main entry point for the cli."""
+    """The command line interface to configure the geoserver datastore and a cascading WMS geoserver
+    using the REST api of GeoServer.
+
+    The parameters can be given provided in multiple ways, in order of priority :
+
+        - directly to the command line
+        - as an environment variable, all caps, with underscores, prefixed by ``GEOIMAGENET_API_``
+          (example: ``GEOIMAGENET_API_GS_MIRROR_URL``)
+        - in the standard configuration file of geoimagenet_api (see: :ref:`configuration`)
+
+    See :ref:`geoserver-yaml-file` for information about the ``gs-yaml-config`` parameter.
+
+    """
 
     def _set(variable, variable_name):
         if not variable:
