@@ -57,6 +57,7 @@ def query_rgbn_16_bit_image(session: Session) -> Query:
             cast(image_alias2.bits, String),
             os.path.sep,
             image_alias2.filename,
+            image_alias2.extension
         ).label("image_name")
     )
 

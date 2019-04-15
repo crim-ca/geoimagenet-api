@@ -121,5 +121,5 @@ def test_get_rgbn_16_bit_image_prespatou(pleiades_images):
         assert len(result) == 1
         assert (
             result[0].image_name
-            == "PLEIADES_RGBN_16/Pleiades_20141012_RGBN_50cm_16bits_AOI_14_Prespatou_BC"
+            == "PLEIADES_RGBN_16/Pleiades_20141012_RGBN_50cm_16bits_AOI_14_Prespatou_BC.tif"
         )

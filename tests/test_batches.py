@@ -61,7 +61,7 @@ def test_get_annotation_images_16_bits(client, pleiades_images):
         assert len(r.json()["features"]) == 1
         assert (
             image_names[0]
-            == f"PLEIADES_RGBN_16/{random_image.filename.replace('8bits', '16bits')}"
+            == f"PLEIADES_RGBN_16/{random_image.filename.replace('8bits', '16bits')}.tif"
         )
 
 
