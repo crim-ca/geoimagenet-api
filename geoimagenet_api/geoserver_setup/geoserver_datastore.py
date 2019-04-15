@@ -103,6 +103,7 @@ class GeoServerDatastore:
         json_=True,
         params=None,
         ignore_codes=None,
+        retry=1,
     ) -> Dict:
         if not url.startswith("/"):
             url = "/" + url
@@ -114,27 +115,40 @@ class GeoServerDatastore:
         headers = {"Accept": content_type, "Content-type": content_type}
         if json_:
             data = json.dumps(data)
-        r = requests.request(
-            method,
-            url,
-            data=data,
-            auth=(self.user, self.password),
-            headers=headers,
-            params=params,
-        )
+
+        assert retry >= 1
+
+        def _request():
+            return requests.request(
+                method,
+                url,
+                data=data,
+                auth=(self.user, self.password),
+                headers=headers,
+                params=params,
+            )
+
         try:
-            r.raise_for_status()
+            response = _request()
+            if response.status_code < 400:
+                while retry:
+                    time.sleep(2)
+                    retry -= 1
+                    response = _request()
+                    if response.status_code < 400:
+                        break
+                response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             if ignore_codes and e.response.status_code in ignore_codes:
                 pass
             else:
-                logger.exception(f"Request content: {r.content}")
+                logger.exception(f"Request content: {e.response.content}")
                 raise
         if json_:
             try:
-                return r.json()
+                return response.json()
             except JSONDecodeError:
-                return r.content
+                return response.content
 
     def _get_data_file(self, filename) -> Path:
         return Path(__file__).parent / "geoserver_requests" / filename
@@ -177,7 +191,7 @@ class GeoServerDatastore:
         if not self.dry_run:
 
             def count_running():
-                response = self.request("get", "/seed.json", gwc=True)
+                response = self.request("get", "/seed.json", gwc=True, retry=5)
                 seeds = [SeedTask(*r) for r in response["long-array-array"]]
                 n_running = sum(1 for s in seeds if s.status == 1)
                 tiles_estimated = sum(s.total for s in seeds if s.status == 1)
@@ -213,10 +227,10 @@ class GeoServerDatastore:
                     }
                 }
                 logger.info(f"Launching {concurrent_seeds} tasks for layer: {layer}")
-                self.request("post", f"/seed/{layer}.json", data=data, gwc=True)
+                self.request("post", f"/seed/{layer}.json", data=data, gwc=True, retry=5)
 
                 # if the tiles are already generated, wait a bit less before checking
-                time.sleep(10)
+                time.sleep(15)
 
     def _get_absolute_path(self, path):
         """Paths can be relative to the config.yaml file or absolute"""
