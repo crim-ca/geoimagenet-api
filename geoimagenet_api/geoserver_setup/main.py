@@ -21,6 +21,7 @@ def main(
     gs_mirror_password: str,
     gs_yaml_config: str,
     seed_cache_only=False,
+    concurrent_seeds=None,
     dry_run=False,
 ):
     logger.info(f"## Configuring datastore")
@@ -34,7 +35,7 @@ def main(
     )
 
     if seed_cache_only:
-        datastore.seed_cache()
+        datastore.seed_cache(concurrent_seeds)
     else:
         datastore.configure()
 
@@ -86,6 +87,12 @@ def main(
     default=False,
     help="If the servers are already configured, only launch the tile caching on the datastore.",
 )
+@click.option(
+    "--concurrent-seeds",
+    type=int,
+    default=4,
+    help="The number of threads to use on GWC when seeding.",
+)
 def cli(
     dry_run,
     gs_yaml_config,
@@ -96,6 +103,7 @@ def cli(
     gs_mirror_user,
     gs_mirror_password,
     seed_cache_only,
+    concurrent_seeds,
 ):
     """The command line interface to configure the geoserver datastore and a cascading WMS geoserver
     using the REST api of GeoServer.
@@ -143,6 +151,7 @@ def cli(
         gs_mirror_password,
         gs_yaml_config,
         seed_cache_only,
+        concurrent_seeds,
         dry_run,
     )
 

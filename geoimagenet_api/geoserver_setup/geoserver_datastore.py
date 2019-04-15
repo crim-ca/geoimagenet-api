@@ -177,7 +177,7 @@ class GeoServerDatastore:
         else:
             logger.info(f"Gridset exists: EPSG:3857")
 
-    def seed_cache(self, image_data: List[ImageData] = None):
+    def seed_cache(self, concurrent_seeds, image_data: List[ImageData] = None):
         if image_data is None:
             image_data = self.parse_images()
 
@@ -191,7 +191,6 @@ class GeoServerDatastore:
 
         SeedTask = namedtuple("SeedTask", "processed total remaining id status")
         # seed_status = {-1: "ABORTED", 0: "PENDING", 1: "RUNNING", 2: "DONE"}
-        concurrent_seeds = 8
         wait_secs = 30
 
         if not self.dry_run:
