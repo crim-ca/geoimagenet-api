@@ -9,14 +9,14 @@ New
 ~~~
 - When images are loaded in geoserver using the provided command,
   the 16 bits filename of the images is returned in GET /batches/annotations
-- Change GET /batches to GET /batches/annotations (the url is only used
-  when there is a POST to /batches, and won't affect the frontend)
 
 Changes
 ~~~~~~~
 - Change the response of POST on /batches to include the response ...
   from the batch-creation service
 - Batch creation is always done using the latest taxonomy version.
+- Change GET /batches to GET /batches/annotations (the url is only used
+  when there is a POST to /batches, and won't affect the frontend)
 - Add --concurrent-seeds option when seeding GWC. [David Caron]
 
 
