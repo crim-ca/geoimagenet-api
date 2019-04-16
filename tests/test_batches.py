@@ -132,6 +132,8 @@ def test_mock_post(client):
         assert r.status_code == 202
         mock_requests.post.assert_called_with(batches_url, json=json.dumps(execute))
 
+        assert r.json() == {"sent_to_ml": execute, "response_from_ml": {"meta": "", "data": ""}}
+
 
 def test_mock_post_failure(client):
     # ----- given

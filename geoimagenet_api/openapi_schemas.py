@@ -76,6 +76,11 @@ class BatchPostForwarded(BaseModel):
     outputs: List[Union[ExecuteIOValue, ExecuteIOHref]] = []
 
 
+class BatchPostResult(BaseModel):
+    sent_to_ml: BatchPostForwarded
+    response_from_ml: dict
+
+
 class AnnotationCountByStatus(BaseModel):
     new: int = 0
     pre_released: int = 0

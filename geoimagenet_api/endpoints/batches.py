@@ -98,7 +98,7 @@ post_description = (
 
 @router.post(
     "/batches",
-    response_model=BatchPostForwarded,
+    response_model=BatchPostResult,
     status_code=202,
     summary="Create",
     description=post_description,
@@ -129,4 +129,5 @@ def post(batch_post: BatchPost, request: Request):
         )
         raise HTTPException(503, message)
 
-    return execute
+    result = BatchPostResult(sent_to_ml=execute, response_from_ml=r.json())
+    return result
