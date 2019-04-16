@@ -1,3 +1,3 @@
-__version__ = "0.14.3"
+__version__ = "0.15.0"
 __author__ = "David Caron"
 __email__ = "david.caron@crim.ca"
