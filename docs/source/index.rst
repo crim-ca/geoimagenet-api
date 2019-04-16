@@ -14,3 +14,4 @@ Annotation API
    tests
    configuration
    geoserver
+   changelog
