@@ -1,7 +1,7 @@
 .. _geoserver-configuration:
 
 ***********************
-Configuration Geoserver
+Geoserver configuration
 ***********************
 
 The GeoServer datastore and cascading WMS instances can be configured with a cli utility.
