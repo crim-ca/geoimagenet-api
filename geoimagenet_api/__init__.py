@@ -34,9 +34,16 @@ if sentry_dsn:
     sentry_sdk.init(dsn=sentry_dsn)
 
 application = FastAPI()
-application.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
-)
+
+if config.get("allow_cors", bool):
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        allow_credentials=True,
+    )
+
 app = FastAPI(
     openapi_prefix="/api/v1",
     title="GeoImageNet Annotations API",
