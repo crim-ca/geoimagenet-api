@@ -25,8 +25,7 @@ def test_get_annotations(client):
             some_annotations_ids.append(a.id)
 
         # ----- when
-        query = {"taxonomy_id": 1}
-        r = client.get("/batches", params=query)
+        r = client.get("/batches/annotations")
 
         # ----- then
         assert r.status_code == 200
@@ -54,8 +53,7 @@ def test_get_annotation_images_16_bits(client, pleiades_images):
         )
 
         # ----- when
-        query = {"taxonomy_id": 1}
-        r = client.get("/batches", params=query)
+        r = client.get("/batches/annotations")
 
         image_names = [f["properties"]["image_name"] for f in r.json()["features"]]
         assert len(r.json()["features"]) == 1
@@ -90,8 +88,7 @@ def test_get_annotations_load_testing(client):
     t = perf_counter()
 
     # ----- when
-    query = {"taxonomy_id": 1}
-    r = client.get("/batches", params=query)
+    r = client.get("/batches/annotations")
     _ = r.json()  # consume the streamed json
 
     # ----- then
@@ -113,6 +110,7 @@ def test_mock_post(client):
         mock_requests.exceptions.RequestException = requests.exceptions.RequestException
         response = mock.Mock()
         response.raise_for_status.return_value = None
+        response.json.return_value = {"meta": "", "data": ""}
         mock_requests.post.return_value = response
         batches_url = "http://testserver/batches/ml/processes/batch-creation/jobs"
         execute = {
@@ -120,7 +118,7 @@ def test_mock_post(client):
                 {"id": "name", "value": data["name"]},
                 {
                     "id": "geojson_url",
-                    "href": "http://testserver/batches?taxonomy_id=1",
+                    "href": "http://testserver/batches/annotations",
                 },
                 {"id": "overwrite", "value": data["overwrite"]},
             ],
@@ -148,23 +146,3 @@ def test_mock_post_failure(client):
 
     # ----- then
     assert r.status_code == 503
-
-
-def test_post_404(client):
-    # ----- given
-    data = {"name": "test_batch", "taxonomy_id": 9999, "overwrite": False}
-
-    # ----- when
-    r = client.post("/batches", json=data)
-
-    # ----- then
-    assert r.status_code == 404
-
-
-def test_get_404(client):
-    # ----- when
-    query = {"taxonomy_id": 9999}
-    r = client.get("/batches", params=query)
-
-    # ----- then
-    assert r.status_code == 404

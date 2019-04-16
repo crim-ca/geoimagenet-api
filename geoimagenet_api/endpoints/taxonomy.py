@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from fastapi import APIRouter, Query, Path
 from slugify import slugify
@@ -15,6 +15,17 @@ from geoimagenet_api.database.models import (
 from geoimagenet_api.database.connection import connection_manager
 
 router = APIRouter()
+
+
+def get_latest_taxonomy_ids() -> Dict[str, int]:
+    """Get ids for the latest taxonomies."""
+    with connection_manager.get_db_session() as session:
+        query = session.query(
+            DBTaxonomy.name_fr,
+            func.array_agg(DBTaxonomy.id).label("ids"),
+            func.array_agg(DBTaxonomy.version).label("versions"),
+        ).group_by(DBTaxonomy.name_fr)
+        return {q.name_fr: q.ids[q.versions.index(max(q.versions))] for q in query}
 
 
 def aggregated_taxonomies():
@@ -80,8 +91,9 @@ def search(name: str = name_query, version: str = None):
         taxonomy_list.append(taxonomy_group)
 
     if not taxonomy_list:  # pragma: no cover
-        message = ("Could't find any taxonomy. "
-                   "The data is not loaded in the database yet.")
+        message = (
+            "Could't find any taxonomy. " "The data is not loaded in the database yet."
+        )
         sentry_sdk.capture_exception(error=ValueError(message))
         raise HTTPException(
             503, message + " This error was reported to the developers."
@@ -94,7 +106,9 @@ name_slug_path = Path(
 )
 
 
-@router.get("/taxonomy/{name_slug}/{version}", response_model=Taxonomy, summary="Get by slug")
+@router.get(
+    "/taxonomy/{name_slug}/{version}", response_model=Taxonomy, summary="Get by slug"
+)
 def get_by_slug(version: str, name_slug: str = name_slug_path):
     for taxonomy in aggregated_taxonomies():
         ids, name_fr, name_en, root_taxonomy_class_ids, taxonomy_versions = taxonomy

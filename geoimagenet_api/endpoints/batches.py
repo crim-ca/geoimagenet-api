@@ -11,12 +11,13 @@ from sqlalchemy import func, and_
 
 from geoimagenet_api.config import config
 from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image
+from geoimagenet_api.endpoints.taxonomy import get_latest_taxonomy_ids
 from geoimagenet_api.endpoints.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
     AnnotationStatus,
-    Taxonomy,
-    Image)
+    Taxonomy
+)
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.openapi_schemas import (
     GeoJsonFeatureCollection,
@@ -24,24 +25,27 @@ from geoimagenet_api.openapi_schemas import (
     BatchPostForwarded,
     ExecuteIOHref,
     ExecuteIOValue,
-)
+    BatchPostResult)
 from geoimagenet_api.utils import geojson_stream
 
 router = APIRouter()
 
 
 @router.get(
-    "/batches",
+    "/batches/annotations",
     response_model=GeoJsonFeatureCollection,
     summary="Get validated annotations",
 )
-def get_annotations(taxonomy_id: int):
-    if not _is_taxonomy_id_valid(taxonomy_id):
-        raise HTTPException(404, "taxonomy_id not found")
+def get_annotations():
+    """Get annotations for the latest taxonomy version."""
+
+    latest_taxonomy_ids = get_latest_taxonomy_ids()
 
     with connection_manager.get_db_session() as session:
 
-        taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_id)
+        taxonomy_ids = []
+        for taxonomy_id in latest_taxonomy_ids.values():
+            taxonomy_ids += get_all_taxonomy_classes_ids(session, taxonomy_id)
 
         subquery = query_rgbn_16_bit_image(session)
 
@@ -100,11 +104,8 @@ post_description = (
     description=post_description,
 )
 def post(batch_post: BatchPost, request: Request):
-    if not _is_taxonomy_id_valid(batch_post.taxonomy_id):
-        raise HTTPException(404, "Taxonomy_id not found")
 
-    query = urlencode({"taxonomy_id": batch_post.taxonomy_id})
-    url = f"{request.url}?{query}"
+    url = f"{request.url}/annotations"
 
     execute = BatchPostForwarded(
         inputs=[

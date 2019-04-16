@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Any, Optional
+from typing import List, Union, Any, Optional, Dict
 
 from pydantic import BaseModel, Schema
 
@@ -58,7 +58,6 @@ class TaxonomyGroup(BaseModel):
 
 class BatchPost(BaseModel):
     name: str
-    taxonomy_id: int
     overwrite: bool = False
 
 

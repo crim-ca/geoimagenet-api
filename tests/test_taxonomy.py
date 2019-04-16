@@ -1,3 +1,8 @@
+from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.endpoints.taxonomy import get_latest_taxonomy_ids
+from geoimagenet_api.database.models import Taxonomy
+
+
 def test_taxonomy_search_all(client):
     r = client.get(f"/taxonomy")
     assert r.status_code == 200
@@ -65,3 +70,33 @@ def test_taxonomy_get_by_slug_not_found(client):
     version = "10"
     r = client.get(f"/taxonomy/{name_slug}/{version}")
     assert r.status_code == 404
+
+
+def test_get_latest_taxonomy_ids():
+    # given
+    with connection_manager.get_db_session() as session:
+        session.add(Taxonomy(name_fr="test", version="1"))
+        session.add(Taxonomy(name_fr="test", version="2"))
+        latest_test = Taxonomy(name_fr="test", version="3")
+        session.add(latest_test)
+
+        latest_test2 = Taxonomy(name_fr="test2", version="v3")
+        session.add(latest_test2)
+        session.add(Taxonomy(name_fr="test2", version="v1"))
+        session.add(Taxonomy(name_fr="test2", version="v2"))
+        session.commit()
+        test_id = latest_test.id
+        test2_id = latest_test2.id
+
+        # when
+        ids = get_latest_taxonomy_ids()
+
+        # then
+        assert ids["test"] == test_id
+        assert ids["test2"] == test2_id
+
+        # cleanup
+        session.query(Taxonomy).filter(Taxonomy.name_fr.in_(["test", "test2"])).delete(
+            synchronize_session=False
+        )
+        session.commit()
