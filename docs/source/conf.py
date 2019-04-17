@@ -65,6 +65,5 @@ confluence_server_user = 'caronda'
 confluence_server_pass = ''
 confluence_ask_password = True
 confluence_max_doc_depth = 2
-confluence_master_homepage = True
 confluence_disable_autogen_title = True
 confluence_disable_notifications = True
