@@ -155,7 +155,8 @@ AnyGeojsonGeometry = Union[Point, LineString, Polygon, MultiPolygon]
 class AnnotationProperties(BaseModel):
     annotator_id: int
     taxonomy_class_id: int
-    image_name: str
+    image_name: str = None
+    image_id: int = None
     status: AnnotationStatus = AnnotationStatus.new
     name: str = None
     review_requested: Optional[bool] = None
@@ -180,4 +181,4 @@ class CRS(BaseModel):
 class GeoJsonFeatureCollection(BaseModel):
     type: str = Schema(..., regex="FeatureCollection")
     crs: CRS = CRS(type="EPSG", properties=CRSCode(code=3857))
-    features: List[GeoJsonFeature] = []
+    features: List[GeoJsonFeature]

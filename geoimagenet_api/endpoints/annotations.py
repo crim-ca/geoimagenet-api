@@ -9,7 +9,10 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 
-from geoimagenet_api.endpoints.image import image_id_from_image_name
+from geoimagenet_api.endpoints.image import (
+    image_id_from_image_name,
+    image_id_from_properties,
+)
 from geoimagenet_api.openapi_schemas import (
     AnnotationCountByStatus,
     GeoJsonFeature,
@@ -133,9 +136,8 @@ def put(
             # You can't change the annotator_id of an annotation
             # Use specific endpoints to change the status (ex: /annotations/release)
             annotation.taxonomy_class_id = properties.taxonomy_class_id
-            annotation.image_id = image_id_from_image_name(
-                session, properties.image_name
-            )
+
+            annotation.image_id = image_id_from_properties(session, properties)
             annotation.geometry = geom
         try:
             session.commit()
@@ -156,7 +158,7 @@ def post(
         for feature in features:
             geom = _serialize_geometry(feature.geometry, srid)
             properties = feature.properties
-            image_id = image_id_from_image_name(session, properties.image_name)
+            image_id = image_id_from_properties(session, properties)
             annotation = DBAnnotation(
                 annotator_id=properties.annotator_id,
                 geometry=geom,

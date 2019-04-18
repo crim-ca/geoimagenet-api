@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.database.models import Image, Annotation
+from geoimagenet_api.database.models import Image
 from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image, image_id_from_image_name
 from tests.test_annotations import write_annotation, _clean_annotation_session
 

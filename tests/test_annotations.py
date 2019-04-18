@@ -284,6 +284,40 @@ def test_annotations_post_srid(client, any_geojson):
         assert expected == geom
 
 
+def test_annotations_post_image_id(client, any_geojson):
+    """POST an annotation using the image_id instead of the image_name"""
+    if any_geojson["type"] == "FeatureCollection":
+        properties = any_geojson["features"][0]["properties"]
+    else:
+        properties = any_geojson["properties"]
+    properties["image_id"] = 2
+    del properties["image_name"]
+    r = client.post("/annotations", json=any_geojson)
+    written_ids = r.json()
+    assert r.status_code == 201
+    with connection_manager.get_db_session() as session:
+        annotation = session.query(Annotation).filter_by(id=written_ids[0]).first()
+        assert annotation.image_id == 2
+
+
+def test_annotations_put_image_id(client, simple_annotation, any_geojson):
+    """POST an annotation using the image_id instead of the image_name"""
+    if any_geojson["type"] == "FeatureCollection":
+        feature = any_geojson["features"][0]
+    else:
+        feature = any_geojson
+    feature["properties"]["image_id"] = 2
+    del feature["properties"]["image_name"]
+
+    feature["id"] = f"annotation.{simple_annotation.id}"
+
+    r = client.put("/annotations", json=any_geojson)
+    assert r.status_code == 204
+    with connection_manager.get_db_session() as session:
+        annotation = session.query(Annotation).filter_by(id=simple_annotation.id).first()
+        assert annotation.image_id == 2
+
+
 def test_annotations_put_srid(client, any_geojson, simple_annotation):
     with connection_manager.get_db_session() as session:
         annotation_id = simple_annotation.id
