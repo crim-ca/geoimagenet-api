@@ -6,7 +6,7 @@ from sqlalchemy_utils import drop_database, create_database, database_exists
 from starlette.testclient import TestClient
 
 from geoimagenet_api.database import migrations
-from geoimagenet_api import app
+from geoimagenet_api import app, application
 from geoimagenet_api.database.connection import connection_manager
 
 
@@ -66,3 +66,8 @@ def randomize_taxonomy_classes():
 @pytest.fixture(scope="module")
 def client():
     yield TestClient(app)
+
+
+@pytest.fixture(scope="module")
+def client_application():
+    yield TestClient(application)

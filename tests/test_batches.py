@@ -102,7 +102,7 @@ def test_get_annotations_load_testing(client):
         session.commit()
 
 
-def test_mock_post(client):
+def test_mock_post(client_application):
     # ----- given
     data = {"name": "test_batch", "taxonomy_id": 1, "overwrite": "False"}
 
@@ -112,13 +112,13 @@ def test_mock_post(client):
         response.raise_for_status.return_value = None
         response.json.return_value = {"meta": "", "data": ""}
         mock_requests.post.return_value = response
-        batches_url = "http://testserver/batches/ml/processes/batch-creation/jobs"
+        batches_url = "http://testserver/ml/processes/batch-creation/jobs"
         execute = {
             "inputs": [
                 {"id": "name", "value": data["name"]},
                 {
                     "id": "geojson_url",
-                    "href": "http://testserver/batches/annotations",
+                    "href": "http://testserver/api/v1/batches/annotations",
                 },
                 {"id": "overwrite", "value": data["overwrite"]},
             ],
@@ -126,7 +126,7 @@ def test_mock_post(client):
         }
 
         # ----- when
-        r = client.post("/batches", json=data)
+        r = client_application.post("/api/v1/batches", json=data)
 
         # ----- then
         assert r.status_code == 202

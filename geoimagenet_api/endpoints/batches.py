@@ -84,7 +84,7 @@ def _get_batch_creation_url(request: Request):
     batches_url = config.get("batch_creation_url", str).strip("/")
     if not batches_url.startswith("http"):
         path = batches_url.strip("/")
-        batches_url = f"{str(request.url).strip('/')}/{path}"
+        batches_url = f"{request.url.scheme}://{request.url.netloc}/{path}"
 
     return batches_url
 
