@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+0.15.1 (2019-04-18)
+-------------------
+
+Changes
+~~~~~~~
+- Accept image_name and image_id for POST and PUT on /annotations.
+  [David Caron]
+- Fix batch creation url endpoint. [David Caron]
+
+
 0.15.0 (2019-04-16)
 -------------------
 
