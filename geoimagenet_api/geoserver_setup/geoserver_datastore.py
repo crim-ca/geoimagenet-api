@@ -438,29 +438,34 @@ class GeoServerDatastore:
                     layer.default_style = self.existing_styles[style]
 
             if self.get_config("create_cached_layers"):
+                existing_layers = self.request("get", f"/layers.json", gwc=True)
+
                 cached_layer_name = f"{workspace_name}:{layer_name}"
-                logger.info(f"CREATE cached layer: {layer_name}")
-                coverage_data = self.request(
-                    "get", f"/workspaces/{workspace_name}/coverages/{layer_name}"
-                )
-                bbox = coverage_data["coverage"]["nativeBoundingBox"]
-                assert bbox["crs"]["$"] == "EPSG:3857"
-
-                data = (
-                    self._get_data_file("cached_layer_put.xml")
-                    .read_text()
-                    .format(
-                        workspace_name=workspace_name,
-                        layer_name=layer_name,
-                        minx=bbox["minx"],
-                        miny=bbox["miny"],
-                        maxx=bbox["maxx"],
-                        maxy=bbox["maxy"],
+                if cached_layer_name in existing_layers:
+                    logger.info(f"Cached layer exists: {layer_name}")
+                else:
+                    logger.info(f"CREATE cached layer: {layer_name}")
+                    coverage_data = self.request(
+                        "get", f"/workspaces/{workspace_name}/coverages/{layer_name}"
                     )
-                )
-                name = urllib.parse.quote(cached_layer_name)
+                    bbox = coverage_data["coverage"]["nativeBoundingBox"]
+                    assert bbox["crs"]["$"] == "EPSG:3857"
 
-                self.request("put", f"/layers/{name}", data=data, gwc=True, json_=False)
+                    data = (
+                        self._get_data_file("cached_layer_put.xml")
+                        .read_text()
+                        .format(
+                            workspace_name=workspace_name,
+                            layer_name=layer_name,
+                            minx=bbox["minx"],
+                            miny=bbox["miny"],
+                            maxx=bbox["maxx"],
+                            maxy=bbox["maxy"],
+                        )
+                    )
+                    name = urllib.parse.quote(cached_layer_name)
+
+                    self.request("put", f"/layers/{name}", data=data, gwc=True, json_=False)
 
     def create_layergroup(self, workspace):
         """Not used."""
