@@ -40,19 +40,22 @@ class GeoServerMirror(GeoServerDatastore):
         self.delete_cached_layers(image_data_8bit)
 
     def delete_cached_layers(self, image_data_8bit: List[ImageData]):
+        existing_layers = self.request("get", f"/layers.json", gwc=True)
+
         for image_data in image_data_8bit:
             def _delete_cached_layers(path):
                 layer_name = path.stem
                 for workspace_name in image_data.workspace_names():
                     cached_layer_name = f"{workspace_name}:{layer_name}"
-                    logger.info(f"DELETE cached layer: {cached_layer_name}")
-                    if not self.dry_run:
-                        self.request(
-                            "delete",
-                            f"/layers/{cached_layer_name}",
-                            gwc=True,
-                            ignore_codes=[404],
-                        )
+                    if cached_layer_name in existing_layers:
+                        logger.info(f"DELETE cached layer: {cached_layer_name}")
+                        if not self.dry_run:
+                            self.request(
+                                "delete",
+                                f"/layers/{cached_layer_name}",
+                                gwc=True,
+                                ignore_codes=[404],
+                            )
 
             self.map_threadded(_delete_cached_layers, image_data.images_list)
 
@@ -73,7 +76,7 @@ class GeoServerMirror(GeoServerDatastore):
                 if store_name not in existing_wms_stores_names:
                     capabilities_url = (
                         self.datastore.geoserver_url.replace("/rest", "")
-                        + "/gwc/service/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=getcapabilities&TILED=true"
+                        + "/gwc/service/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=getcapabilities"
                     )
                     data = {
                         "wmsStore": {
