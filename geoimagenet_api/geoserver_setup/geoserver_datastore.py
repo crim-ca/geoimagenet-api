@@ -437,23 +437,23 @@ class GeoServerDatastore:
                 layer.projection = "EPSG:3857"
                 self.catalog.save(layer)
 
-                logger.debug(f"Setting transparency to layer: {layer_name}")
-                url = f"/workspaces/{workspace_name}/coveragestores/{layer_name}/coverage/{layer_name}"
-                data = {
-                    "coverage": {
-                        "parameters": {
-                            "entry": [{"string": ["InputTransparentColor", "#000000"]}]
-                        }
-                    }
-                }
-                self.request("put", url, data=data)
-
                 if style:
                     logger.debug(f"Applying style {style}")
                     url = f"/workspaces/{workspace_name}/layers/{layer_name}"
                     data = {"layer": {"defaultStyle": {"name": style}}}
                     self.request("put", url, data=data)
                     layer.default_style = self.existing_styles[style]
+
+            logger.debug(f"Setting transparency to layer: {layer_name}")
+            url = f"/workspaces/{workspace_name}/coveragestores/{layer_name}/coverage/{layer_name}"
+            data = {
+                "coverage": {
+                    "parameters": {
+                        "entry": [{"string": ["InputTransparentColor", "#000000"]}]
+                    }
+                }
+            }
+            self.request("put", url, data=data)
 
             if self.get_config("create_cached_layers"):
                 existing_layers = self.request("get", f"/layers.json", gwc=True)
