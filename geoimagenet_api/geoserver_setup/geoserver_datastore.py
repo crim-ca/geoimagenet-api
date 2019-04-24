@@ -436,6 +436,18 @@ class GeoServerDatastore:
                 logger.info(f"SET layer properties: {layer_name}")
                 layer.projection = "EPSG:3857"
                 self.catalog.save(layer)
+
+                logger.debug(f"Setting transparency to layer: {layer_name}")
+                url = f"/workspaces/{workspace_name}/coveragestores/{layer_name}/coverage/{layer_name}"
+                data = {
+                    "coverage": {
+                        "parameters": {
+                            "entry": [{"string": ["InputTransparentColor", "#000000"]}]
+                        }
+                    }
+                }
+                self.request("put", url, data=data)
+
                 if style:
                     logger.debug(f"Applying style {style}")
                     url = f"/workspaces/{workspace_name}/layers/{layer_name}"
@@ -471,7 +483,9 @@ class GeoServerDatastore:
                     )
                     name = urllib.parse.quote(cached_layer_name)
 
-                    self.request("put", f"/layers/{name}", data=data, gwc=True, json_=False)
+                    self.request(
+                        "put", f"/layers/{name}", data=data, gwc=True, json_=False
+                    )
 
     def create_layergroup(self, workspace):
         """Not used."""
