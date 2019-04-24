@@ -345,18 +345,23 @@ class GeoServerDatastore:
                 logger.error(f"Path to style {name} doesn't exist: {path}")
                 sys.exit(1)
 
-            data = path.read_text()
+            if name in self.existing_styles:
+                logger.info(f"Style {name} already exists")
+            else:
+                data = path.read_text()
 
-            logger.info(f"CREATE style: {name}")
-            if not self.dry_run:
-                self.catalog.create_style(
-                    name,
-                    data,
-                    overwrite=True,
-                    workspace=None,
-                    style_format="sld10",
-                    raw=False,
-                )
+                logger.info(f"CREATE style: {name}")
+                if not self.dry_run:
+                    self.catalog.create_style(
+                        name,
+                        data,
+                        overwrite=True,
+                        workspace=None,
+                        style_format="sld10",
+                        raw=False,
+                    )
+
+        # reload existing styles
         self._existing_styles = None
 
     def map_threadded(self, func, iterable):
@@ -399,7 +404,7 @@ class GeoServerDatastore:
             logger.warning(f"Image extension not recognized: {path}")
             return
 
-        logger.info(f"CREATE {type_} store: {workspace_name}:{image_name}")
+        logger.info(f"Setup {type_} store: {workspace_name}:{image_name}")
         if not self.dry_run:
             layer_name = path.stem
             layer = None
@@ -417,6 +422,7 @@ class GeoServerDatastore:
                     store = None
 
             if not store and not layer:
+                logger.info(f"CREATE {type_} store: {workspace_name}:{image_name}")
                 layer = self.catalog.create_coveragestore(
                     image_name,
                     workspace=workspace_name,
