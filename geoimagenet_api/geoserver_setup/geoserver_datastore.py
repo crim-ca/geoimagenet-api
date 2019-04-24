@@ -445,7 +445,7 @@ class GeoServerDatastore:
                     layer.default_style = self.existing_styles[style]
 
             logger.debug(f"Setting transparency to layer: {layer_name}")
-            url = f"/workspaces/{workspace_name}/coveragestores/{layer_name}/coverage/{layer_name}"
+            url = f"/workspaces/{workspace_name}/coveragestores/{layer_name}/coverages/{layer_name}"
             data = {
                 "coverage": {
                     "parameters": {
