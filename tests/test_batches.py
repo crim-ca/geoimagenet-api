@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 from unittest import mock
@@ -115,7 +116,7 @@ def test_mock_post(client_application):
         batches_url = "http://testserver/ml/processes/batch-creation/jobs"
         execute = {
             "inputs": [
-                {"id": "name", "value": data["name"]},
+                {"id": "name", "value": datetime.datetime.now().strftime("%Y-%m-%d")},
                 {
                     "id": "geojson_url",
                     "href": "http://testserver/api/v1/batches/annotations",

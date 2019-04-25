@@ -57,7 +57,6 @@ class TaxonomyGroup(BaseModel):
 
 
 class BatchPost(BaseModel):
-    name: str
     overwrite: bool = False
 
 

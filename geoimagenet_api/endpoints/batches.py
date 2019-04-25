@@ -1,5 +1,4 @@
-import json
-from urllib.parse import urlencode
+import datetime
 
 from fastapi import APIRouter
 from starlette.exceptions import HTTPException
@@ -107,9 +106,11 @@ def post(batch_post: BatchPost, request: Request):
 
     url = f"{request.url}/annotations"
 
+    name = datetime.datetime.now().strftime("%Y-%m-%d")
+
     execute = BatchPostForwarded(
         inputs=[
-            ExecuteIOValue(id="name", value=batch_post.name),
+            ExecuteIOValue(id="name", value=name),
             ExecuteIOHref(id="geojson_url", href=url),
             ExecuteIOValue(id="overwrite", value=batch_post.overwrite),
         ],
