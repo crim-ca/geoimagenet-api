@@ -2,8 +2,9 @@ Changelog
 =========
 
 
-0.15.8 (2019-05-08)
+0.15.9 (2019-05-08)
 -------------------
+
 
 Changes
 ~~~~~~~
@@ -17,6 +18,7 @@ Fix
 
 folder name does not match the pattern for folders that are not
 intended to store satellite images
+- fix after fastapi api change
 
 
 0.15.1 (2019-04-18)
