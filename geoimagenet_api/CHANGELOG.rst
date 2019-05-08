@@ -2,6 +2,23 @@ Changelog
 =========
 
 
+0.15.8 (2019-05-08)
+-------------------
+
+Changes
+~~~~~~~
+- Change the POST /batches endpoint. [David Caron]
+
+  batch name is generated, not provided by the caller
+
+Fix
+~~~
+- in geoserver_setup, log a warning instead of crashing if the  ...
+
+folder name does not match the pattern for folders that are not
+intended to store satellite images
+
+
 0.15.1 (2019-04-18)
 -------------------
 
