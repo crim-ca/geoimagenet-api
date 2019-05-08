@@ -270,9 +270,10 @@ class GeoServerDatastore:
         def _parse_folder_name(name: str):
             match = re.match(r"^([^_]+)_([^_]+)_([^_]+)$", name)
             if not match:
-                raise ValueError(
+                logger.warning(
                     f"Folder name not of the format '{{sensor}}_{{bands}}_{{bits}}': {name}"
                 )
+                return
             return match.groups()
 
         images_folder = Path(self.get_config("images_folder"))
@@ -280,7 +281,10 @@ class GeoServerDatastore:
         for folder in images_folder.iterdir():
             if not folder.is_dir():
                 continue
-            sensor_name, bands, bits = _parse_folder_name(folder.name)
+            info = _parse_folder_name(folder.name)
+            if not info:
+                continue
+            sensor_name, bands, bits = info
             images_data.append(
                 ImageData(
                     sensor_name=sensor_name,
