@@ -60,7 +60,7 @@ def redirect_v1():
     return RedirectResponse(url="/api/v1")
 
 
-@app.get("/changelog/", include_in_schema=False, content_type=PlainTextResponse)
+@app.get("/changelog/", include_in_schema=False, response_class=PlainTextResponse)
 def changelog():
     return Path(__file__).with_name("CHANGELOG.rst").read_text()
 
