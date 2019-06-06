@@ -31,7 +31,11 @@ if config.get("wait_for_db_connection_on_import", bool):
 
 sentry_dsn = config.get("sentry_url", str)
 if sentry_dsn:
-    sentry_sdk.init(dsn=sentry_dsn)
+    sentry_environment = config.get("sentry_environment", str)
+    sentry_server_name = config.get("sentry_server_name", str)
+    sentry_sdk.init(
+        dsn=sentry_dsn, environment=sentry_environment, server_name=sentry_server_name
+    )
 
 application = FastAPI()
 
