@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Tuple, Dict, Union, List
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Body
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -113,7 +113,7 @@ def get(
 
 @router.put("/annotations", status_code=204, summary="Modify")
 def put(
-    body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID
 ):
     with connection_manager.get_db_session() as session:
         json_annotations = _geojson_features_from_body(body)
@@ -149,7 +149,7 @@ def put(
     "/annotations", response_model=List[int], status_code=201, summary="Create"
 )
 def post(
-    body: Union[GeoJsonFeature, GeoJsonFeatureCollection], srid: int = DEFAULT_SRID
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID
 ):
     written_annotations = []
 
@@ -288,22 +288,22 @@ def _update_status(
 
 
 @router.post("/annotations/release", status_code=204, summary="Release")
-def update_status_release(update: status_update_type, request: Request):
+def update_status_release(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.released, request)
 
 
 @router.post("/annotations/validate", status_code=204, summary="Validate")
-def update_status_validate(update: status_update_type, request: Request):
+def update_status_validate(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.validated, request)
 
 
 @router.post("/annotations/reject", status_code=204, summary="Reject")
-def update_status_reject(update: status_update_type, request: Request):
+def update_status_reject(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.rejected, request)
 
 
 @router.post("/annotations/delete", status_code=204, summary="Delete")
-def update_status_delete(update: status_update_type, request: Request):
+def update_status_delete(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.deleted, request)
 
 
