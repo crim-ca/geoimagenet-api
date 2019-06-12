@@ -1,5 +1,6 @@
 import enum
 import json
+import re
 from typing import List
 
 import sqlalchemy.orm
@@ -63,3 +64,14 @@ def _get_attr(object, name):
     if isinstance(value, enum.Enum):
         value = value.value
     return value
+
+
+def get_latest_version_number(versions):
+    """Get the latest version number.
+
+    By parsing only the integer numbers in a list of versions."""
+
+    def sort_key(version) -> List[int]:
+        return list(map(int, re.findall(r"\d+", version)))
+
+    return max(versions, key=sort_key)

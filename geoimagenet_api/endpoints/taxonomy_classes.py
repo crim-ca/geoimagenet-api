@@ -8,12 +8,21 @@ from geoimagenet_api.openapi_schemas import TaxonomyClass
 from geoimagenet_api.database.models import TaxonomyClass as DBTaxonomyClass
 from geoimagenet_api.database.models import Taxonomy as DBTaxonomy
 from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.utils import get_latest_version_number
 
 router = APIRouter()
 
 
+name_query = Query(
+    None,
+    description=(
+        "Name of the taxonomy class. "
+        "If not provided, defaults to the taxonomy classes "
+        "that don't have any parent (root taxonomy classes)."
+    ),
+)
 taxonomy_name_query = Query(
-    ...,
+    None,
     description=(
         "Full name or sluggified name of the taxonomy. "
         "Example of name slug for 'Couverture de sol': "
@@ -21,50 +30,82 @@ taxonomy_name_query = Query(
     ),
 )
 
+taxonomy_version_query = Query(
+    None,
+    description=(
+        "Version of the taxonomy. "
+        "If not provided, defaults to the latest version "
+        "in all the taxonomies in the database."
+    ),
+)
+
 
 @router.get("/taxonomy_classes", response_model=List[TaxonomyClass], summary="Search")
-def search(name: str, taxonomy_name: str = taxonomy_name_query, depth: int = -1):
+def search(
+    name: str = name_query,
+    taxonomy_name: str = taxonomy_name_query,
+    taxonomy_version: str = taxonomy_version_query,
+    depth: int = -1,
+):
     with connection_manager.get_db_session() as session:
+
+        if not taxonomy_version:
+            versions = [t.version for t in session.query(DBTaxonomy.version)]
+            taxonomy_version = get_latest_version_number(versions)
+
+        taxonomy_ids = []
         for t in session.query(DBTaxonomy):
-            if taxonomy_name in (
-                t.name_fr,
-                slugify(t.name_fr),
-                t.name_en,
-                slugify(t.name_en or ""),
-            ):
-                taxonomy = t
-                break
-        else:
+            taxonomy_name_ok = True
+            taxonomy_version_ok = t.version == taxonomy_version
+
+            if taxonomy_name:
+                name_variations = (
+                    t.name_fr,
+                    slugify(t.name_fr),
+                    t.name_en,
+                    slugify(t.name_en or ""),
+                )
+                if taxonomy_name not in name_variations:
+                    taxonomy_name_ok = False
+
+            if taxonomy_name_ok and taxonomy_version_ok:
+                taxonomy_ids.append(t.id)
+
+        if not taxonomy_ids:
             raise HTTPException(
                 404, f"Taxonomy name or slug not found: {taxonomy_name}"
             )
 
-        taxonomy_class = (
-            session.query(
-                DBTaxonomyClass.id,
-                DBTaxonomyClass.name_fr,
-                DBTaxonomyClass.name_en,
-                DBTaxonomyClass.taxonomy_id,
-            )
-            .filter_by(taxonomy_id=taxonomy.id, name_fr=name)
-            .first()
-        )
-        if not taxonomy_class:
+        taxonomy_classes = session.query(
+            DBTaxonomyClass.id,
+            DBTaxonomyClass.name_fr,
+            DBTaxonomyClass.name_en,
+            DBTaxonomyClass.taxonomy_id,
+        ).filter(DBTaxonomyClass.taxonomy_id.in_(taxonomy_ids))
+
+        if name:
+            taxonomy_classes = taxonomy_classes.filter_by(name_fr=name)
+        else:
+            taxonomy_classes = taxonomy_classes.filter_by(parent=None)
+
+        if not taxonomy_classes.count():
             raise HTTPException(404, f"Taxonomy class name not found: {name}")
 
         if depth != 0:
-            taxonomy_class = get_taxonomy_classes_tree(
-                session, taxonomy_class_id=taxonomy_class.id
-            )
+            return [
+                get_taxonomy_classes_tree(session, taxonomy_class_id=taxo.id)
+                for taxo in taxonomy_classes
+            ]
         else:
-            taxonomy_class = TaxonomyClass(
-                id=taxonomy_class.id,
-                name_fr=taxonomy_class.name_fr,
-                name_en=taxonomy_class.name_en,
-                taxonomy_id=taxonomy_class.taxonomy_id,
-            )
-
-    return [taxonomy_class]
+            return [
+                TaxonomyClass(
+                    id=taxo.id,
+                    name_fr=taxo.name_fr,
+                    name_en=taxo.name_en,
+                    taxonomy_id=taxo.taxonomy_id,
+                )
+                for taxo in taxonomy_classes
+            ]
 
 
 @router.get("/taxonomy_classes/{id}", response_model=TaxonomyClass, summary="Get by id")
