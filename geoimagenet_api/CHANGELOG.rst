@@ -2,6 +2,26 @@ Changelog
 =========
 
 
+0.16.0 (2019-06-12)
+-------------------
+
+
+New
+~~~
+- Allow querying all the taxonomy classes for a specific taxonomy ...
+  [David Caron]
+
+  version or the latest version by default
+
+Fixes
+~~~~~
+- Require fastapi>=0.29.0 (recent api change) [David Caron]
+- Explicitly define Union types as Body parameters ... [David Caron]
+
+  after fastapi 0.27.0 refactored its parsing of parameters
+- Add sentry server name and environment configuration. [David Caron]
+
+
 0.15.9 (2019-05-08)
 -------------------
 
