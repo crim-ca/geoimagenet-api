@@ -1,9 +1,12 @@
 from contextlib import contextmanager
+import logging
 
 from sqlalchemy.exc import OperationalError
 from geoimagenet_api import config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, Session
+
+logger = logging.getLogger(__name__)
 
 
 class _ConnectionManager:
@@ -56,6 +59,7 @@ connection_manager = _ConnectionManager()
 
 def wait_for_db_connection(seconds=30):
     """Wait for a successful database connection for a specified time"""
+    logger.info("Checking database connection")
     engine = connection_manager.engine
     while seconds >= 1:
         try:

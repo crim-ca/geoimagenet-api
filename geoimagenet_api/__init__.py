@@ -26,7 +26,6 @@ if __name__ == "geoimagenet_api":
     logger.setLevel(logging.DEBUG)
 
 if config.get("wait_for_db_connection_on_import", bool):
-    logger.info("Waiting for database connection")
     connection.wait_for_db_connection()
 
 sentry_dsn = config.get("sentry_url", str)
