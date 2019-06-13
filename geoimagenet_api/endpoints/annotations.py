@@ -100,7 +100,7 @@ def get(
         if review_requested is not None:
             query = query.filter_by(review_requested=review_requested)
         if current_user_only:
-            logged_user = get_logged_user(request)
+            logged_user = get_logged_user(request.headers)
             query = query.filter_by(annotator_id=logged_user)
 
         properties = [f.key for f in fields if f.key not in ["geometry", "id"]]
@@ -205,7 +205,7 @@ def _update_status(
     update_info: status_update_type, desired_status: AnnotationStatus, request: Request
 ):
     """Update annotations statuses based on filters provided in update_info and allowed transitions."""
-    logged_user = get_logged_user(request)
+    logged_user = get_logged_user(request.headers)
 
     with connection_manager.get_db_session() as session:
         query = session.query(DBAnnotation)
@@ -369,7 +369,7 @@ def counts(
         )
 
         if current_user_only:
-            logged_user = get_logged_user(request)
+            logged_user = get_logged_user(request.headers)
             query = query.filter(DBAnnotation.annotator_id == logged_user)
 
         if review_requested is not None:
@@ -435,7 +435,7 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
 )
 def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""
-    logged_user = get_logged_user(request)
+    logged_user = get_logged_user(request.headers)
 
     annotation_ids = _get_annotation_ids_integers(body.annotation_ids)
 

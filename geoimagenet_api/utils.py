@@ -4,10 +4,10 @@ import re
 from typing import List
 
 import sqlalchemy.orm
-from starlette.requests import Request
+from starlette.datastructures import Headers
 
 
-def get_logged_user(request: Request) -> int:
+def get_logged_user(headers: Headers) -> int:
     # todo: use the id of the currently logged in user
     return 1
 
