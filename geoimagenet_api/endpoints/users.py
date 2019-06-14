@@ -16,31 +16,6 @@ from geoimagenet_api.utils import get_config_url
 router = APIRouter()
 
 
-@router.get("/users", response_model=List[User], summary="Search")
-def search(username: str = None, name: str = None):
-    with connection_manager.get_db_session() as session:
-        query = session.query(Person)
-        if username is not None:
-            query = query.filter_by(username=username)
-        if name is not None:
-            query = query.filter_by(name=name)
-
-        users_all = query.all()
-        if not users_all:
-            raise HTTPException(404, "No user found")
-        return users_all
-
-
-@router.get("/users/{username}", response_model=User, summary="Get user by username")
-def get(username: str):
-    with connection_manager.get_db_session() as session:
-        person = session.query(Person).filter_by(username=username).first()
-        if not person:
-            raise HTTPException(404, "Username not found")
-
-        return person
-
-
 def get_magpie_user_id(request: Request) -> Union[None, int]:
     """Requests the current logged in user id from magpie.
 
@@ -58,9 +33,11 @@ def get_magpie_user_id(request: Request) -> Union[None, int]:
 
     data = response.json()
     user_data = data['user']
-    user_id = user_data.get('user_id')
 
-    return user_id
+    user_id = user_data.get('user_id')
+    user_name = user_data.get('user_name')
+
+    return User(user_id=user_id, user_name=user_name, )
 
 
 @router.get("/users/current", response_model=User, summary="Get currently logged in user")
@@ -70,6 +47,4 @@ def current(request: Request):
     except requests.exceptions.RequestException:
         sentry_sdk.capture_exception()
         return "There was a problem connecting to magpie. This error was reported to the developers.", 503
-    if logged_user is None:
-        return "You are not logged in to magpie.", 204
     return logged_user, 200
