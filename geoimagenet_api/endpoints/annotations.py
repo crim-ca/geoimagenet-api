@@ -114,8 +114,11 @@ def get(
 
 @router.put("/annotations", status_code=204, summary="Modify")
 def put(
-    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID
+    request: Request,
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID,
 ):
+    logged_user_id = get_logged_user_id(request)
+
     with connection_manager.get_db_session() as session:
         json_annotations = _geojson_features_from_body(body)
         for json_annotation in json_annotations:
@@ -124,6 +127,9 @@ def put(
 
             if json_annotation.id is None:
                 raise HTTPException(400, "Property 'id' is required")
+
+            if properties.annotator_id != logged_user_id:
+                raise HTTPException(403, "You are trying to update an annotation another user created.")
 
             id_ = _get_annotation_ids_integers([json_annotation.id])[0]
 
@@ -150,8 +156,10 @@ def put(
     "/annotations", response_model=List[int], status_code=201, summary="Create"
 )
 def post(
+    request: Request,
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID
 ):
+    logged_user_id = get_logged_user_id(request)
     written_annotations = []
 
     with connection_manager.get_db_session() as session:
@@ -160,6 +168,10 @@ def post(
             geom = _serialize_geometry(feature.geometry, srid)
             properties = feature.properties
             image_id = image_id_from_properties(session, properties)
+
+            if properties.annotator_id != logged_user_id:
+                raise HTTPException(403, "You are trying to create an annotation with someone else's user id.")
+
             annotation = DBAnnotation(
                 annotator_id=properties.annotator_id,
                 geometry=geom,

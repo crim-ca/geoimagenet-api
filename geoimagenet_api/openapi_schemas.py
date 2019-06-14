@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Any, Optional, Dict
+from typing import List, Union, Any, Optional
 
 from pydantic import BaseModel, Schema
 
@@ -17,9 +17,8 @@ class ApiInfo(BaseModel):
 
 
 class User(BaseModel):
-    id: int
+    id: int = None
     username: str
-    email: str
 
 
 class TaxonomyClass(BaseModel):
