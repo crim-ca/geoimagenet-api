@@ -1,3 +1,4 @@
+import geoimagenet_api
 import pytest
 
 from geoimagenet_api.database.connection import connection_manager
@@ -10,6 +11,8 @@ from geoimagenet_api.database.models import (
 
 image_id_to_cleanup = 3
 
+# the logged in user is always user 1 during tests
+geoimagenet_api.endpoints.annotations.get_logged_user_id = lambda *a: 1
 
 def make_annotation(id, user_id, taxonomy_class, status):
     return Annotation(
@@ -351,6 +354,7 @@ def test_validate_write_validation_in_database(cleanup_annotations, client):
 
 def test_validate_write_rejection_in_database(cleanup_annotations, client):
     ids = insert_annotations(
+        # user_id, taxonomy_class, status
         (2, 2, AnnotationStatus.released), (2, 1, AnnotationStatus.released)
     )
     post_annotation_ids(client, "reject", ids)

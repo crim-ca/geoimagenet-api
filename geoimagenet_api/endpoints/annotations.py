@@ -233,10 +233,10 @@ def _update_status(
             return query.filter(or_(*filters))
 
         def _filter_annotation_ids(query) -> Union[Query, Tuple]:
-
             annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
             existing_ids = session.query(DBAnnotation.id).filter(DBAnnotation.id.in_(annotation_ids))
+            existing_ids = [a.id for a in existing_ids]
             missing_ids = set(annotation_ids).difference(existing_ids)
             if missing_ids:
                 raise HTTPException(
@@ -276,7 +276,7 @@ def _update_status(
         query = session.query(DBAnnotation)
         query = _filter_for_allowed_transitions(query, desired_status)
 
-        if update_info.annotation_ids:
+        if isinstance(update_info, AnnotationStatusUpdateIds):
             query = _filter_annotation_ids(query)
         else:
             query = _filter_taxonomy_ids(query)
@@ -305,7 +305,6 @@ def _record_validation_events(session, desired_status, user_id, query):
                 for a in query
             ]
         )
-
 
 
 @router.post("/annotations/release", status_code=204, summary="Release")

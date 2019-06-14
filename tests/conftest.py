@@ -1,10 +1,13 @@
 import os
 import random
+from unittest import mock
 
 import pytest
+from geoimagenet_api.openapi_schemas import User
 from sqlalchemy_utils import drop_database, create_database, database_exists
 from starlette.testclient import TestClient
 
+import geoimagenet_api
 from geoimagenet_api.database import migrations
 from geoimagenet_api import app, application
 from geoimagenet_api.database.connection import connection_manager
@@ -49,12 +52,11 @@ def reset_test_database():
     randomize_taxonomy_classes()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def test_configuration():
+@pytest.fixture(autouse=True)
+@mock.patch("geoimagenet_api.endpoints.annotations.get_logged_user_id")
+def magpie_return_user_1_logged_in(m):
     """Some configuration values for testing."""
-
-    os.environ["GEOIMAGENET_API_MAGPIE_URL"] = "https://localhost/magpie"
-    os.environ["GEOIMAGENET_API_MAGPIE_VERIFY_SSL"] = "false"
+    m.return_value = 1
 
 
 def randomize_taxonomy_classes():

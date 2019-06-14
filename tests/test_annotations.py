@@ -4,6 +4,7 @@ import pytest
 from geoalchemy2 import functions
 from sqlalchemy import func
 
+import geoimagenet_api
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import (
     Annotation,
@@ -32,6 +33,9 @@ point = {"type": "Point", "coordinates": test_coordinates[0]}
 linestring = {"type": "LineString", "coordinates": test_coordinates}
 polygon = {"type": "Polygon", "coordinates": [test_coordinates]}
 
+# the logged in user is always user 1 during tests
+geoimagenet_api.endpoints.annotations.get_logged_user_id = lambda *a: 1
+
 
 @pytest.fixture(params=[point, linestring, polygon])
 def geojson_geometry(request):
@@ -39,7 +43,6 @@ def geojson_geometry(request):
         "type": "Feature",
         "geometry": request.param,
         "properties": {
-            "annotator_id": 1,
             "taxonomy_class_id": 1,
             "image_name": "PLEIADES_RGB:test_image",
         },
@@ -263,12 +266,6 @@ def test_annotations_put_image_doesnt_exist(
     assert r.status_code == 400
 
 
-def test_annotations_post_not_allowed_other_user(client, geojson_geometry):
-    geojson_geometry["properties"]["annotator_id"] = 2
-    r = client.post(f"/annotations", json=geojson_geometry)
-    assert r.status_code == 403
-
-
 def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry):
     with _clean_annotation_session() as session:
         annotation = write_annotation(
@@ -278,27 +275,11 @@ def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry):
 
         annotation_id = annotation.id
         geojson_geometry["id"] = f"annotation.{annotation_id}"
-        geojson_geometry["properties"]["annotator_id"] = 1
 
         r = client.put(
             f"/annotations",
             json=geojson_geometry,
         )
-        assert r.status_code == 403
-
-
-def test_annotations_put_not_allowed_other_user_not_admin(client, geojson_geometry):
-    with _clean_annotation_session() as session:
-        annotation = write_annotation(
-            session=session,
-            user_id=1,
-        )
-
-        annotation_id = annotation.id
-        geojson_geometry["id"] = f"annotation.{annotation_id}"
-        geojson_geometry["properties"]["annotator_id"] = 2
-
-        r = client.put("/annotations", json=geojson_geometry)
         assert r.status_code == 403
 
 
@@ -437,10 +418,10 @@ def test_annotations_request_review_not_found(client, simple_annotation):
     assert r.status_code == 404
 
 
-def test_annotations_put(client, any_geojson, simple_annotation_user_2):
+def test_annotations_put(client, any_geojson, simple_annotation):
     with connection_manager.get_db_session() as session:
-        annotation_id = simple_annotation_user_2.id
-        annotator_id = simple_annotation_user_2.annotator_id
+        annotation_id = simple_annotation.id
+        annotator_id = simple_annotation.annotator_id
 
         if any_geojson["type"] == "FeatureCollection":
             first_feature = any_geojson["features"][0]
@@ -460,8 +441,6 @@ def test_annotations_put(client, any_geojson, simple_annotation_user_2):
         assert annotation2.taxonomy_class_id == properties.taxonomy_class_id
         assert annotation2.image_id == 1  # there should be an image of id 1 named test_image.tif
 
-        # you can't change owner of an annotation
-        assert annotation2.annotator_id == annotator_id
         # you can't change the status of an annotation this way
         assert annotation2.status == AnnotationStatus.new
 

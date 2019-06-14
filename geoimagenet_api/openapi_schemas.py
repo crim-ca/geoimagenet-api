@@ -25,8 +25,6 @@ class User(BaseModel):
     organisation: str = None
 
 
-
-
 class TaxonomyClass(BaseModel):
     id: int
     name_fr: str
@@ -157,8 +155,8 @@ AnyGeojsonGeometry = Union[Point, LineString, Polygon, MultiPolygon]
 
 
 class AnnotationProperties(BaseModel):
-    annotator_id: int
     taxonomy_class_id: int
+    annotator_id: int = None
     # one of image_name or image_id is required
     image_name: str = None
     image_id: int = None

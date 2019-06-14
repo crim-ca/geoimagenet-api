@@ -1,4 +1,4 @@
-from typing import List, Union, Optional
+from typing import Optional
 
 import requests
 import sentry_sdk
@@ -37,6 +37,8 @@ def _get_magpie_user(request: Request) -> User:
         email=user_data.get('email'),
     )
 
+    _create_user_if_not_in_database(magpie_user)
+
     return magpie_user
 
 
@@ -45,14 +47,20 @@ def _create_user_if_not_in_database(magpie_user: User):
     if magpie_user.id is not None:
         with connection_manager.get_db_session() as session:
             if not session.query(Person.id).filter_by(id=magpie_user.id).first():
-                session.add(Person(id=magpie_user.id, username=magpie_user.username))
+                session.add(Person(
+                    id=magpie_user.id,
+                    username=magpie_user.username,
+                    email=magpie_user.email,
+                    firstname=magpie_user.firstname,
+                    lastname=magpie_user.lastname,
+                    organisation=magpie_user.organisation,
+                ))
                 session.commit()
 
 
 def get_logged_user_id(request: Request, raise_if_logged_out=True) -> Optional[int]:
     try:
         logged_user = _get_magpie_user(request)
-        _create_user_if_not_in_database(logged_user)
     except requests.exceptions.RequestException:
         sentry_sdk.capture_exception()
         raise HTTPException(
