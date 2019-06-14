@@ -19,23 +19,23 @@ router = APIRouter()
 def _get_magpie_user(request: Request) -> User:
     """Requests the current logged in user id from magpie.
 
-    Raises an instance of any `requests.exceptions` when there is a connection error.
+    Raises an instance of any `requests.exceptions.RequestException` when there is a connection error.
     """
-
     magpie_url = get_config_url(request, "magpie_url")
     user_url = f"{magpie_url}/users/current"
 
     verify_ssl = config.get("magpie_verify_ssl", bool)
-    response = requests.get(user_url, cookies=request.cookies, verify=verify_ssl)
+    response = requests.get(user_url, cookies=request.cookies, verify=verify_ssl, timeout=5)
     response.raise_for_status()
 
     data = response.json()
     user_data = data['user']
 
-    user_id = user_data.get('user_id')
-    username = user_data.get('user_name')
-
-    magpie_user = User(id=user_id, username=username)
+    magpie_user = User(
+        id=user_data.get('user_id'),
+        username=user_data.get('user_name'),
+        email=user_data.get('email'),
+    )
 
     return magpie_user
 
