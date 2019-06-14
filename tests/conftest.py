@@ -49,6 +49,14 @@ def reset_test_database():
     randomize_taxonomy_classes()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def test_configuration():
+    """Some configuration values for testing."""
+
+    os.environ["GEOIMAGENET_API_MAGPIE_URL"] = "https://localhost/magpie"
+    os.environ["GEOIMAGENET_API_MAGPIE_VERIFY_SSL"] = "false"
+
+
 def randomize_taxonomy_classes():
     """Randomize the return value of TaxonomyClass. This is necessary to test some algorithms."""
     from geoimagenet_api.database.models import TaxonomyClass
@@ -65,9 +73,11 @@ def randomize_taxonomy_classes():
 
 @pytest.fixture(scope="module")
 def client():
+    """This is the application that is served at /api/v1"""
     yield TestClient(app)
 
 
 @pytest.fixture(scope="module")
 def client_application():
+    """This is the application that is served at / (root)"""
     yield TestClient(application)
