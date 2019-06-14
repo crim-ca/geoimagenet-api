@@ -1,10 +1,12 @@
 from typing import List
 
 import pytest
+from starlette.exceptions import HTTPException
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Image
-from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image, image_id_from_image_name
+from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image, image_id_from_image_name, image_id_from_properties
+from geoimagenet_api.openapi_schemas import AnnotationProperties
 from tests.test_annotations import write_annotation, _clean_annotation_session
 
 
@@ -138,3 +140,12 @@ def test_image_id_from_image_name(pleiades_images):
     with _clean_annotation_session() as session:
         id_ = image_id_from_image_name(session, image_name)
         assert id_
+
+
+def test_image_id_from_properties_raises_400(pleiades_images):
+    with _clean_annotation_session() as session:
+        properties = AnnotationProperties(
+            taxonomy_class_id=1,
+        )
+        with pytest.raises(HTTPException):
+            image_id_from_properties(session, properties)
