@@ -263,6 +263,45 @@ def test_annotations_put_image_doesnt_exist(
     assert r.status_code == 400
 
 
+def test_annotations_post_not_allowed_other_user(client, geojson_geometry):
+    geojson_geometry["properties"]["annotator_id"] = 2
+    r = client.post(f"/annotations", json=geojson_geometry)
+    assert r.status_code == 403
+
+
+def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry):
+    with _clean_annotation_session() as session:
+        annotation = write_annotation(
+            session=session,
+            user_id=2,
+        )
+
+        annotation_id = annotation.id
+        geojson_geometry["id"] = f"annotation.{annotation_id}"
+        geojson_geometry["properties"]["annotator_id"] = 1
+
+        r = client.put(
+            f"/annotations",
+            json=geojson_geometry,
+        )
+        assert r.status_code == 403
+
+
+def test_annotations_put_not_allowed_other_user_not_admin(client, geojson_geometry):
+    with _clean_annotation_session() as session:
+        annotation = write_annotation(
+            session=session,
+            user_id=1,
+        )
+
+        annotation_id = annotation.id
+        geojson_geometry["id"] = f"annotation.{annotation_id}"
+        geojson_geometry["properties"]["annotator_id"] = 2
+
+        r = client.put("/annotations", json=geojson_geometry)
+        assert r.status_code == 403
+
+
 def test_annotations_post_srid(client, any_geojson):
     from_srid = 4326
     query = {"srid": from_srid}
