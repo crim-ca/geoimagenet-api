@@ -24,5 +24,5 @@ def test_get_logged_user():
         response = mock.Mock()
         response.json.return_value = mock_json
         mock_requests.get.return_value = response
-        user_id = users_routes.get_user_id_from_cookies(request)
+        user_id = users_routes.get_magpie_user_id(request)
         assert user_id == 99

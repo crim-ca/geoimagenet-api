@@ -41,7 +41,7 @@ def get(username: str):
         return person
 
 
-def get_user_id_from_cookies(request: Request) -> Union[None, int]:
+def get_magpie_user_id(request: Request) -> Union[None, int]:
     """Requests the current logged in user id from magpie.
 
     Raises an instance of any `requests.exceptions` when there is a connection error.
@@ -66,7 +66,7 @@ def get_user_id_from_cookies(request: Request) -> Union[None, int]:
 @router.get("/users/current", response_model=User, summary="Get currently logged in user")
 def current(request: Request):
     try:
-        logged_user = get_user_id_from_cookies(request)
+        logged_user = get_magpie_user_id(request)
     except requests.exceptions.RequestException:
         sentry_sdk.capture_exception()
         return "There was a problem connecting to magpie. This error was reported to the developers.", 503
