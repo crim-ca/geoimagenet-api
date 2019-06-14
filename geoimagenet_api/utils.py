@@ -4,15 +4,9 @@ import re
 from typing import List
 
 import sqlalchemy.orm
-from starlette.datastructures import Headers
 from starlette.requests import Request
 
 from geoimagenet_api.config import config
-
-
-def get_logged_user(headers: Headers) -> int:
-    # todo: use the id of the currently logged in user
-    return 1
 
 
 async def geojson_stream(

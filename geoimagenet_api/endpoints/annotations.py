@@ -13,6 +13,7 @@ from geoimagenet_api.endpoints.image import (
     image_id_from_image_name,
     image_id_from_properties,
 )
+from geoimagenet_api.endpoints.users import get_logged_user_id
 from geoimagenet_api.openapi_schemas import (
     AnnotationCountByStatus,
     GeoJsonFeature,
@@ -36,7 +37,7 @@ from geoimagenet_api.endpoints.taxonomy_classes import (
     get_all_taxonomy_classes_ids,
 )
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.utils import get_logged_user, geojson_stream
+from geoimagenet_api.utils import geojson_stream
 
 DEFAULT_SRID = 3857
 
@@ -100,8 +101,8 @@ def get(
         if review_requested is not None:
             query = query.filter_by(review_requested=review_requested)
         if current_user_only:
-            logged_user = get_logged_user(request.headers)
-            query = query.filter_by(annotator_id=logged_user)
+            logged_user_id = get_logged_user_id(request)
+            query = query.filter_by(annotator_id=logged_user_id)
 
         properties = [f.key for f in fields if f.key not in ["geometry", "id"]]
         stream = geojson_stream(
@@ -205,7 +206,7 @@ def _update_status(
     update_info: status_update_type, desired_status: AnnotationStatus, request: Request
 ):
     """Update annotations statuses based on filters provided in update_info and allowed transitions."""
-    logged_user = get_logged_user(request.headers)
+    logged_user_id = get_logged_user_id(request)
 
     with connection_manager.get_db_session() as session:
         query = session.query(DBAnnotation)
@@ -217,7 +218,7 @@ def _update_status(
                 status_filter = DBAnnotation.status == from_status
                 if only_logged_user:
                     filters.append(
-                        and_(DBAnnotation.annotator_id == logged_user, status_filter)
+                        and_(DBAnnotation.annotator_id == logged_user_id, status_filter)
                     )
                 else:
                     filters.append(status_filter)
@@ -282,7 +283,7 @@ def _update_status(
                 [
                     ValidationEvent(
                         annotation_id=a.id,
-                        validator_id=logged_user,
+                        validator_id=logged_user_id,
                         validation_value=validation_value[desired_status],
                     )
                     for a in query
@@ -376,8 +377,8 @@ def counts(
         )
 
         if current_user_only:
-            logged_user = get_logged_user(request.headers)
-            query = query.filter(DBAnnotation.annotator_id == logged_user)
+            logged_user_id = get_logged_user_id(request)
+            query = query.filter(DBAnnotation.annotator_id == logged_user_id)
 
         if review_requested is not None:
             query = query.filter(DBAnnotation.review_requested == review_requested)
@@ -442,12 +443,12 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
 )
 def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""
-    logged_user = get_logged_user(request.headers)
+    logged_user_id = get_logged_user_id(request)
 
     annotation_ids = _get_annotation_ids_integers(body.annotation_ids)
 
     _ensure_annotations_exists(annotation_ids)
-    _ensure_annotation_owner(annotation_ids, logged_user)
+    _ensure_annotation_owner(annotation_ids, logged_user_id)
 
     with connection_manager.get_db_session() as session:
         (
