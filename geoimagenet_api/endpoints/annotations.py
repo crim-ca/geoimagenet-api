@@ -221,23 +221,23 @@ def _update_status(
     logged_user_id = get_logged_user_id(request)
 
     with connection_manager.get_db_session() as session:
-        query = session.query(DBAnnotation)
 
-        filters = []
+        def _filter_for_allowed_transitions(query, desired_status):
+            filters = []
+            for from_status, to_status, only_logged_user in allowed_status_transitions:
+                if to_status == desired_status:
+                    status_filter = DBAnnotation.status == from_status
+                    if only_logged_user:
+                        filters.append(
+                            and_(DBAnnotation.annotator_id == logged_user_id, status_filter)
+                        )
+                    else:
+                        filters.append(status_filter)
 
-        for from_status, to_status, only_logged_user in allowed_status_transitions:
-            if to_status == desired_status:
-                status_filter = DBAnnotation.status == from_status
-                if only_logged_user:
-                    filters.append(
-                        and_(DBAnnotation.annotator_id == logged_user_id, status_filter)
-                    )
-                else:
-                    filters.append(status_filter)
+            return query.filter(or_(*filters))
 
-        query = query.filter(or_(*filters))
+        def _filter_annotation_ids(query) -> Union[Query, Tuple]:
 
-        if isinstance(update_info, AnnotationStatusUpdateIds):
             annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
             existing_ids = session.query(DBAnnotation.id).filter(DBAnnotation.id.in_(annotation_ids))
@@ -249,26 +249,18 @@ def _update_status(
 
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
 
-            count_in_good_state = (
-                session.query(DBAnnotation.id)
-                .filter(
-                    and_(
-                        DBAnnotation.id.in_(annotation_ids),
-                        DBAnnotation.status == desired_status,
-                    )
-                )
-                .count()
-            )
             count_to_update = query.count()
             count_requested = len(annotation_ids)
-            if count_to_update < count_requested - count_in_good_state:
+            if count_to_update < count_requested:
                 # some annotation ids were not in a good state and
                 # a wrong transition was requested
                 raise HTTPException(
-                    403, "Status update refused. This transition is not allowed"
+                    403, "Status update refused. One or more status transition not allowed."
                 )
 
-        else:
+            return query
+
+        def _filter_taxonomy_ids(query) -> Union[Query, Tuple]:
             taxonomy_class_id = update_info.taxonomy_class_id
             taxonomy_id = (
                 session.query(DBTaxonomyClass.id)
@@ -283,28 +275,41 @@ def _update_status(
                 taxonomy_ids = get_all_taxonomy_classes_ids(session, taxonomy_class_id)
             else:
                 taxonomy_ids = [taxonomy_class_id]
-            query = query.filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_ids))
+            return query.filter(DBAnnotation.taxonomy_class_id.in_(taxonomy_ids))
 
-        # record validation events
-        if desired_status in (AnnotationStatus.validated, AnnotationStatus.rejected):
-            validation_value = {
-                AnnotationStatus.validated: ValidationValue.validated,
-                AnnotationStatus.rejected: ValidationValue.rejected,
-            }
-            session.bulk_save_objects(
-                [
-                    ValidationEvent(
-                        annotation_id=a.id,
-                        validator_id=logged_user_id,
-                        validation_value=validation_value[desired_status],
-                    )
-                    for a in query
-                ]
-            )
+        query = session.query(DBAnnotation)
+        query = _filter_for_allowed_transitions(query, desired_status)
+
+        if update_info.annotation_ids:
+            query = _filter_annotation_ids(query)
+        else:
+            query = _filter_taxonomy_ids(query)
+
+        _record_validation_events(session, desired_status, logged_user_id, query)
 
         query.update({DBAnnotation.status: desired_status}, synchronize_session=False)
 
         session.commit()
+
+
+def _record_validation_events(session, desired_status, user_id, query):
+    # record validation events
+    if desired_status in (AnnotationStatus.validated, AnnotationStatus.rejected):
+        validation_value = {
+            AnnotationStatus.validated: ValidationValue.validated,
+            AnnotationStatus.rejected: ValidationValue.rejected,
+        }
+        session.bulk_save_objects(
+            [
+                ValidationEvent(
+                    annotation_id=a.id,
+                    validator_id=user_id,
+                    validation_value=validation_value[desired_status],
+                )
+                for a in query
+            ]
+        )
+
 
 
 @router.post("/annotations/release", status_code=204, summary="Release")
