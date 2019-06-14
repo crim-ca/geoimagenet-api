@@ -128,14 +128,13 @@ def put(
             if json_annotation.id is None:
                 raise HTTPException(400, "Property 'id' is required")
 
-            if properties.annotator_id != logged_user_id:
-                raise HTTPException(403, "You are trying to update an annotation another user created.")
-
             id_ = _get_annotation_ids_integers([json_annotation.id])[0]
 
             annotation = session.query(DBAnnotation).filter_by(id=id_).first()
             if not annotation:
                 raise HTTPException(404, f"Annotation id not found: {id_}")
+            if annotation.annotator_id != logged_user_id:
+                raise HTTPException(403, "You are trying to update an annotation another user created.")
 
             geom = _serialize_geometry(geometry, srid)
 
@@ -169,11 +168,8 @@ def post(
             properties = feature.properties
             image_id = image_id_from_properties(session, properties)
 
-            if properties.annotator_id != logged_user_id:
-                raise HTTPException(403, "You are trying to create an annotation with someone else's user id.")
-
             annotation = DBAnnotation(
-                annotator_id=properties.annotator_id,
+                annotator_id=logged_user_id,
                 geometry=geom,
                 taxonomy_class_id=properties.taxonomy_class_id,
                 image_id=image_id,
