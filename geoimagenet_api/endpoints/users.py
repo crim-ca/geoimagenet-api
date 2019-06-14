@@ -37,19 +37,22 @@ def _get_magpie_user(request: Request) -> User:
 
     magpie_user = User(id=user_id, username=username)
 
-    # if the user doesn't exist in the database, create it
+    return magpie_user
+
+
+def _create_user_if_not_in_database(magpie_user: User):
+    """If the user doesn't exist in the database, create it"""
     if magpie_user.id is not None:
         with connection_manager.get_db_session() as session:
             if not session.query(Person.id).filter_by(id=magpie_user.id).first():
                 session.add(Person(id=magpie_user.id, username=magpie_user.username))
                 session.commit()
 
-    return magpie_user
-
 
 def get_logged_user_id(request: Request, raise_if_logged_out=True) -> Optional[int]:
     try:
         logged_user = _get_magpie_user(request)
+        _create_user_if_not_in_database(logged_user)
     except requests.exceptions.RequestException:
         sentry_sdk.capture_exception()
         raise HTTPException(
