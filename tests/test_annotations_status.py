@@ -146,6 +146,10 @@ def test_release_by_id(cleanup_annotations, client):
     assert_statuses(ids, expected)
 
 
+def test_release_by_id_not_found(cleanup_annotations, client):
+    post_annotation_ids(client, "release", [12345678], expected_code=404)
+
+
 def test_release_by_id_not_an_int(cleanup_annotations, client):
     ids = ["not_an_int"]
     post_annotation_ids(client, "release", ids, expected_code=400)

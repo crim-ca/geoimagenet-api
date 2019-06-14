@@ -227,6 +227,13 @@ def _update_status(
         if isinstance(update_info, AnnotationStatusUpdateIds):
             annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
+            existing_ids = session.query(DBAnnotation.id).filter(DBAnnotation.id.in_(annotation_ids))
+            missing_ids = set(annotation_ids).difference(existing_ids)
+            if missing_ids:
+                raise HTTPException(
+                    404, f"Annotation ids not found: {', '.join(map(str, missing_ids))}"
+                )
+
             query = query.filter(DBAnnotation.id.in_(annotation_ids))
 
             count_in_good_state = (
