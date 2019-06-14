@@ -325,11 +325,11 @@ def test_action_by_id_not_allowed(cleanup_annotations, client):
     assert_statuses(ids, expected)
 
 
-def test_action_by_id_allowed_same_state(cleanup_annotations, client):
+def test_action_by_id_not_allowed_same_state(cleanup_annotations, client):
     ids = insert_annotations(
         (1, 2, AnnotationStatus.released), (1, 2, AnnotationStatus.released)
     )
-    post_annotation_ids(client, "release", ids, expected_code=204)
+    post_annotation_ids(client, "release", ids, expected_code=403)
     expected = [AnnotationStatus.released, AnnotationStatus.released]
     assert_statuses(ids, expected)
 
