@@ -159,7 +159,7 @@ def post(
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID
 ):
     logged_user_id = get_logged_user_id(request)
-    annotations_to_write = []
+    written_annotations = []
 
     with connection_manager.get_db_session() as session:
         features = _geojson_features_from_body(body)
@@ -174,15 +174,15 @@ def post(
                 taxonomy_class_id=properties.taxonomy_class_id,
                 image_id=image_id,
             )
-            annotations_to_write.append(annotation)
+            session.add(annotation)
+            written_annotations.append(annotation)
 
         try:
-            session.bulk_save_objects(annotations_to_write)
             session.commit()
         except IntegrityError as e:  # pragma: no cover
             raise HTTPException(400, f"Error: {e}")
 
-        return [a.id for a in annotations_to_write]
+        return [a.id for a in written_annotations]
 
 
 allowed_status_transitions = {
