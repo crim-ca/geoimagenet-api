@@ -5,6 +5,9 @@ from typing import List
 
 import sqlalchemy.orm
 from starlette.datastructures import Headers
+from starlette.requests import Request
+
+from geoimagenet_api.config import config
 
 
 def get_logged_user(headers: Headers) -> int:
@@ -75,3 +78,19 @@ def get_latest_version_number(versions):
         return list(map(int, re.findall(r"\d+", version)))
 
     return max(versions, key=sort_key)
+
+
+def get_config_url(request: Request, config_parameter: str) -> str:
+    """Returns a full url for a config url that may be absolute or relative.
+
+    If the `config_parameter` is a path,
+    the request scheme and netloc is prepended.
+    This is for cases when the process is running on the same host.
+
+    for example: https://127.0.0.1/ml/processes/batch-creation/jobs
+    """
+    url = config.get("batch_creation_url", str).strip("/")
+    if not url.startswith("http"):
+        url = f"{request.url.scheme}://{request.url.netloc}/{url}"
+
+    return url

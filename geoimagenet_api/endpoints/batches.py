@@ -25,7 +25,7 @@ from geoimagenet_api.openapi_schemas import (
     ExecuteIOHref,
     ExecuteIOValue,
     BatchPostResult)
-from geoimagenet_api.utils import geojson_stream
+from geoimagenet_api.utils import geojson_stream, get_config_url
 
 router = APIRouter()
 
@@ -71,23 +71,6 @@ def _is_taxonomy_id_valid(taxonomy_id):
         return bool(session.query(Taxonomy).filter_by(id=taxonomy_id).first())
 
 
-def _get_batch_creation_url(request: Request):
-    """Returns the base url for batches creation requests.
-
-    If the `batches_creation_url` configuration is a path,
-    the request.host_url is prepended.
-    This is for cases when the process is running on the same host.
-
-    for example: https://127.0.0.1/ml/processes/batch-creation/jobs
-    """
-    batches_url = config.get("batch_creation_url", str).strip("/")
-    if not batches_url.startswith("http"):
-        path = batches_url.strip("/")
-        batches_url = f"{request.url.scheme}://{request.url.netloc}/{path}"
-
-    return batches_url
-
-
 post_description = (
     "Forwards information to the batch creation process. On success, "
     "the returned body is the same as the one forwarded to the batch "
@@ -117,7 +100,7 @@ def post(batch_post: BatchPost, request: Request):
         outputs=[],
     )
 
-    batch_url = _get_batch_creation_url(request)
+    batch_url = get_config_url(request, "batch_creation_url")
 
     try:
         r = requests.post(batch_url, json=execute.json())
