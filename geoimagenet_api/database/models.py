@@ -25,7 +25,10 @@ class Person(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String, nullable=False, unique=True)
-    name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    firstname = Column(String)
+    lastname = Column(String)
+    organisation = Column(String)
 
 
 class AnnotationStatus(enum.Enum):

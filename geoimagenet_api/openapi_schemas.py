@@ -19,6 +19,12 @@ class ApiInfo(BaseModel):
 class User(BaseModel):
     id: int = None
     username: str
+    email: str
+    firstname: str = None
+    lastname: str = None
+    organisation: str = None
+
+
 
 
 class TaxonomyClass(BaseModel):

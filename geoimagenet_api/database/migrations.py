@@ -110,13 +110,16 @@ def load_testing_data():
     with connection_manager.get_db_session() as session:
 
         # add some Users
-        demo_admin = models.Person(username="admin", name="Demo admin")
+        demo_admin = models.Person(username="admin", firstname="Demo", lastname="admin", email="admin@crim.ca")
         session.add(demo_admin)
-        demo_observateur = models.Person(username="observateur", name="Demo observateur")
+        demo_observateur = models.Person(username="observateur", firstname="Demo", lastname="observateur",
+                                         email="observateur@crim.ca")
         session.add(demo_observateur)
-        demo_annotateur = models.Person(username="annotateur", name="Demo annotateur")
+        demo_annotateur = models.Person(username="annotateur", firstname="Demo", lastname="annotateur",
+                                        email="annotateur@crim.ca")
         session.add(demo_annotateur)
-        demo_validateur = models.Person(username="validateur", name="Demo validateur")
+        demo_validateur = models.Person(username="validateur", firstname="Demo", lastname="validateur",
+                                        email="validateur@crim.ca")
         session.add(demo_validateur)
 
         image_data = {
