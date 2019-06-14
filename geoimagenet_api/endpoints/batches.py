@@ -66,11 +66,6 @@ def get_annotations():
         return StreamingResponse(stream, media_type="application/json")
 
 
-def _is_taxonomy_id_valid(taxonomy_id):
-    with connection_manager.get_db_session() as session:
-        return bool(session.query(Taxonomy).filter_by(id=taxonomy_id).first())
-
-
 post_description = (
     "Forwards information to the batch creation process. On success, "
     "the returned body is the same as the one forwarded to the batch "

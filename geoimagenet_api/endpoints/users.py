@@ -61,13 +61,13 @@ def _create_user_if_not_in_database(magpie_user: User):
 def get_logged_user_id(request: Request, raise_if_logged_out=True) -> Optional[int]:
     try:
         logged_user = _get_magpie_user(request)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException:  # pragma: no cover
         sentry_sdk.capture_exception()
         raise HTTPException(
             503,
             "There was a problem connecting to magpie. This error was reported to the developers."
         )
-    if raise_if_logged_out and logged_user.id is None:
+    if raise_if_logged_out and logged_user.id is None:  # pragma: no cover
         raise HTTPException(
             403,
             "You are not logged in."

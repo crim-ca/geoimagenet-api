@@ -25,7 +25,7 @@ if __name__ == "geoimagenet_api":
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
 
-if config.get("wait_for_db_connection_on_import", bool):
+if config.get("wait_for_db_connection_on_import", bool):  # pragma: no cover
     connection.wait_for_db_connection()
 
 sentry_dsn = config.get("sentry_url", str)
@@ -38,7 +38,7 @@ if sentry_dsn:
 
 application = FastAPI()
 
-if config.get("allow_cors", bool):
+if config.get("allow_cors", bool):  # pragma: no cover
     application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
