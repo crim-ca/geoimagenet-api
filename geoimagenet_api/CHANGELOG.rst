@@ -2,6 +2,22 @@ Changelog
 =========
 
 
+0.17.0 (2019-06-17)
+------------
+
+New
+~~~~~
+- The annotator id is taken from magpie, not from the payload
+
+  For:
+  - GET on /annotations (using the 'current_user_only' query param)
+  - GET on /annotations/counts/{} (using the 'current_user_only' query param)
+  - POST on /annotations
+  - PUT on /annotations (can't do anything if you don't own the annotation)
+  - POST on /annotations/{status_update} (to check rules for allowed status updates)
+  - POST on /annotations/request_review (must own the annotation)
+
+
 0.16.0 (2019-06-12)
 -------------------
 
