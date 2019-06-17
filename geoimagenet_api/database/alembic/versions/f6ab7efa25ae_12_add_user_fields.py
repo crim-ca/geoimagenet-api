@@ -21,7 +21,7 @@ def upgrade():
     op.create_index(op.f('ix_image_layer_name'), 'image', ['layer_name'], unique=False)
     op.drop_index('ix_image_name', table_name='image')
 
-    op.add_column('person', sa.Column('email', sa.String(), nullable=False))
+    op.add_column('person', sa.Column('email', sa.String(), nullable=True))
     op.add_column('person', sa.Column('firstname', sa.String(), nullable=True))
     op.add_column('person', sa.Column('lastname', sa.String(), nullable=True))
     op.add_column('person', sa.Column('organisation', sa.String(), nullable=True))

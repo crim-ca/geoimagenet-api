@@ -19,7 +19,7 @@ class ApiInfo(BaseModel):
 class User(BaseModel):
     id: int = None
     username: str
-    email: str
+    email: str = None
     firstname: str = None
     lastname: str = None
     organisation: str = None
