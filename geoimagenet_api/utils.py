@@ -83,7 +83,7 @@ def get_config_url(request: Request, config_parameter: str) -> str:
 
     for example: https://127.0.0.1/ml/processes/batch-creation/jobs
     """
-    url = config.get("batch_creation_url", str).strip("/")
+    url = config.get(config_parameter, str).strip("/")
     if not url.startswith("http"):
         url = f"{request.url.scheme}://{request.url.netloc}/{url}"
 
