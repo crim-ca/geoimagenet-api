@@ -13,3 +13,7 @@ styles:
     path: ./styles/RGB.xml
   - name: NRG
     path: ./styles/NRG.xml
+
+metadata:
+  - name: PLEIADES
+    attribution: Pleiades

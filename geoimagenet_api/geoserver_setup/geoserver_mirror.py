@@ -43,6 +43,7 @@ class GeoServerMirror(GeoServerDatastore):
         existing_layers = self.request("get", f"/layers.json", gwc=True)
 
         for image_data in image_data_8bit:
+
             def _delete_cached_layers(path):
                 layer_name = path.stem
                 for workspace_name in image_data.workspace_names():
@@ -100,6 +101,10 @@ class GeoServerMirror(GeoServerDatastore):
 
     def create_wms_layers(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms layers")
+
+        attributions = {
+            meta["name"]: meta["attribution"] for meta in self.get_config("metadata")
+        }
 
         for image_data in image_data_8bit:
             for workspace_name in image_data.workspace_names():
@@ -166,6 +171,15 @@ class GeoServerMirror(GeoServerDatastore):
                                 f"/workspaces/{workspace_name}/wmsstores/{wms_store_name}/wmslayers/{store.name}.json",
                                 data={"wmsLayer": {}},
                                 params={"calculate": "latlonbbox"},
+                            )
+
+                        attribution = attributions.get(image_data.sensor_name)
+                        if attribution:
+                            data = {"layer": {"attribution": {"title": attribution}}}
+                            self.request(
+                                "put",
+                                f"/workspaces/{workspace_name}/layers/{store.name}.json",
+                                data=data,
                             )
 
                 stores = self.datastore.get_stores(workspace_name)
