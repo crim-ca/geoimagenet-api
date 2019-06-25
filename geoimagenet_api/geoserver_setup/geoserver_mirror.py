@@ -57,7 +57,7 @@ class GeoServerMirror(GeoServerDatastore):
                                 ignore_codes=[404],
                             )
 
-            self.map_threadded(_delete_cached_layers, image_data.images_list)
+            self.map_threaded(_delete_cached_layers, image_data.images_list)
 
     def create_wms_stores(self, image_data_8bit: List[ImageData]):
         logger.info("Creating wms stores")
@@ -169,4 +169,4 @@ class GeoServerMirror(GeoServerDatastore):
                             )
 
                 stores = self.datastore.get_stores(workspace_name)
-                self.map_threadded(_create_wms_layers, stores)
+                self.map_threaded(_create_wms_layers, stores)

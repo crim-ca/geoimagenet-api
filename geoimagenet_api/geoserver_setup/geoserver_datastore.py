@@ -368,7 +368,7 @@ class GeoServerDatastore:
         # reload existing styles
         self._existing_styles = None
 
-    def map_threadded(self, func, iterable):
+    def map_threaded(self, func, iterable):
         if self.thread_pool_size > 1:
             t = ThreadPool(processes=self.thread_pool_size)
             for i in iterable:
@@ -397,7 +397,7 @@ class GeoServerDatastore:
                         style = workspace_name.split("_")[-1]
                     self.create_coverage_store(path, workspace_name, style)
 
-            self.map_threadded(_create_coverage_store, data.images_list)
+            self.map_threaded(_create_coverage_store, data.images_list)
 
     def create_coverage_store(
         self, path: Path, workspace_name: str, style: str = default_style.name
