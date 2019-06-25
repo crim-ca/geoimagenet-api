@@ -71,16 +71,16 @@ class GeoServerMirror(GeoServerDatastore):
                         w["name"] for w in r["wmsStores"]["wmsStore"]
                     ]
 
-                store_name = workspace_name  # they have the same name
+                wms_store_name = workspace_name  # they have the same name
 
-                if store_name not in existing_wms_stores_names:
+                if wms_store_name not in existing_wms_stores_names:
                     capabilities_url = (
                         self.datastore.geoserver_url.replace("/rest", "")
                         + "/gwc/service/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=getcapabilities"
                     )
                     data = {
                         "wmsStore": {
-                            "name": store_name,
+                            "name": wms_store_name,
                             "type": "WMS",
                             "capabilitiesURL": capabilities_url,
                             "user": self.datastore.user,
@@ -90,7 +90,7 @@ class GeoServerMirror(GeoServerDatastore):
                             "connectTimeout": 30,
                         }
                     }
-                    logger.info(f"CREATE wms store: {store_name}")
+                    logger.info(f"CREATE wms store: {wms_store_name}")
                     if not self.dry_run:
                         self.request(
                             "post",
@@ -143,7 +143,7 @@ class GeoServerMirror(GeoServerDatastore):
                     logger.info(f"CREATE wms layer: {store.name}")
 
                     if not self.dry_run:
-                        store_name = workspace_name  # they have the same name
+                        wms_store_name = workspace_name  # they have the same name
 
                         if self.catalog.get_resource(
                             name=store.name, workspace=workspace_name
@@ -151,19 +151,19 @@ class GeoServerMirror(GeoServerDatastore):
                             logger.info(f"Layer already exists, updating: {store.name}")
                             self.request(
                                 "put",
-                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{store.name}.json",
+                                f"/workspaces/{workspace_name}/wmsstores/{wms_store_name}/wmslayers/{store.name}.json",
                                 data=data,
                                 params={"calculate": "latlonbbox"},
                             )
                         else:
                             self.request(
                                 "post",
-                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers.json",
+                                f"/workspaces/{workspace_name}/wmsstores/{wms_store_name}/wmslayers.json",
                                 data=data,
                             )
                             self.request(
                                 "put",
-                                f"/workspaces/{workspace_name}/wmsstores/{store_name}/wmslayers/{store.name}.json",
+                                f"/workspaces/{workspace_name}/wmsstores/{wms_store_name}/wmslayers/{store.name}.json",
                                 data={"wmsLayer": {}},
                                 params={"calculate": "latlonbbox"},
                             )
