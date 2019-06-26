@@ -33,7 +33,8 @@ def generate(dataset: str) -> Dict:
 
 
 if __name__ == '__main__':
-    datasets = ["couverture_de_sol.json", "objets.json"]
-    for dataset in datasets:
+    datasets = ["couverture_de_sol_v1_a.json", "objets_v1_a.json"]
+    outputs = ["couverture_de_sol_v1_b.json", "objets_v1_b.json"]
+    for dataset, output in zip(datasets, outputs):
         data = generate(dataset)
-        json.dump(data, open(dataset, "w"), ensure_ascii=False, indent=4)
+        json.dump(data, open(output, "w"), ensure_ascii=False, indent=4)
