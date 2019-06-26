@@ -3,6 +3,8 @@ from pathlib import Path
 import configparser
 
 # global variable used to read configuration files only once
+from typing import Dict
+
 config_ini = None
 # prefix to use in environment variables
 ENVIRONMENT_PREFIX = "GEOIMAGENET_API_"
@@ -51,6 +53,20 @@ def get(parameter_name: str, type_):
     conversion_function = {bool: _convert_bool}.get(type_, type_)
 
     return conversion_function(from_environment or from_config)
+
+
+def get_all_config() -> Dict:
+    """Returns the complete configuration as a dict"""
+
+    config = _load_config_ini()
+    configuration = config["geoimagenet_api"]
+
+    for param in configuration:
+        from_environment = _get_environment_var(param)
+        if from_environment:
+            configuration[param] = from_environment
+
+    return configuration
 
 
 def _convert_bool(value):

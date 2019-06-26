@@ -6,7 +6,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from starlette.responses import PlainTextResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
-
 import sentry_sdk
 
 from geoimagenet_api.__about__ import __version__, __author__, __email__
@@ -30,11 +29,17 @@ if config.get("wait_for_db_connection_on_import", bool):  # pragma: no cover
 
 sentry_dsn = config.get("sentry_url", str)
 if sentry_dsn:
-    sentry_environment = config.get("sentry_environment", str)
-    sentry_server_name = config.get("sentry_server_name", str)
-    sentry_sdk.init(
-        dsn=sentry_dsn, environment=sentry_environment, server_name=sentry_server_name
-    )
+    kwargs = {}
+    if config.get("sentry_environment", str):
+        kwargs["environment"] = config.get("sentry_environment", str)
+    if config.get("sentry_server_name", str):
+        kwargs["server_name"] = config.get("sentry_server_name", str)
+
+    sentry_sdk.init(dsn=sentry_dsn, **kwargs)
+
+    with sentry_sdk.configure_scope() as scope:
+        scope.set_extra("config", dict(config.get_all_config()))
+
 
 application = FastAPI()
 
