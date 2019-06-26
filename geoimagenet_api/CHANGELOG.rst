@@ -2,11 +2,19 @@ Changelog
 =========
 
 
+0.17.1 (2019-06-26)
+------------
+
+Changes
+~~~~~~~
+- Add wms layers attributions in geoserver. [David Caron]
+
+
 0.17.0 (2019-06-17)
 ------------
 
 New
-~~~~~
+~~~
 - The annotator id is taken from magpie, not from the payload
 
   For:
