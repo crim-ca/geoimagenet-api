@@ -1,11 +1,9 @@
 import enum
 import json
 import re
-from itertools import combinations
 from typing import List
 
 import sqlalchemy.orm
-import unidecode
 from starlette.requests import Request
 
 from geoimagenet_api.config import config
@@ -92,51 +90,3 @@ def get_config_url(request: Request, config_parameter: str) -> str:
     return url
 
 
-def make_codes_from_name(name: str) -> List[str]:
-    """A generator that takes a french name and generates a list of 4-letter code possibilities.
-
-    Rules:
-     - 3-letter words are considered first. If no words are found, consider all words.
-     - All accents are removed
-     - Every letter is transformed to upper case
-
-    Possibilities:
-     - First letters of the first word (1 to 4) followed by the first letter of next words
-     - First 4 letters of the first word
-     - First letter and next 3 consonants
-     - All other possibilities of all the consonants, keeping the first letter
-     - All other possibilities of all the letters, keeping the first letter
-     - All the letters of the word, repeating the last one
-    """
-    # Remove all accents, convert to uppercase
-    name = unidecode.unidecode(name).upper()
-    all_letters = "".join(re.findall(r"[A-Z]", name))
-    words = re.findall(r"[A-Z]{3,}", name)
-    if not words:
-        words = re.findall(r"[A-Z]+", name)
-
-    first_letter = words[0][0]
-
-    # Take the first 4 letters of the first word
-    first_4_letters = all_letters[:4]
-    # Take the first letter of the next at most 3 words
-    first_letters_next_words = "".join([w[0] for w in words[1:4]])
-    # and put it at the end
-    if first_letters_next_words:
-        yield first_4_letters[:-len(first_letters_next_words)] + first_letters_next_words
-
-    if len(first_4_letters) >= 4:
-        yield first_4_letters
-
-    consonants = [c for c in all_letters[1:] if c not in "AEIOU"]
-    if len(consonants) >= 3:
-        for comb in combinations(consonants, 3):
-            yield first_letter + "".join(comb)
-
-    all_letters_not_first = all_letters[1:]
-    if len(all_letters_not_first) >= 3:
-        for comb in combinations(all_letters_not_first, 3):
-            yield first_letter + "".join(comb)
-
-    if not len(all_letters) >= 4:
-        yield all_letters + "".join(all_letters[-1] * (4 - len(all_letters)))
