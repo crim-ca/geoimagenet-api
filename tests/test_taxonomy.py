@@ -26,7 +26,7 @@ def test_taxonomy_root_id(client):
     query = {"name": "Couverture de sol", "version": "1"}
     r = client.get(f"/taxonomy", params=query)
     groups = r.json()
-    assert groups[0]["versions"][0]["root_taxonomy_class_id"] == 205
+    assert groups[0]["versions"][0]["root_taxonomy_class_id"] == 195
 
 
 def test_taxonomy_versions_400_version_only(client):
@@ -62,7 +62,7 @@ def test_taxonomy_get_by_slug(client):
     r = client.get(f"/taxonomy/{name_slug}/{version}")
     assert r.status_code == 200
     assert r.json()["name_fr"] == "Couverture de sol"
-    assert r.json()["root_taxonomy_class_id"] == 205
+    assert r.json()["root_taxonomy_class_id"] == 195
 
 
 def test_taxonomy_get_by_slug_not_found(client):

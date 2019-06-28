@@ -67,7 +67,7 @@ def write_taxonomy(json_path: Path):
             name_fr, name_en = get_names(names)
 
             taxonomy_class = models.TaxonomyClass(
-                taxonomy_id=taxonomy_id, name_fr=name_fr, name_en=name_en, parent_id=parent_id
+                taxonomy_id=taxonomy_id, name_fr=name_fr, name_en=name_en, parent_id=parent_id, code=obj["code"]
             )
             session.add(taxonomy_class)
             session.flush()

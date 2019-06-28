@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from slugify import slugify
@@ -81,6 +81,7 @@ def search(
             DBTaxonomyClass.name_fr,
             DBTaxonomyClass.name_en,
             DBTaxonomyClass.taxonomy_id,
+            DBTaxonomyClass.code,
         ).filter(DBTaxonomyClass.taxonomy_id.in_(taxonomy_ids))
 
         if name:
@@ -103,6 +104,7 @@ def search(
                     name_fr=taxo.name_fr,
                     name_en=taxo.name_en,
                     taxonomy_id=taxo.taxonomy_id,
+                    code=taxo.code,
                 )
                 for taxo in taxonomy_classes
             ]
@@ -117,6 +119,7 @@ def get(id: int, depth: int = -1):
                 DBTaxonomyClass.name_fr,
                 DBTaxonomyClass.name_en,
                 DBTaxonomyClass.taxonomy_id,
+                DBTaxonomyClass.code,
             )
             .filter_by(id=id)
             .first()
@@ -133,11 +136,12 @@ def get(id: int, depth: int = -1):
                 name_fr=taxonomy_class.name_fr,
                 name_en=taxonomy_class.name_en,
                 taxonomy_id=taxonomy_class.taxonomy_id,
+                code=taxonomy_class.code,
             )
     return taxonomy_class
 
 
-def get_all_taxonomy_classes_ids(session, taxonomy_class_id: int = None) -> List[int]:
+def get_all_taxonomy_classes_ids(session, taxonomy_class_id: int) -> List[int]:
     taxo_tree = get_taxonomy_classes_tree(session, taxonomy_class_id)
     return flatten_taxonomy_classes_ids(taxo_tree)
 
@@ -161,8 +165,7 @@ def get_taxonomy_classes_tree(
 ) -> Union[TaxonomyClass, None]:
     """Builds the taxonomy_class tree.
 
-    If taxonomy_class_id is specified, returns this id and its children.
-    If not, return the root element.
+    Return the specified taxonomy_class_id and its children.
 
     This is the most effective solution I found to query this kind of nested elements.
 
@@ -196,6 +199,7 @@ def get_taxonomy_classes_tree(
             DBTaxonomyClass.name_fr,
             DBTaxonomyClass.name_en,
             DBTaxonomyClass.parent_id,
+            DBTaxonomyClass.code,
         ).filter_by(taxonomy_id=taxonomy_id)
 
         for taxo in taxonomy_query:
@@ -204,6 +208,7 @@ def get_taxonomy_classes_tree(
                 name_fr=taxo.name_fr,
                 name_en=taxo.name_en,
                 taxonomy_id=taxonomy_id,
+                code=taxo.code,
             )
             seen_classes[taxo.id] = taxonomy_class
 

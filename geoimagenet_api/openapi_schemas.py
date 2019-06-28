@@ -30,6 +30,7 @@ class TaxonomyClass(BaseModel):
     name_fr: str
     name_en: Optional[str] = ""
     taxonomy_id: int
+    code: str
     # Workaround OpenAPI recursive reference, using Any
     children: List[Any] = Schema([], description="A list of 'TaxonomyClass' objects.")
 

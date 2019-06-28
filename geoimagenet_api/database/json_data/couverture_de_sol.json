@@ -2,173 +2,180 @@
     "version": 1,
     "name": {
         "fr": "Couverture de sol",
-        "en": ""
+        "en": "Land cover"
     },
-    "code": "",
+    "code": "COUV",
     "value": [
         {
             "name": {
-                "fr": "Urban or Built-up Land",
-                "en": ""
+                "fr": "Urbain ou bâti",
+                "en": "Urban or Built-up Land"
             },
-            "code": "",
+            "code": "URBA",
             "value": [
                 {
                     "name": {
-                        "fr": "Residential",
-                        "en": ""
+                        "fr": "Zone résidentielle",
+                        "en": "Residential"
                     },
-                    "code": "",
+                    "code": "RESD",
                     "value": [
                         {
                             "name": {
                                 "fr": "Densité faible",
-                                "en": ""
+                                "en": "Low density"
                             },
-                            "code": ""
+                            "code": "DENS"
                         },
                         {
                             "name": {
                                 "fr": "Densité moyenne",
-                                "en": ""
+                                "en": "Medium density"
                             },
-                            "code": ""
+                            "code": "DENI"
                         },
                         {
                             "name": {
                                 "fr": "Densité élevée",
-                                "en": ""
+                                "en": "High density"
                             },
-                            "code": ""
+                            "code": "DENT"
                         },
                         {
                             "name": {
                                 "fr": "Parc de maisons mobiles",
-                                "en": ""
+                                "en": "Mobile home park"
                             },
-                            "code": ""
+                            "code": "PARC"
                         }
                     ]
                 },
                 {
                     "name": {
-                        "fr": "Commercial and Services",
-                        "en": ""
+                        "fr": "Zone commerciales et services",
+                        "en": "Commercial and Services"
                     },
-                    "code": "",
+                    "code": "COMC",
                     "value": [
                         {
                             "name": {
-                                "fr": "Terrain associé au commerce ou au service (selon le type de commerce ou de service)?",
-                                "en": ""
+                                "fr": "Terrain associé au commerce ou au service",
+                                "en": "Ground related to commercial or services"
                             },
-                            "code": ""
+                            "code": "TERR"
+                        },
+						{
+                            "name": {
+                                "fr": "Campus (université ou collège)",
+                                "en": "Campus (university or college)"
+                            },
+                            "code": "CAMP"
                         }
                     ]
                 },
                 {
                     "name": {
-                        "fr": "Industrial",
-                        "en": ""
+                        "fr": "Zone industrielle",
+                        "en": "Industrial"
                     },
-                    "code": "",
+                    "code": "INDS",
                     "value": [
                         {
                             "name": {
-                                "fr": "Terrain associé à l'industrie (selon le type d'industrie)?",
-                                "en": ""
+                                "fr": "Terrain associé à l'industrie",
+                                "en": "Ground related to industry"
                             },
-                            "code": ""
+                            "code": "TERA"
                         }
                     ]
                 },
                 {
                     "name": {
-                        "fr": "Transportation",
-                        "en": ""
+                        "fr": "Zone de transport",
+                        "en": "Transportation"
                     },
-                    "code": "",
+                    "code": "TRAS",
                     "value": [
                         {
                             "name": {
                                 "fr": "Emprise/corridor de transport routier",
-                                "en": ""
+                                "en": "Road corridor"
                             },
-                            "code": ""
+                            "code": "EMPR"
                         },
                         {
                             "name": {
                                 "fr": "Emprise/corridor de transport ferroviaire",
-                                "en": ""
+                                "en": "Train corridor"
                             },
-                            "code": ""
+                            "code": "EMPI"
                         },
                         {
                             "name": {
                                 "fr": "Zone portuaire",
-                                "en": ""
+                                "en": "Harbour area"
                             },
-                            "code": ""
+                            "code": "ZONE"
                         },
                         {
                             "name": {
                                 "fr": "Zone aéroportuaire",
-                                "en": ""
+                                "en": "Airport area"
                             },
-                            "code": ""
+                            "code": "ZONA"
                         }
                     ]
                 },
                 {
                     "name": {
-                        "fr": "Energy",
-                        "en": ""
+                        "fr": "Énergie",
+                        "en": "Energy"
                     },
-                    "code": "",
+                    "code": "ENEY",
                     "value": [
                         {
                             "name": {
                                 "fr": "Emprise/corridor de transport d'énergie électrique",
-                                "en": ""
+                                "en": "Electrical power right of way"
                             },
-                            "code": ""
+                            "code": "EMPS"
                         },
                         {
                             "name": {
                                 "fr": "Emprise de pipeline",
-                                "en": ""
+                                "en": "Pipeline right of way"
                             },
-                            "code": ""
+                            "code": "EMPE"
                         },
                         {
                             "name": {
                                 "fr": "Parc solaire",
-                                "en": ""
+                                "en": "Solar park"
                             },
-                            "code": ""
+                            "code": "PARS"
                         }
                     ]
                 },
                 {
                     "name": {
-                        "fr": "Other Urban or Built-up Land",
-                        "en": ""
+                        "fr": "Urbain et bâti autre",
+                        "en": "Other Urban or Built-up Land"
                     },
-                    "code": "",
+                    "code": "OTHU",
                     "value": [
                         {
                             "name": {
                                 "fr": "Parc, espace vert",
-                                "en": ""
+                                "en": "Park, green space"
                             },
-                            "code": ""
+                            "code": "PARE"
                         },
                         {
                             "name": {
                                 "fr": "Terrain associé aux installations (traitement des eaux, traitement des déchets)",
-                                "en": ""
+                                "en": "Ground related to installations (water treatment, waste treatment"
                             },
-                            "code": ""
+                            "code": "TERI"
                         }
                     ]
                 }
@@ -176,369 +183,376 @@
         },
         {
             "name": {
-                "fr": "Agricultural Land",
-                "en": ""
+                "fr": "Terre agricole",
+                "en": "Agricultural Land"
             },
-            "code": "",
+            "code": "AGRU",
             "value": [
                 {
                     "name": {
-                        "fr": "Grandes cultures",
-                        "en": ""
+                        "fr": "Grande culture",
+                        "en": "Cropland"
                     },
-                    "code": ""
+                    "code": "GRAN"
                 },
                 {
                     "name": {
                         "fr": "Maraîcher",
-                        "en": ""
+                        "en": "Vegetable crop"
                     },
-                    "code": ""
+                    "code": "MARA"
                 },
                 {
                     "name": {
                         "fr": "Pâturage",
-                        "en": ""
+                        "en": "Pasture"
                     },
-                    "code": ""
+                    "code": "PATU"
                 },
                 {
                     "name": {
                         "fr": "Ferme (terrain avec bâtiments)",
-                        "en": ""
+                        "en": "Farmhouse and buildings / Farmstead"
                     },
-                    "code": ""
+                    "code": "FERM"
                 },
                 {
                     "name": {
-                        "fr": "Other Agricultural Land",
-                        "en": ""
+                        "fr": "Terre agricole autre",
+                        "en": "Other Agricultural Land"
                     },
-                    "code": ""
+                    "code": "OTHA"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Rangeland",
-                "en": ""
+                "fr": "Pâturage",
+                "en": "Rangeland"
             },
-            "code": "",
+            "code": "RANG",
             "value": [
                 {
                     "name": {
-                        "fr": "Herbaceous Rangeland",
-                        "en": ""
+                        "fr": "Pâturage herbeux",
+                        "en": "Herbaceous Rangeland"
                     },
-                    "code": ""
+                    "code": "HERB"
                 },
                 {
                     "name": {
-                        "fr": "Shrub and Brush Rangeland",
-                        "en": ""
+                        "fr": "Pâturage arbuste et buisson",
+                        "en": "Shrub and Brush Rangeland"
                     },
-                    "code": ""
+                    "code": "SHRU"
                 },
                 {
                     "name": {
-                        "fr": "Mixed Rangeland",
-                        "en": ""
+                        "fr": "Pâturage mixte",
+                        "en": "Mixed Rangeland"
                     },
-                    "code": ""
+                    "code": "MIXE"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Forest Land",
-                "en": ""
+                "fr": "Région forestière",
+                "en": "Forest Land"
             },
-            "code": "",
+            "code": "FORE",
             "value": [
                 {
                     "name": {
-                        "fr": "Deciduous Forest Land",
-                        "en": ""
+                        "fr": "Forêt feuillue",
+                        "en": "Deciduous Forest Land"
                     },
-                    "code": ""
+                    "code": "DECD"
                 },
                 {
                     "name": {
-                        "fr": "Evergreen Forest Land",
-                        "en": ""
+                        "fr": "Forêt conifère",
+                        "en": "Evergreen Forest Land"
                     },
-                    "code": ""
+                    "code": "EVER"
                 },
                 {
                     "name": {
-                        "fr": "Mixed Forest Land",
-                        "en": ""
+                        "fr": "Forêt mixte",
+                        "en": "Mixed Forest Land"
                     },
-                    "code": ""
+                    "code": "MIXD"
                 },
                 {
                     "name": {
                         "fr": "Plantation",
-                        "en": ""
+                        "en": "Plantation"
                     },
-                    "code": ""
+                    "code": "PLAN"
                 },
                 {
                     "name": {
-                        "fr": "Recent disturbance (fire, clear-cut)",
-                        "en": ""
+                        "fr": "Perturbation récente (feu, coupe)",
+                        "en": "Recent disturbance (fire, clear-cut)"
                     },
-                    "code": ""
+                    "code": "RECE"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Water",
-                "en": ""
+                "fr": "Région hydrique",
+                "en": "Water"
             },
-            "code": "",
+            "code": "WAER",
             "value": [
                 {
                     "name": {
-                        "fr": "Streams considéré comme objet ou comme zone d'occupation du sol selon l'échelle de cartographie",
-                        "en": ""
+                        "fr": "Fleuve/ ruisseau",
+                        "en": "Stream"
                     },
-                    "code": ""
+                    "code": "STRA"
                 },
                 {
                     "name": {
-                        "fr": "Lakes",
-                        "en": ""
+                        "fr": "Lac",
+                        "en": "Lake"
                     },
-                    "code": ""
+                    "code": "LAKE"
                 },
                 {
                     "name": {
-                        "fr": "Reservoirs",
-                        "en": ""
+                        "fr": "Réservoir",
+                        "en": "Reservoir"
                     },
-                    "code": ""
+                    "code": "RESE"
                 },
                 {
                     "name": {
-                        "fr": "Bays and Estuaries",
-                        "en": ""
+                        "fr": "Baie et esturaire",
+                        "en": "Bay and Estuarie"
                     },
-                    "code": ""
+                    "code": "BAYS"
                 },
                 {
                     "name": {
-                        "fr": "Canals",
-                        "en": ""
+                        "fr": "Canal",
+                        "en": "Canal"
                     },
-                    "code": ""
+                    "code": "CANA"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Wetland",
-                "en": ""
+                "fr": "Milieu humide",
+                "en": "Wetland"
             },
-            "code": "",
+            "code": "WETA",
             "value": [
                 {
                     "name": {
-                        "fr": "Forested peatland",
-                        "en": ""
+                        "fr": "Tourbière boisée",
+                        "en": "Forested peatland"
                     },
-                    "code": ""
+                    "code": "FORS"
                 },
                 {
                     "name": {
-                        "fr": "Bog",
-                        "en": ""
+                        "fr": "Bog (tourbière ombrotrophe)",
+                        "en": "Bog"
                     },
-                    "code": ""
+                    "code": "BOGG"
                 },
                 {
                     "name": {
-                        "fr": "Fen",
-                        "en": ""
+                        "fr": "Fen (tourbière minérotrophe)",
+                        "en": "Fen"
                     },
-                    "code": ""
+                    "code": "FNEN"
                 },
                 {
                     "name": {
-                        "fr": "Swamp",
-                        "en": ""
+                        "fr": "Marécage",
+                        "en": "Swamp"
                     },
-                    "code": ""
+                    "code": "SWAP"
                 },
                 {
                     "name": {
-                        "fr": "Marsh",
-                        "en": ""
+                        "fr": "Marais",
+                        "en": "Marsh"
                     },
-                    "code": ""
+                    "code": "MARH"
+                },
+				{
+                    "name": {
+                        "fr": "Eau peu profonde",
+                        "en": "Shallow water"
+                    },
+                    "code": "SHAW"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Barren Land",
-                "en": ""
+                "fr": "Sans végétation",
+                "en": "Barren Land"
             },
-            "code": "",
+            "code": "BARR",
             "value": [
                 {
                     "name": {
-                        "fr": "Dry Salt Flats",
-                        "en": ""
+                        "fr": "Salant sec",
+                        "en": "Dry Salt Flat"
                     },
-                    "code": ""
+                    "code": "DRYS"
                 },
                 {
                     "name": {
-                        "fr": "Beaches",
-                        "en": ""
+                        "fr": "Plage",
+                        "en": "Beach"
                     },
-                    "code": ""
+                    "code": "BEAC"
                 },
                 {
                     "name": {
-                        "fr": "Sandy Areas other than Beaches",
-                        "en": ""
+                        "fr": "Zone sablonneuse (pas plage)",
+                        "en": "Sandy Area other than Beach"
                     },
-                    "code": ""
+                    "code": "SAND"
                 },
                 {
                     "name": {
-                        "fr": "Bare Exposed Rock",
-                        "en": ""
+                        "fr": "Affleurement rocheux",
+                        "en": "Bare Exposed Rock"
                     },
-                    "code": ""
+                    "code": "BARE"
                 },
                 {
                     "name": {
-                        "fr": "Strip Mine Quarries, and Gravel Pits",
-                        "en": ""
+                        "fr": "Carrière à ciel ouvert et gravière",
+                        "en": "Strip Mine Quarrie, and Gravel Pit"
                     },
-                    "code": ""
+                    "code": "STRI"
                 },
                 {
                     "name": {
-                        "fr": "Transitional Areas",
-                        "en": ""
+                        "fr": "Zone de transistion",
+                        "en": "Transitional Area"
                     },
-                    "code": ""
+                    "code": "TRAT"
                 },
                 {
                     "name": {
-                        "fr": "Mixed Barren Land",
-                        "en": ""
+                        "fr": "Terrain sans végétation - mixte",
+                        "en": "Mixed Barren Land"
                     },
-                    "code": ""
+                    "code": "MIXB"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Tundra",
-                "en": ""
+                "fr": "Toundra",
+                "en": "Tundra"
             },
-            "code": "",
+            "code": "TUND",
             "value": [
                 {
                     "name": {
-                        "fr": "Shrub and Brush Tundra",
-                        "en": ""
+                        "fr": "Toundra arbuste et buisson",
+                        "en": "Shrub and Brush Tundra"
                     },
-                    "code": ""
+                    "code": "SHRB"
                 },
                 {
                     "name": {
-                        "fr": "Herbaceous Tundra",
-                        "en": ""
+                        "fr": "Toundra herbeuse",
+                        "en": "Herbaceous Tundra"
                     },
-                    "code": ""
+                    "code": "HERA"
                 },
                 {
                     "name": {
-                        "fr": "Bare Ground Tundra",
-                        "en": ""
+                        "fr": "Toundra sol nu",
+                        "en": "Bare Ground Tundra"
                     },
-                    "code": ""
+                    "code": "BARG"
                 },
                 {
                     "name": {
-                        "fr": "Wet Tundra",
-                        "en": ""
+                        "fr": "Toundra humide",
+                        "en": "Wet Tundra"
                     },
-                    "code": ""
+                    "code": "WETT"
                 },
                 {
                     "name": {
-                        "fr": "Mixed Tundra",
-                        "en": ""
+                        "fr": "Toundra mixte",
+                        "en": "Mixed Tundra"
                     },
-                    "code": ""
+                    "code": "MIXT"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Perennial Snow or Ice",
-                "en": ""
+                "fr": "Neige et glace permanentes",
+                "en": "Perennial Snow or Ice"
             },
-            "code": "",
+            "code": "PERE",
             "value": [
                 {
                     "name": {
-                        "fr": "Perennial Snowfields",
-                        "en": ""
+                        "fr": "Neige permanente",
+                        "en": "Perennial Snowfield"
                     },
-                    "code": ""
+                    "code": "PERN"
                 },
                 {
                     "name": {
-                        "fr": "Glaciers",
-                        "en": ""
+                        "fr": "Glacier",
+                        "en": "Glacier"
                     },
-                    "code": ""
+                    "code": "GLAI"
                 }
             ]
         },
         {
             "name": {
-                "fr": "Formes terrestres",
-                "en": ""
+                "fr": "Forme terrestre",
+                "en": "Glacial landform"
             },
-            "code": "",
+            "code": "FORM",
             "value": [
                 {
                     "name": {
                         "fr": "Esker",
-                        "en": ""
+                        "en": "Esker"
                     },
-                    "code": ""
+                    "code": "ESKR"
                 },
                 {
                     "name": {
                         "fr": "Moraine",
-                        "en": ""
+                        "en": "Moraine"
                     },
-                    "code": ""
+                    "code": "MORI"
                 },
                 {
                     "name": {
                         "fr": "Pingo",
-                        "en": ""
+                        "en": "Pingo"
                     },
-                    "code": ""
+                    "code": "PINO"
                 },
                 {
                     "name": {
                         "fr": "Drumlin",
-                        "en": ""
+                        "en": "Drumlin"
                     },
-                    "code": ""
+                    "code": "DRUL"
                 }
             ]
         }

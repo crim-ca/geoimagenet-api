@@ -88,3 +88,5 @@ def get_config_url(request: Request, config_parameter: str) -> str:
         url = f"{request.url.scheme}://{request.url.netloc}/{url}"
 
     return url
+
+

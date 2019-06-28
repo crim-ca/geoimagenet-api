@@ -29,7 +29,7 @@ def upgrade():
 
 
 def downgrade():
-    op.add_column('person', sa.Column('name', sa.VARCHAR(), autoincrement=False, nullable=False))
+    op.add_column('person', sa.Column('name', sa.VARCHAR(), autoincrement=False))
     op.drop_column('person', 'organisation')
     op.drop_column('person', 'lastname')
     op.drop_column('person', 'firstname')

@@ -4,56 +4,56 @@
         "fr": "Objets",
         "en": "Objects"
     },
-    "code": "",
+    "code": "OBJE",
     "value": [
         {
             "name": {
                 "fr": "Bâtiment résidentiel",
                 "en": "Residential building"
             },
-            "code": "",
+            "code": "RESI",
             "value": [
                 {
                     "name": {
                         "fr": "Unifamilial",
                         "en": "Single-family"
                     },
-                    "code": ""
+                    "code": "SING"
                 },
                 {
                     "name": {
                         "fr": "Unifamilial détaché",
                         "en": "Single-family detached"
                     },
-                    "code": ""
+                    "code": "SINL"
                 },
                 {
                     "name": {
                         "fr": "Unifamilial jumelé",
                         "en": "Single-family attached"
                     },
-                    "code": ""
+                    "code": "SINE"
                 },
                 {
                     "name": {
                         "fr": "Multifamiliale",
                         "en": "Multi-family"
                     },
-                    "code": ""
+                    "code": "MULT"
                 },
                 {
                     "name": {
                         "fr": "Maison mobile",
                         "en": "Mobile home"
                     },
-                    "code": ""
+                    "code": "MOBI"
                 },
                 {
                     "name": {
                         "fr": "Autre bâtiment",
                         "en": "Building other"
                     },
-                    "code": ""
+                    "code": "BUIL"
                 }
             ]
         },
@@ -62,63 +62,63 @@
                 "fr": "Bâtiment commercial et service",
                 "en": "Commercial building"
             },
-            "code": "",
+            "code": "COMM",
             "value": [
                 {
                     "name": {
                         "fr": "Centre commercial",
                         "en": "Shopping center"
                     },
-                    "code": ""
+                    "code": "SHOP"
                 },
                 {
                     "name": {
                         "fr": "Commerce indépendant (pharmacie, épicerie, …)",
                         "en": "Commercial store (drugstore, grocery store, …)"
                     },
-                    "code": ""
+                    "code": "COME"
                 },
                 {
                     "name": {
                         "fr": "Commerce de véhicules",
                         "en": "Car dealership"
                     },
-                    "code": ""
+                    "code": "CARD"
                 },
                 {
                     "name": {
                         "fr": "Station de service et garage",
                         "en": "Gas station and automobile repair shop"
                     },
-                    "code": ""
+                    "code": "GASS"
                 },
                 {
                     "name": {
                         "fr": "Hôtel",
                         "en": "Hotel"
                     },
-                    "code": ""
+                    "code": "HOTE"
                 },
                 {
                     "name": {
                         "fr": "Motel",
                         "en": "Motel"
                     },
-                    "code": ""
+                    "code": "MOTE"
                 },
                 {
                     "name": {
                         "fr": "Restaurant, brasserie",
                         "en": "Restaurant, bar"
                     },
-                    "code": ""
+                    "code": "REST"
                 },
                 {
                     "name": {
                         "fr": "Autre commerce/service",
                         "en": "Other retail or service"
                     },
-                    "code": ""
+                    "code": "OTHE"
                 }
             ]
         },
@@ -127,147 +127,147 @@
                 "fr": "Bâtiment de service et d'utilité publique (équipements collectifs)",
                 "en": "Public utility and services building"
             },
-            "code": "",
+            "code": "PUBL",
             "value": [
+                {
+                    "name": {
+                        "fr": "Château d'eau",
+                        "en": "Water tower"
+                    },
+                    "code": "WATE"
+                },
                 {
                     "name": {
                         "fr": "Édifice gouvernemental",
                         "en": "Government building"
                     },
-                    "code": ""
+                    "code": "GOVE"
                 },
                 {
                     "name": {
                         "fr": "Hôtel de ville",
                         "en": "City hall"
                     },
-                    "code": ""
+                    "code": "CITY"
                 },
                 {
                     "name": {
                         "fr": "Établissement d'incarcération",
                         "en": "Incarceration facility"
                     },
-                    "code": ""
+                    "code": "INCA"
                 },
                 {
                     "name": {
                         "fr": "Poste de police",
                         "en": "Police station"
                     },
-                    "code": ""
+                    "code": "POLI"
                 },
                 {
                     "name": {
                         "fr": "Poste de pompiers",
                         "en": "Fire station"
                     },
-                    "code": ""
+                    "code": "FIRE"
                 },
                 {
                     "name": {
                         "fr": "Hôpital",
                         "en": "Hospital"
                     },
-                    "code": ""
+                    "code": "HOSP"
                 },
                 {
                     "name": {
                         "fr": "Église",
                         "en": "Church"
                     },
-                    "code": ""
+                    "code": "CHUR"
                 },
                 {
                     "name": {
                         "fr": "Maison de religieux",
                         "en": "Other religious building"
                     },
-                    "code": ""
+                    "code": "OTHR"
                 },
                 {
                     "name": {
                         "fr": "Université, collège",
                         "en": "University and college"
                     },
-                    "code": ""
+                    "code": "UNIV"
                 },
                 {
                     "name": {
                         "fr": "École primaire/secondaire",
                         "en": "School (elementary and high)"
                     },
-                    "code": ""
+                    "code": "SCHO"
                 },
                 {
                     "name": {
                         "fr": "Cinéma extérieur",
                         "en": "Drive-in cinema"
                     },
-                    "code": ""
+                    "code": "DRIV"
                 },
                 {
                     "name": {
                         "fr": "Aréna",
                         "en": "Arena"
                     },
-                    "code": ""
+                    "code": "AREN"
                 },
                 {
                     "name": {
                         "fr": "Stade",
                         "en": "Stadium"
                     },
-                    "code": ""
+                    "code": "STAD"
                 },
                 {
                     "name": {
                         "fr": "Centre sportif",
                         "en": "Sport facility"
                     },
-                    "code": ""
+                    "code": "SPOR"
                 },
                 {
                     "name": {
                         "fr": "Terrain de jeu, parc urbain",
                         "en": "Playground and park"
                     },
-                    "code": ""
+                    "code": "PLAY"
                 },
                 {
                     "name": {
                         "fr": "Cimetière",
                         "en": "Cemetary"
                     },
-                    "code": ""
+                    "code": "CEME"
                 },
                 {
                     "name": {
                         "fr": "Poste de douane",
                         "en": "Customs checkpoint"
                     },
-                    "code": ""
+                    "code": "CUST"
                 },
                 {
                     "name": {
                         "fr": "Observatoire",
                         "en": "Observatory"
                     },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Château d'eau",
-                        "en": "Water tower"
-                    },
-                    "code": ""
+                    "code": "OBSE"
                 },
                 {
                     "name": {
                         "fr": "Bassin de rétention",
                         "en": "Retention basin"
                     },
-                    "code": ""
+                    "code": "RETE"
                 }
             ]
         },
@@ -276,105 +276,105 @@
                 "fr": "Installations sportives extérieures",
                 "en": "Outdoor sport facility"
             },
-            "code": "",
+            "code": "OUTD",
             "value": [
                 {
                     "name": {
                         "fr": "Terrain de baseball",
                         "en": "Baseball field"
                     },
-                    "code": ""
+                    "code": "BASE"
                 },
                 {
                     "name": {
                         "fr": "Terrain de soccer",
                         "en": "Soccer field"
                     },
-                    "code": ""
+                    "code": "SOCC"
                 },
                 {
                     "name": {
                         "fr": "Terrain de football",
                         "en": "Football field"
                     },
-                    "code": ""
+                    "code": "FOOT"
                 },
                 {
                     "name": {
                         "fr": "Piscine extérieure",
                         "en": "Outdoor pool"
                     },
-                    "code": ""
+                    "code": "OUTO"
                 },
                 {
                     "name": {
                         "fr": "Terrain de tennis",
                         "en": "Tennis court"
                     },
-                    "code": ""
+                    "code": "TENN"
                 },
                 {
                     "name": {
                         "fr": "Terrain de basketball",
                         "en": "Basketball court"
                     },
-                    "code": ""
+                    "code": "BASK"
                 },
                 {
                     "name": {
                         "fr": "Piste d'athlétisme",
                         "en": "Athletics track"
                     },
-                    "code": ""
+                    "code": "ATHL"
                 },
                 {
                     "name": {
                         "fr": "Terrain à vocation multiple",
                         "en": "Multiple-use sports field"
                     },
-                    "code": ""
+                    "code": "MULI"
                 },
                 {
                     "name": {
                         "fr": "Terrain de volley-ball",
                         "en": "Volleyball court"
                     },
-                    "code": ""
+                    "code": "VOLL"
                 },
                 {
                     "name": {
                         "fr": "Terrain de golf",
                         "en": "Golf course"
                     },
-                    "code": ""
+                    "code": "GOLF"
                 },
                 {
                     "name": {
                         "fr": "Centre de ski",
                         "en": "Ski resort"
                     },
-                    "code": ""
+                    "code": "SKIR"
                 },
                 {
                     "name": {
                         "fr": "Piste de course",
                         "en": "Racetrack"
                     },
-                    "code": ""
+                    "code": "RACE"
                 },
                 {
                     "name": {
                         "fr": "Parc d'attractions",
                         "en": "Amusement park"
                     },
-                    "code": ""
+                    "code": "AMUS"
                 },
                 {
                     "name": {
                         "fr": "Hippodrome",
                         "en": "Hippodrome"
                     },
-                    "code": ""
+                    "code": "HIPP"
                 }
             ]
         },
@@ -383,84 +383,84 @@
                 "fr": "Bâtiment ou infrastructure industriel",
                 "en": "Industrial building and structure"
             },
-            "code": "",
+            "code": "INDU",
             "value": [
                 {
                     "name": {
                         "fr": "Usine d'extraction (carrière, sablière, gravière)",
                         "en": "Extraction plant (quarry, gravel/sand pit)"
                     },
-                    "code": ""
+                    "code": "EXTR"
                 },
                 {
                     "name": {
                         "fr": "Usine de fabrication/transformation légère",
                         "en": "Light processing/manufacturing plant"
                     },
-                    "code": ""
+                    "code": "LIGH"
                 },
                 {
                     "name": {
                         "fr": "Usine de fabrication/transformation lourde",
                         "en": "Heavy processing/manufacturing plant"
                     },
-                    "code": ""
+                    "code": "HEAV"
                 },
                 {
                     "name": {
                         "fr": "Entrepôt de marchandise",
                         "en": "Merchandise warehouse"
                     },
-                    "code": ""
+                    "code": "MERC"
                 },
                 {
                     "name": {
                         "fr": "Entrepôt d'hydrocarbures",
                         "en": "Oil and gas storage facility"
                     },
-                    "code": ""
+                    "code": "OILA"
                 },
                 {
                     "name": {
                         "fr": "Station d'épuration des eaux",
                         "en": "Water treatment plant"
                     },
-                    "code": ""
+                    "code": "WATR"
                 },
                 {
                     "name": {
                         "fr": "Bassin de décantation",
                         "en": "Decantation basin"
                     },
-                    "code": ""
+                    "code": "DECA"
                 },
                 {
                     "name": {
                         "fr": "Site d'enfouissement (dépôt de déchets)",
                         "en": "Landfill site"
                     },
-                    "code": ""
+                    "code": "LAND"
                 },
                 {
                     "name": {
                         "fr": "Réservoir",
                         "en": "Tank"
                     },
-                    "code": ""
+                    "code": "TANK"
                 },
                 {
                     "name": {
                         "fr": "Cheminée",
                         "en": "Chimney"
                     },
-                    "code": ""
+                    "code": "CHIM"
                 },
                 {
                     "name": {
                         "fr": "Usine autre",
                         "en": "Other factory"
                     },
-                    "code": ""
+                    "code": "OTHF"
                 }
             ]
         },
@@ -469,49 +469,49 @@
                 "fr": "Autres objets bâtis (mobilier urbain)",
                 "en": "Street furniture"
             },
-            "code": "",
+            "code": "STRE",
             "value": [
                 {
                     "name": {
                         "fr": "Clôture",
                         "en": "Fence"
                     },
-                    "code": ""
+                    "code": "FENC"
                 },
                 {
                     "name": {
                         "fr": "Lampadaire",
                         "en": "Lamp post"
                     },
-                    "code": ""
+                    "code": "LAMP"
                 },
                 {
                     "name": {
                         "fr": "Trottoir",
                         "en": "Sidewalk"
                     },
-                    "code": ""
+                    "code": "SIDE"
                 },
                 {
                     "name": {
                         "fr": "Haie",
                         "en": "Hedgerow"
                     },
-                    "code": ""
+                    "code": "HEDG"
                 },
                 {
                     "name": {
                         "fr": "Poteau électrique",
                         "en": "Utility pole"
                     },
-                    "code": ""
+                    "code": "UTIL"
                 },
                 {
                     "name": {
                         "fr": "Abribus",
                         "en": "Bus shelter"
                     },
-                    "code": ""
+                    "code": "BUSS"
                 }
             ]
         },
@@ -520,98 +520,98 @@
                 "fr": "Infrastructure de transport routier",
                 "en": "Road infrastructure"
             },
-            "code": "",
+            "code": "ROAD",
             "value": [
                 {
                     "name": {
                         "fr": "Autoroute",
                         "en": "Highway"
                     },
-                    "code": ""
+                    "code": "HIGH"
                 },
                 {
                     "name": {
                         "fr": "Échangeur",
                         "en": "Interchange"
                     },
-                    "code": ""
+                    "code": "INTE"
                 },
                 {
                     "name": {
                         "fr": "Route pavée",
                         "en": "Paved road"
                     },
-                    "code": ""
+                    "code": "PAVE"
                 },
                 {
                     "name": {
                         "fr": "Route non pavée",
                         "en": "Unpaved road"
                     },
-                    "code": ""
+                    "code": "UNPA"
                 },
                 {
                     "name": {
                         "fr": "Pont",
                         "en": "Bridge"
                     },
-                    "code": ""
+                    "code": "BRID"
                 },
                 {
                     "name": {
                         "fr": "Viaduc",
                         "en": "Overpass"
                     },
-                    "code": ""
+                    "code": "OVER"
                 },
                 {
                     "name": {
                         "fr": "Centre de services autoroutiers",
                         "en": "Service and rest area"
                     },
-                    "code": ""
+                    "code": "SERV"
                 },
                 {
                     "name": {
                         "fr": "Poste de péage",
                         "en": "Toll station"
                     },
-                    "code": ""
+                    "code": "TOLL"
                 },
                 {
                     "name": {
                         "fr": "Signalisation routière",
                         "en": "Road sign"
                     },
-                    "code": ""
+                    "code": "ROAS"
                 },
                 {
                     "name": {
                         "fr": "Stationnement",
                         "en": "Parking lot"
                     },
-                    "code": ""
+                    "code": "PARK"
                 },
                 {
                     "name": {
                         "fr": "Balance routière",
                         "en": "Weighing station"
                     },
-                    "code": ""
+                    "code": "WEIG"
                 },
                 {
                     "name": {
                         "fr": "Paraneige",
                         "en": "Snow fence"
                     },
-                    "code": ""
+                    "code": "SNOW"
                 },
                 {
                     "name": {
                         "fr": "Tunnel (entrée et sortie)",
                         "en": "Tunnel (entrance and exit)"
                     },
-                    "code": ""
+                    "code": "TUNN"
                 }
             ]
         },
@@ -620,49 +620,56 @@
                 "fr": "Infrastructure de transport ferroviaire",
                 "en": "Train infrastructure"
             },
-            "code": "",
+            "code": "TRAI",
             "value": [
                 {
                     "name": {
                         "fr": "Gare de train",
                         "en": "Train station"
                     },
-                    "code": ""
+                    "code": "TRAN"
                 },
                 {
                     "name": {
                         "fr": "Voie ferrée unique",
                         "en": "Single railroad track"
                     },
-                    "code": ""
+                    "code": "SINR"
                 },
                 {
                     "name": {
                         "fr": "Voie ferrée multiple",
                         "en": "Multiple railroad tracks"
                     },
-                    "code": ""
+                    "code": "MULP"
                 },
                 {
                     "name": {
                         "fr": "Voie de garage",
                         "en": "Storage track"
                     },
-                    "code": ""
+                    "code": "STOR"
                 },
                 {
                     "name": {
                         "fr": "Gare de triage",
                         "en": "Train depot"
                     },
-                    "code": ""
+                    "code": "TRAD"
                 },
                 {
                     "name": {
                         "fr": "Aiguillage ferroviaire",
                         "en": "Railway switch"
                     },
-                    "code": ""
+                    "code": "RAIL"
+                },
+                {
+                    "name": {
+                        "fr": "Passage à niveau",
+                        "en": "Railway crossing"
+                    },
+                    "code": "RAIC"
                 }
             ]
         },
@@ -671,49 +678,49 @@
                 "fr": "Infrastructure de transport maritime",
                 "en": "Maritime infrastructure"
             },
-            "code": "",
+            "code": "MARI",
             "value": [
                 {
                     "name": {
                         "fr": "Port commercial",
                         "en": "Commercial port"
                     },
-                    "code": ""
+                    "code": "COMR"
                 },
                 {
                     "name": {
                         "fr": "Marina / Port de plaisance",
                         "en": "Marina"
                     },
-                    "code": ""
+                    "code": "MARN"
                 },
                 {
                     "name": {
                         "fr": "Port militaire",
                         "en": "Military port"
                     },
-                    "code": ""
+                    "code": "MILI"
                 },
                 {
                     "name": {
                         "fr": "Quai",
                         "en": "Warf"
                     },
-                    "code": ""
+                    "code": "WARF"
                 },
                 {
                     "name": {
                         "fr": "Rampe de mise à l'eau",
                         "en": "Boat launching ramp"
                     },
-                    "code": ""
+                    "code": "BOAT"
                 },
                 {
                     "name": {
                         "fr": "Écluse",
                         "en": "Boat lock"
                     },
-                    "code": ""
+                    "code": "BOAL"
                 }
             ]
         },
@@ -722,28 +729,28 @@
                 "fr": "Infrastructure de transport aérien",
                 "en": "Air transport infastructure"
             },
-            "code": "",
+            "code": "AIRT",
             "value": [
                 {
                     "name": {
                         "fr": "Aéroport",
                         "en": "Airport"
                     },
-                    "code": ""
+                    "code": "AIRP"
                 },
                 {
                     "name": {
                         "fr": "Piste de décollage",
                         "en": "Runway"
                     },
-                    "code": ""
+                    "code": "RUNW"
                 },
                 {
                     "name": {
                         "fr": "Hangar",
                         "en": "Hangar"
                     },
-                    "code": ""
+                    "code": "HANG"
                 }
             ]
         },
@@ -752,126 +759,126 @@
                 "fr": "Moyen de transport mobile",
                 "en": "Mobile transportation means"
             },
-            "code": "",
+            "code": "MOBL",
             "value": [
                 {
                     "name": {
                         "fr": "Voiture",
                         "en": "Car"
                     },
-                    "code": ""
+                    "code": "CARR"
                 },
                 {
                     "name": {
                         "fr": "Fourgonnette",
                         "en": "Van"
                     },
-                    "code": ""
+                    "code": "VANN"
                 },
                 {
                     "name": {
                         "fr": "Camionnette",
                         "en": "Pick-up truck"
                     },
-                    "code": ""
+                    "code": "PICK"
                 },
                 {
                     "name": {
                         "fr": "Autocar/autobus",
-                        "en": ""
+                        "en": "Bus"
                     },
-                    "code": ""
+                    "code": "AUTO"
                 },
                 {
                     "name": {
                         "fr": "Train - locomotive",
                         "en": "Train - locomotive"
                     },
-                    "code": ""
+                    "code": "TRAL"
                 },
                 {
                     "name": {
                         "fr": "Train - wagon de passagers",
                         "en": "Train - passenger car"
                     },
-                    "code": ""
+                    "code": "TRAP"
                 },
                 {
                     "name": {
                         "fr": "Train - wagon de marchandise",
                         "en": "Train - freight car"
                     },
-                    "code": ""
+                    "code": "TRAF"
                 },
                 {
                     "name": {
                         "fr": "Bateau de plaisance, voilier",
                         "en": "Pleasure craft"
                     },
-                    "code": ""
+                    "code": "PLEA"
                 },
                 {
                     "name": {
                         "fr": "Bateau de marchandise",
                         "en": "Freight vessel"
                     },
-                    "code": ""
+                    "code": "FREI"
                 },
                 {
                     "name": {
                         "fr": "Porte-conteneurs",
                         "en": "Container ship"
                     },
-                    "code": ""
+                    "code": "CONT"
                 },
                 {
                     "name": {
                         "fr": "Pétrolier/méthanier",
                         "en": "Tanker"
                     },
-                    "code": ""
+                    "code": "TANE"
                 },
                 {
                     "name": {
                         "fr": "Avion type cessna",
                         "en": "Small plane"
                     },
-                    "code": ""
+                    "code": "SMAL"
                 },
                 {
                     "name": {
                         "fr": "Avion de ligne",
                         "en": "Airliner"
                     },
-                    "code": ""
+                    "code": "AIRL"
                 },
                 {
                     "name": {
                         "fr": "Avion militaire",
                         "en": "Military aircraft"
                     },
-                    "code": ""
+                    "code": "MILT"
                 },
                 {
                     "name": {
                         "fr": "Train routier",
                         "en": "Road train"
                     },
-                    "code": ""
+                    "code": "ROAT"
                 },
                 {
                     "name": {
                         "fr": "Paquebot",
                         "en": "Cruise ship"
                     },
-                    "code": ""
+                    "code": "CRUI"
                 },
                 {
                     "name": {
                         "fr": "Navire militaire",
                         "en": "Military vessel"
                     },
-                    "code": ""
+                    "code": "MILA"
                 }
             ]
         },
@@ -880,28 +887,28 @@
                 "fr": "Télécommunications",
                 "en": "Telecommunication"
             },
-            "code": "",
+            "code": "TELE",
             "value": [
                 {
                     "name": {
                         "fr": "Tour (dédiée)",
                         "en": "Tower (dedicated)"
                     },
-                    "code": ""
+                    "code": "TOWE"
                 },
                 {
                     "name": {
                         "fr": "Antenne de communication (sur toit)",
                         "en": "Communication antenna (roof)"
                     },
-                    "code": ""
+                    "code": "COMU"
                 },
                 {
                     "name": {
                         "fr": "Station de réception satellite (grandes paraboles)",
                         "en": "Satellite dish"
                     },
-                    "code": ""
+                    "code": "SATE"
                 }
             ]
         },
@@ -910,84 +917,84 @@
                 "fr": "Énergie",
                 "en": "Energy"
             },
-            "code": "",
+            "code": "ENER",
             "value": [
                 {
                     "name": {
                         "fr": "Ligne de haute tension",
                         "en": "High-voltage line"
                     },
-                    "code": ""
+                    "code": "HIGV"
                 },
                 {
                     "name": {
                         "fr": "Pipeline",
                         "en": "Pipeline"
                     },
-                    "code": ""
+                    "code": "PIPE"
                 },
                 {
                     "name": {
                         "fr": "Pylône",
                         "en": "Pylon"
                     },
-                    "code": ""
+                    "code": "PYLO"
                 },
                 {
                     "name": {
                         "fr": "Centrale thermique",
                         "en": "Thermal power plant"
                     },
-                    "code": ""
+                    "code": "THER"
                 },
                 {
                     "name": {
                         "fr": "Centrale hydro-électrique",
                         "en": "Hydroelectric power plant"
                     },
-                    "code": ""
+                    "code": "HYDR"
                 },
                 {
                     "name": {
                         "fr": "Centrale nucléaire",
                         "en": "Nuclear plant"
                     },
-                    "code": ""
+                    "code": "NUCL"
                 },
                 {
                     "name": {
                         "fr": "Éolienne",
                         "en": "Wind turbine"
                     },
-                    "code": ""
+                    "code": "WIND"
                 },
                 {
                     "name": {
                         "fr": "Panneau solaire",
                         "en": "Solar pannel"
                     },
-                    "code": ""
+                    "code": "SOLA"
                 },
                 {
                     "name": {
                         "fr": "Transformateur d'électricité, poste électrique",
                         "en": "Electrical substation"
                     },
-                    "code": ""
+                    "code": "ELEC"
                 },
                 {
                     "name": {
                         "fr": "Puits de pétrole/gaz",
                         "en": "Oil/ gas well"
                     },
-                    "code": ""
+                    "code": "OILG"
                 },
                 {
                     "name": {
                         "fr": "Raffinerie",
                         "en": "Refinery"
                     },
-                    "code": ""
+                    "code": "REFI"
                 }
             ]
         },
@@ -996,63 +1003,63 @@
                 "fr": "Structures anthropiques hydrographiques",
                 "en": "Man-made hydrographic structure"
             },
-            "code": "",
+            "code": "MANM",
             "value": [
                 {
                     "name": {
                         "fr": "Digue",
                         "en": "Dike"
                     },
-                    "code": ""
+                    "code": "DIKE"
                 },
                 {
                     "name": {
                         "fr": "Brise-Lame",
                         "en": "Breakwater"
                     },
-                    "code": ""
+                    "code": "BREA"
                 },
                 {
                     "name": {
                         "fr": "Cale sèche",
                         "en": "Dry dock"
                     },
-                    "code": ""
+                    "code": "DRYD"
                 },
                 {
                     "name": {
                         "fr": "Entrave à la navigation",
                         "en": "Navigational obstacle"
                     },
-                    "code": ""
+                    "code": "NAVI"
                 },
                 {
                     "name": {
                         "fr": "Mur de protection (seawall)",
                         "en": "Seawall"
                     },
-                    "code": ""
+                    "code": "SEAW"
                 },
                 {
                     "name": {
                         "fr": "Repère de navigation",
                         "en": "Navigational landmark"
                     },
-                    "code": ""
+                    "code": "NAVG"
                 },
                 {
                     "name": {
                         "fr": "Vivier / pisciculture",
                         "en": "Fish pool/ farm"
                     },
-                    "code": ""
+                    "code": "FISH"
                 },
                 {
                     "name": {
                         "fr": "Échelle à poisson",
                         "en": "Fish ladder"
                     },
-                    "code": ""
+                    "code": "FISL"
                 }
             ]
         },
@@ -1061,63 +1068,63 @@
                 "fr": "Exploitation agricole",
                 "en": "Farmland"
             },
-            "code": "",
+            "code": "FARM",
             "value": [
                 {
                     "name": {
                         "fr": "Champ - grandes cultures",
                         "en": "Crop field"
                     },
-                    "code": ""
+                    "code": "CROP"
                 },
                 {
                     "name": {
                         "fr": "Champ - cultures maraîchères",
                         "en": "Field - vegetable crop"
                     },
-                    "code": ""
+                    "code": "FIEL"
                 },
                 {
                     "name": {
                         "fr": "Champ - horticulture",
                         "en": "Field - horticulture"
                     },
-                    "code": ""
+                    "code": "FIED"
                 },
                 {
                     "name": {
                         "fr": "Champ - fourrager",
                         "en": "Field - hay"
                     },
-                    "code": ""
+                    "code": "FIEH"
                 },
                 {
                     "name": {
                         "fr": "Friche",
                         "en": "Fallow"
                     },
-                    "code": ""
+                    "code": "FALL"
                 },
                 {
                     "name": {
                         "fr": "Verger",
                         "en": "Orchard"
                     },
-                    "code": ""
+                    "code": "ORCH"
                 },
                 {
                     "name": {
                         "fr": "Vignoble",
                         "en": "Vineyards"
                     },
-                    "code": ""
+                    "code": "VINE"
                 },
                 {
                     "name": {
                         "fr": "Enclos",
                         "en": "Paddock"
                     },
-                    "code": ""
+                    "code": "PADD"
                 }
             ]
         },
@@ -1126,56 +1133,56 @@
                 "fr": "Bâtiments agricoles",
                 "en": "Agricultural buildings"
             },
-            "code": "",
+            "code": "AGRI",
             "value": [
                 {
                     "name": {
                         "fr": "Grange, entrepôt, hangar",
                         "en": "Barn, warehouse, shed"
                     },
-                    "code": ""
+                    "code": "BARN"
                 },
                 {
                     "name": {
                         "fr": "Silo",
                         "en": "Silo"
                     },
-                    "code": ""
+                    "code": "SILO"
                 },
                 {
                     "name": {
                         "fr": "Ferme d'élevage",
                         "en": "Livestock farm"
                     },
-                    "code": ""
+                    "code": "LIVE"
                 },
                 {
                     "name": {
                         "fr": "Fosse lisier",
                         "en": "Manure pit"
                     },
-                    "code": ""
+                    "code": "MANU"
                 },
                 {
                     "name": {
                         "fr": "Serre d'exploitation agricole",
                         "en": "Agricultural greenhouse"
                     },
-                    "code": ""
+                    "code": "AGRC"
                 },
                 {
                     "name": {
                         "fr": "Serre commerciale",
-                        "en": ""
+                        "en": "Commercial greenhouse"
                     },
-                    "code": ""
+                    "code": "SERR"
                 },
                 {
                     "name": {
                         "fr": "Élévateur à grain",
                         "en": "Grain elevator"
                     },
-                    "code": ""
+                    "code": "GRAI"
                 }
             ]
         },
@@ -1184,21 +1191,21 @@
                 "fr": "Arbres (en divers milieux)",
                 "en": "Trees"
             },
-            "code": "",
+            "code": "TREE",
             "value": [
                 {
                     "name": {
                         "fr": "Arbre feuillu (Deciduous tree)",
                         "en": "Deciduous tree"
                     },
-                    "code": ""
+                    "code": "DECI"
                 },
                 {
                     "name": {
                         "fr": "Arbre conifère (Evergreen Forest Land)",
                         "en": "Coniferous tree"
                     },
-                    "code": ""
+                    "code": "CONI"
                 }
             ]
         },
@@ -1207,49 +1214,49 @@
                 "fr": "Hydrographie linéaire",
                 "en": "Linear hydrography"
             },
-            "code": "",
+            "code": "LINE",
             "value": [
                 {
                     "name": {
                         "fr": "Rivière (Streams)",
                         "en": "River and stream"
                     },
-                    "code": ""
+                    "code": "RIVE"
                 },
                 {
                     "name": {
                         "fr": "Ruisseau",
                         "en": "Brook"
                     },
-                    "code": ""
+                    "code": "BROO"
                 },
                 {
                     "name": {
                         "fr": "Fossé",
                         "en": "Ditch"
                     },
-                    "code": ""
+                    "code": "DITC"
                 },
                 {
                     "name": {
                         "fr": "Chute",
                         "en": "Waterfall"
                     },
-                    "code": ""
+                    "code": "WATF"
                 },
                 {
                     "name": {
                         "fr": "Rapide",
                         "en": "Rapid"
                     },
-                    "code": ""
+                    "code": "RAPI"
                 },
                 {
                     "name": {
                         "fr": "Cours d'eau tari",
                         "en": "Dry watercourse"
                     },
-                    "code": ""
+                    "code": "DRYW"
                 }
             ]
         },
@@ -1258,14 +1265,14 @@
                 "fr": "Hydrographie surfacique",
                 "en": "Surficial hydrography"
             },
-            "code": "",
+            "code": "SURF",
             "value": [
                 {
                     "name": {
                         "fr": "Eau",
                         "en": "Water"
                     },
-                    "code": ""
+                    "code": "WAET"
                 }
             ]
         },
@@ -1274,49 +1281,49 @@
                 "fr": "Milieux humides",
                 "en": "Wetland"
             },
-            "code": "",
+            "code": "WETL",
             "value": [
                 {
                     "name": {
                         "fr": "Bog - arboré",
                         "en": "Treed bog"
                     },
-                    "code": ""
+                    "code": "TRED"
                 },
                 {
                     "name": {
                         "fr": "Bog - non arboré",
                         "en": "Untreed bog"
                     },
-                    "code": ""
+                    "code": "UNTR"
                 },
                 {
                     "name": {
                         "fr": "Fen",
                         "en": "Fen"
                     },
-                    "code": ""
+                    "code": "FENN"
                 },
                 {
                     "name": {
                         "fr": "Marécage",
                         "en": "Swamp"
                     },
-                    "code": ""
+                    "code": "SWAM"
                 },
                 {
                     "name": {
                         "fr": "Marais",
                         "en": "Marsh"
                     },
-                    "code": ""
+                    "code": "MARS"
                 },
                 {
                     "name": {
                         "fr": "Eau peu profonde",
                         "en": "Shallow water"
                     },
-                    "code": ""
+                    "code": "SHAL"
                 }
             ]
         },
@@ -1325,35 +1332,35 @@
                 "fr": "Mines",
                 "en": "Mines"
             },
-            "code": "",
+            "code": "MINE",
             "value": [
                 {
                     "name": {
                         "fr": "Pit",
                         "en": "Pit"
                     },
-                    "code": ""
+                    "code": "PITT"
                 },
                 {
                     "name": {
                         "fr": "Mine shaft",
                         "en": "Mine shaft"
                     },
-                    "code": ""
+                    "code": "MINS"
                 },
                 {
                     "name": {
                         "fr": "Tailings",
                         "en": "Tailings"
                     },
-                    "code": ""
+                    "code": "TAIL"
                 },
                 {
                     "name": {
                         "fr": "Decantation basin",
                         "en": "Decantation basin"
                     },
-                    "code": ""
+                    "code": "DECN"
                 }
             ]
         },
@@ -1362,114 +1369,35 @@
                 "fr": "Formes terrestres",
                 "en": "Glacial landforms"
             },
-            "code": "",
+            "code": "GLAC",
             "value": [
                 {
                     "name": {
                         "fr": "Esker",
                         "en": "Esker"
                     },
-                    "code": ""
+                    "code": "ESKE"
                 },
                 {
                     "name": {
                         "fr": "Moraine",
                         "en": "Moraine"
                     },
-                    "code": ""
+                    "code": "MORA"
                 },
                 {
                     "name": {
                         "fr": "Pingo",
                         "en": "Pingo"
                     },
-                    "code": ""
+                    "code": "PING"
                 },
                 {
                     "name": {
                         "fr": "Drumlin",
                         "en": "Drumlin"
                     },
-                    "code": ""
-                }
-            ]
-        },
-        {
-            "name": {
-                "fr": "Énergie verte",
-                "en": ""
-            },
-            "code": "",
-            "value": [
-                {
-                    "name": {
-                        "fr": "Roofedge - toit vert",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Roofedge - avec panneau solaire",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit plat",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit plat < 10 % obstruction",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit plat  10 - 30% obstruction",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit plat > 30 % obstruction",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit 2 pentes",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit 4 pentes",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit complexe",
-                        "en": ""
-                    },
-                    "code": ""
-                },
-                {
-                    "name": {
-                        "fr": "Toit convexe",
-                        "en": ""
-                    },
-                    "code": ""
+                    "code": "DRUM"
                 }
             ]
         }
