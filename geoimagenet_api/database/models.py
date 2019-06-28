@@ -118,9 +118,7 @@ class TaxonomyClass(Base):
     )
     name_fr = Column(String, nullable=False, index=True)
     name_en = Column(String, nullable=True, index=True)
-    code = Column(
-        String, nullable=False, server_default="NONE", index=True, unique=True
-    )
+    code = Column(String, nullable=False, index=True, unique=True)
 
 
 class Taxonomy(Base):

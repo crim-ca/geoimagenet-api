@@ -79,7 +79,7 @@ def upgrade():
 
         return taxonomy_class_id
 
-    objets_json_path = Path(__file__).parent.parent.parent / "json_data" / "objets_v1_a.json"
+    objets_json_path = Path(__file__).parent.parent.parent / "json_data" / "objets.json"
     objets_data = json.loads(objets_json_path.read_text())
 
     name_fr = objets_data["name"]["fr"]
