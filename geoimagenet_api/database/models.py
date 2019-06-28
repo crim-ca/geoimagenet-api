@@ -53,9 +53,7 @@ class Annotation(Base):
     taxonomy_class_id = Column(
         Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
     )
-    image_id = Column(
-        Integer, ForeignKey("image.id"), nullable=False, index=True
-    )
+    image_id = Column(Integer, ForeignKey("image.id"), nullable=False, index=True)
     status = Column(
         Enum(AnnotationStatus, name="annotation_status_enum"),
         nullable=False,
@@ -120,9 +118,8 @@ class TaxonomyClass(Base):
     )
     name_fr = Column(String, nullable=False, index=True)
     name_en = Column(String, nullable=True, index=True)
-    code = Column(String, nullable=False, server_default="NONE", index=True)
-    __table_args__ = (
-        UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),
+    code = Column(
+        String, nullable=False, server_default="NONE", index=True, unique=True
     )
 
 
@@ -174,6 +171,7 @@ class Image(Base):
     __table_args__ = (
         UniqueConstraint("sensor_name", "bands", "bits", "filename", name="uc_image"),
     )
+
     def __repr__(self):
         return f"Image<info={self.sensor_name} {self.bands} {self.bits}, filename={self.filename}>"
 
