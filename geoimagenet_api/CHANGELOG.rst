@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+0.18.0 (2019-06-28)
+------------
+
+Changes
+~~~~~~~
+- Add unique 4-letter codes for taxonomy classes and update taxonomy
+
+
 0.17.1 (2019-06-26)
 ------------
 
