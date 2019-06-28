@@ -162,22 +162,21 @@ def upgrade():
 
     for row in result:
         image_name = row[0]
+        bands, filename = image_name.split("_", 1)  # example: RGB_filename
         if (
             not image_name.count("_") == 9
-            or "RGBN" not in image_name
-            or "8bit" not in image_name
             or "Pleiades" not in image_name
+            or bands not in "RGB RGBN NRG".split()
         ):
             raise ValueError(
                 f"Image name is unexpected (fix migration script): {image_name}"
             )
-        bands, filename = image_name.split("_", 1)  # example: RGB_filename
 
         images_data.append(
             {
                 "sensor_name": "Pleiades",
                 "bands": bands,
-                "bits": 8,
+                "bits": 16 if "16bit" in image_name else 8,
                 "filename": filename,
                 "extension": ".tif",
             }

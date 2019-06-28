@@ -5,6 +5,8 @@ Revises: 36bf8c8afe01
 Create Date: 2019-03-20 12:16:39.931404
 
 """
+from pathlib import Path
+
 from alembic import op
 import sqlalchemy as sa
 import geoalchemy2
