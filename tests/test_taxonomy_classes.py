@@ -19,7 +19,7 @@ def dummy_taxonomy(request, version):
         taxo = Taxonomy(name_fr="dummy", version=version)
         session.add(taxo)
         session.flush()
-        taxo_class = TaxonomyClass(taxonomy_id=taxo.id, name_fr="dummy class")
+        taxo_class = TaxonomyClass(taxonomy_id=taxo.id, name_fr="dummy class", code="DUMM")
         session.add(taxo_class)
         session.commit()
 
@@ -46,7 +46,7 @@ def test_taxonomy_class_latest_version_dummy(client, dummy_taxonomy_1_1):
 
 
 def test_taxonomy_class_sluggified_name(client):
-    query = {"taxonomy_name": "couverture-de-sol", "name": "Residential"}
+    query = {"taxonomy_name": "couverture-de-sol", "name": "Zone résidentielle"}
     r = client.get("/taxonomy_classes", params=query)
     assert r.status_code == 200
     assert len(r.json()) == 1

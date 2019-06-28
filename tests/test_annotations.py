@@ -800,7 +800,7 @@ def test_friendly_name():
             session=session, geometry=transformed_geometry, taxonomy_class=12
         )
 
-        assert annotation.name == "NONE_+040.000000_-070.000000"
+        assert annotation.name == "CARD_+040.000000_-070.000000"
         taxo = (
             session.query(TaxonomyClass)
             .filter_by(id=annotation.taxonomy_class_id)
