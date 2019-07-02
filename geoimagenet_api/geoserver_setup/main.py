@@ -22,6 +22,8 @@ def main(
     gs_yaml_config: str,
     seed_cache_only=False,
     concurrent_seeds=None,
+    setup_datastore=False,
+    gs_mirror_insecure=False,
     dry_run=False,
 ):
     logger.info(f"## Configuring datastore")
@@ -31,14 +33,14 @@ def main(
         gs_datastore_user,
         gs_datastore_password,
         gs_yaml_config,
-        dry_run,
+        dry_run=dry_run,
     )
 
     if seed_cache_only:
         datastore.seed_cache(concurrent_seeds)
     else:
-        datastore.configure()
-
+        if setup_datastore:
+            datastore.configure()
         logger.info(f"## Configuring GeoServer mirror instance")
         GeoServerMirror(
             gs_datastore_url,
@@ -48,7 +50,8 @@ def main(
             gs_mirror_user,
             gs_mirror_password,
             gs_yaml_config,
-            dry_run,
+            dry_run=dry_run,
+            skip_ssl=gs_mirror_insecure,
         ).configure()
 
 
@@ -58,6 +61,12 @@ def main(
     "--dry-run",
     is_flag=True,
     help="Only log actions to perform without changing anything on the remote servers.",
+)
+@click.option(
+    "--setup-datastore",
+    is_flag=True,
+    help="By default, the datastore images are not configured "
+    "(so that development environments don't interfere with production).",
 )
 @click.option(
     "--gs-yaml-config",
@@ -82,6 +91,11 @@ def main(
     "--gs-mirror-password", help="Password to connect to Geoserver mirror service."
 )
 @click.option(
+    "--gs-mirror-insecure",
+    is_flag=True,
+    help="Don't validate ssl when connecting to geoserver mirror instance.",
+)
+@click.option(
     "--seed-cache-only",
     is_flag=True,
     default=False,
@@ -104,6 +118,8 @@ def cli(
     gs_mirror_password,
     seed_cache_only,
     concurrent_seeds,
+    setup_datastore,
+    gs_mirror_insecure,
 ):
     """The command line interface to configure the geoserver datastore and a cascading WMS geoserver
     using the REST api of GeoServer.
@@ -152,6 +168,8 @@ def cli(
         gs_yaml_config,
         seed_cache_only,
         concurrent_seeds,
+        setup_datastore,
+        gs_mirror_insecure,
         dry_run,
     )
 
