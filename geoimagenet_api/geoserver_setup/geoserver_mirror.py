@@ -8,6 +8,8 @@ from geoimagenet_api.geoserver_setup.utils import find_date
 
 
 class GeoServerMirror(GeoServerDatastore):
+    annotation_workspace_name = "GeoImageNet"
+
     def __init__(
         self,
         gs_datastore_url,
@@ -17,17 +19,24 @@ class GeoServerMirror(GeoServerDatastore):
         gs_mirror_user,
         gs_mirror_password,
         gs_yaml_config,
+        *,
         dry_run,
+        skip_ssl,
     ):
         self.datastore = GeoServerDatastore(
             gs_datastore_url,
             gs_datastore_user,
             gs_datastore_password,
             gs_yaml_config,
-            dry_run,
+            dry_run=dry_run,
         )
         super().__init__(
-            gs_mirror_url, gs_mirror_user, gs_mirror_password, gs_yaml_config, dry_run
+            gs_mirror_url,
+            gs_mirror_user,
+            gs_mirror_password,
+            gs_yaml_config,
+            dry_run=dry_run,
+            skip_ssl=skip_ssl,
         )
 
     def configure(self):

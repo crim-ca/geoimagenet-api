@@ -35,7 +35,9 @@ class GeoServerDatastore:
     thread_pool_size = 4
     extensions = {".tif": "GeoTIFF", ".tiff": "GeoTIFF"}
 
-    def __init__(self, url, user, password, yaml_path, dry_run=False):
+    def __init__(
+        self, url, user, password, yaml_path, *, dry_run=False, skip_ssl=False
+    ):
         self.geoserver_url = url.rstrip("/")
         if not self.geoserver_url.endswith("/rest"):
             self.geoserver_url += "/rest"
@@ -49,6 +51,8 @@ class GeoServerDatastore:
         self.password = password
 
         self.dry_run = dry_run
+
+        self.skip_ssl = skip_ssl
 
         self._catalog = None
         self._existing_styles = None
@@ -126,6 +130,7 @@ class GeoServerDatastore:
                 auth=(self.user, self.password),
                 headers=headers,
                 params=params,
+                verify=not self.skip_ssl,
             )
 
         try:
@@ -256,7 +261,10 @@ class GeoServerDatastore:
         if self._catalog is None:
             logger.debug(f"Getting catalog from {self.geoserver_url}")
             self._catalog = Catalog(
-                self.geoserver_url, username=self.user, password=self.password
+                self.geoserver_url,
+                username=self.user,
+                password=self.password,
+                validate_ssl_certificate=not self.skip_ssl,
             )
         return self._catalog
 
