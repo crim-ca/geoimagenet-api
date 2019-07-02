@@ -35,7 +35,7 @@ pipeline {
                         sh """
                         docker run --rm --link ${c.id}:postgis -v \$(pwd)/${TEST_OUTPUT}:/code/${TEST_OUTPUT} -e GEOIMAGENET_API_POSTGIS_USER=docker -e GEOIMAGENET_API_POSTGIS_PASSWORD=docker -e GEOIMAGENET_API_POSTGIS_HOST=postgis $LOCAL_IMAGE_NAME /bin/sh -c \" \
                         pip install -r requirements_dev.txt && \
-                        pytest --duration=10 --junitxml ${TEST_OUTPUT}/junit.xml --cov 2>&1 | tee ${TEST_OUTPUT}/coverage.out && \
+                        pytest --junitxml ${TEST_OUTPUT}/junit.xml --cov 2>&1 | tee ${TEST_OUTPUT}/coverage.out && \
                         chmod -R 777 ${TEST_OUTPUT}\"
                         """
                     }
