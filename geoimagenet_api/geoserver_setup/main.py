@@ -28,6 +28,10 @@ def main(
 ):
     logger.info(f"## Configuring datastore")
 
+    if gs_mirror_insecure:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     datastore = GeoServerDatastore(
         gs_datastore_url,
         gs_datastore_user,
