@@ -1,13 +1,13 @@
 import os
 import random
 from unittest import mock
+import sys
+from copy import copy
 
 import pytest
-from geoimagenet_api.openapi_schemas import User
 from sqlalchemy_utils import drop_database, create_database, database_exists
 from starlette.testclient import TestClient
 
-import geoimagenet_api
 from geoimagenet_api.database import migrations
 from geoimagenet_api import app, application
 from geoimagenet_api.database.connection import connection_manager
@@ -46,7 +46,11 @@ def reset_test_database():
     create_database(db_url, template="template_postgis")
 
     # run migrations and initiate base data
-    migrations.init_database_data()
+    old_argv = copy(sys.argv)
+    sys.argv = [sys.argv[0], "upgrade", "head"]
+    migrations.migrate()
+    sys.argv = old_argv
+
     migrations.load_testing_data()
 
     randomize_taxonomy_classes()

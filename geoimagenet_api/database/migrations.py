@@ -31,17 +31,35 @@ def ensure_database_exists():
         create_database(engine.url, template="template_postgis")
 
 
+def _has_alembic_version():
+    """Returns True if the database contains an alembic_version table."""
+    with connection_manager.get_db_session() as session:
+        result = session.execute(
+            "SELECT table_name "
+            "FROM information_schema.tables "
+            "WHERE table_schema='public' "
+            "AND table_type='BASE TABLE' "
+            "AND table_name='alembic_version';"
+        ).first()
+        return result is not None
+
+
 def migrate():
     """Entrypoint for command-line migrations.
 
     Use the `migrate` command exactly like `alembic`.
     Ex: `migrate upgrade head`
     """
+    has_alembic_version = _has_alembic_version()
+
     here = str(Path(__file__).parent)
     print(":: running_migrations ::")
     with cwd(here):
         argv = ["--raiseerr"] + sys.argv[1:]
         alembic.config.main(argv=argv)
+
+    if not has_alembic_version and sys.argv[1:3] == ["upgrade", "head"]:
+        load_taxonomies()
 
 
 def get_names(names):
@@ -67,7 +85,11 @@ def write_taxonomy(json_path: Path):
             name_fr, name_en = get_names(names)
 
             taxonomy_class = models.TaxonomyClass(
-                taxonomy_id=taxonomy_id, name_fr=name_fr, name_en=name_en, parent_id=parent_id, code=obj["code"]
+                taxonomy_id=taxonomy_id,
+                name_fr=name_fr,
+                name_en=name_en,
+                parent_id=parent_id,
+                code=obj["code"],
             )
             session.add(taxonomy_class)
             session.flush()
@@ -81,7 +103,9 @@ def write_taxonomy(json_path: Path):
             return taxonomy_class
 
         def taxonomy_exists(name_fr, version):
-            query = session.query(models.Taxonomy).filter_by(name_fr=name_fr, version=version)
+            query = session.query(models.Taxonomy).filter_by(
+                name_fr=name_fr, version=version
+            )
             return query.scalar() is not None
 
         data = json.loads(json_path.read_text())
@@ -92,7 +116,9 @@ def write_taxonomy(json_path: Path):
         version = str(data["version"])
 
         if not taxonomy_exists(name_fr, version):
-            taxonomy = models.Taxonomy(name_fr=name_fr, name_en=name_en, version=version)
+            taxonomy = models.Taxonomy(
+                name_fr=name_fr, name_en=name_en, version=version
+            )
             session.add(taxonomy)
             session.flush()
             recurse_json(data, taxonomy.id)
@@ -110,16 +136,30 @@ def load_testing_data():
     with connection_manager.get_db_session() as session:
 
         # add some Users
-        demo_admin = models.Person(username="admin", firstname="Demo", lastname="admin", email="admin@crim.ca")
+        demo_admin = models.Person(
+            username="admin", firstname="Demo", lastname="admin", email="admin@crim.ca"
+        )
         session.add(demo_admin)
-        demo_observateur = models.Person(username="observateur", firstname="Demo", lastname="observateur",
-                                         email="observateur@crim.ca")
+        demo_observateur = models.Person(
+            username="observateur",
+            firstname="Demo",
+            lastname="observateur",
+            email="observateur@crim.ca",
+        )
         session.add(demo_observateur)
-        demo_annotateur = models.Person(username="annotateur", firstname="Demo", lastname="annotateur",
-                                        email="annotateur@crim.ca")
+        demo_annotateur = models.Person(
+            username="annotateur",
+            firstname="Demo",
+            lastname="annotateur",
+            email="annotateur@crim.ca",
+        )
         session.add(demo_annotateur)
-        demo_validateur = models.Person(username="validateur", firstname="Demo", lastname="validateur",
-                                        email="validateur@crim.ca")
+        demo_validateur = models.Person(
+            username="validateur",
+            firstname="Demo",
+            lastname="validateur",
+            email="validateur@crim.ca",
+        )
         session.add(demo_validateur)
 
         image_data = {
@@ -138,22 +178,3 @@ def load_testing_data():
             session.commit()
         except IntegrityError:  # pragma: no cover
             session.rollback()
-
-
-def init_database_data():
-    """Entrypoint to build an empty database with data.
-
-    While unique constraints shouldn't allow duplicate data,
-    you should be careful when loading data into the database.
-    Any required migrations will be applied prior to inserting the data.
-    """
-    ensure_database_exists()
-    old_argv = copy(sys.argv)
-    sys.argv = [sys.argv[0], "upgrade", "head"]
-    migrate()
-    sys.argv = old_argv
-
-    load_taxonomies()
-
-    if "--testing" in sys.argv:  # pragma: no cover
-        load_testing_data()
