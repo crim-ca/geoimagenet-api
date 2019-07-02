@@ -5,10 +5,13 @@ from loguru import logger
 from geoimagenet_api.geoserver_setup.geoserver_datastore import GeoServerDatastore
 from geoimagenet_api.geoserver_setup.image_data import ImageData
 from geoimagenet_api.geoserver_setup.utils import find_date
+from geoimagenet_api import config
 
 
 class GeoServerMirror(GeoServerDatastore):
-    annotation_workspace_name = "GeoImageNet"
+    annotation_workspace = "GeoImageNet"
+    annotation_store = "annotations"
+    annotation_table = "annotation"
 
     def __init__(
         self,
@@ -47,6 +50,107 @@ class GeoServerMirror(GeoServerDatastore):
         self.create_wms_stores(image_data_8bit)
         self.create_wms_layers(image_data_8bit)
         self.delete_cached_layers(image_data_8bit)
+
+        self.create_annotation_workspace()
+        self.create_annotation_store()
+        self.create_annotation_layer()
+
+    def create_annotation_workspace(self):
+        logger.debug(f"Creating annotation workspace")
+        existing_workspaces_names = [w.name for w in self.workspaces]
+
+        if self.annotation_workspace not in existing_workspaces_names:
+            logger.info(
+                f"CREATE workspace: name={self.annotation_workspace}, uri={self.annotation_workspace}"
+            )
+            if not self.dry_run:
+                self.catalog.create_workspace(
+                    name=self.annotation_workspace, uri=self.annotation_workspace
+                )
+
+    def create_annotation_store(self):
+        existing_stores = self.request(
+            "get", f"/workspaces/{self.annotation_workspace}/datastores.json"
+        )
+        existing_stores_names = []
+        if existing_stores["dataStores"]:
+            existing_stores_names = [
+                d["name"] for d in existing_stores["dataStores"]["dataStore"]
+            ]
+
+        if self.annotation_store in existing_stores_names:
+            logger.info(f"annotation store already exists")
+            return
+
+        host = config.get("postgis_host", str)
+        user = config.get("postgis_user", str)
+        password = config.get("postgis_password", str)
+        db = config.get("postgis_db", str)
+
+        data = {
+            "dataStore": {
+                "name": self.annotation_store,
+                "connectionParameters": {
+                    "entry": [
+                        {"@key": "host", "$": host},
+                        {"@key": "port", "$": "5432"},
+                        {"@key": "database", "$": db},
+                        {"@key": "user", "$": user},
+                        {"@key": "passwd", "$": password},
+                        {"@key": "dbtype", "$": "postgis"},
+                        {"@key": "Expose primary keys", "$": "true"},
+                    ]
+                },
+            }
+        }
+
+        logger.info(f"CREATE annotations store")
+        if not self.dry_run:
+            self.request(
+                "post",
+                f"/workspaces/{self.annotation_workspace}/datastores.json",
+                data=data,
+            )
+
+    def create_annotation_layer(self):
+        existing_layers = self.request(
+            "get",
+            f"/workspaces/{self.annotation_workspace}/datastores/{self.annotation_store}/featuretypes.json",
+        )
+        existing_layers_names = []
+        if existing_layers["featureTypes"]:
+            existing_layers_names = [
+                d["name"] for d in existing_layers["featureTypes"]["featureType"]
+            ]
+
+        if self.annotation_table in existing_layers_names:
+            logger.info(f"annotation layer already exists")
+            return
+
+        data = {
+            "featureType": {
+                "name": self.annotation_table,
+                "nativeCRS": "EPSG:3857",
+                "srs": "EPSG:3857",
+                "nativeBoundingBox": {
+                  "minx": -2.0037508342789244E7,
+                  "maxx": 2.0037508342789244E7,
+                  "miny": -2.00489661040146E7,
+                  "maxy": 2.0048966104014594E7,
+                  "crs": "EPSG:3857",
+                },
+                "projectionPolicy": "FORCE_DECLARED",
+                "enabled": True,
+            }
+        }
+
+        logger.info(f"CREATE annotation layer")
+        if not self.dry_run:
+            self.request(
+                "post",
+                f"/workspaces/{self.annotation_workspace}/datastores/{self.annotation_store}/featuretypes.json",
+                data=data,
+            )
 
     def delete_cached_layers(self, image_data_8bit: List[ImageData]):
         existing_layers = self.request("get", f"/layers.json", gwc=True)
