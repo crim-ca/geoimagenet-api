@@ -76,8 +76,8 @@ class ExecuteIOHref(BaseModel):
 
 class BatchPostForwarded(BaseModel):
     inputs: List[Union[ExecuteIOValue, ExecuteIOHref]]
-    # Todo: replace Any with ExecuteIOValue when fastapi and pydantic are updated and this mysterious bug is fixed
-    outputs: List[Union[Any, ExecuteIOHref]] = []
+    # Todo: replace Any, Any with ExecuteIOValue, ExecuteIOHref when fastapi and pydantic are updated and this mysterious bug is fixed
+    outputs: List[Union[Any, Any]] = []
 
 
 class BatchPostResult(BaseModel):
