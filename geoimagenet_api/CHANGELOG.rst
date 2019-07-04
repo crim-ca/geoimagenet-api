@@ -2,8 +2,26 @@ Changelog
 =========
 
 
+0.18.1 (2019-07-04)
+-------------------
+
+Changes
+~~~~~~~
+- Remove 'init-database' cli command and do it automatically
+  when the database is new
+- Automatically setup geoserver annotation layer. [David Caron]
+- Add flag to ignore ssl verification on geoserver mirror. [David Caron]
+- Geoserver_setup: by default, don't setup images on the datastore.
+  [David Caron]
+
+Fix
+~~~
+- Require fastapi 0.29.0 as 0.30.0 breaks schema validation for
+  nested Union
+
+
 0.18.0 (2019-06-28)
-------------
+-------------------
 
 Changes
 ~~~~~~~
@@ -11,7 +29,7 @@ Changes
 
 
 0.17.1 (2019-06-26)
-------------
+-------------------
 
 Changes
 ~~~~~~~
@@ -19,7 +37,7 @@ Changes
 
 
 0.17.0 (2019-06-17)
-------------
+-------------------
 
 New
 ~~~
