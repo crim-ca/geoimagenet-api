@@ -25,6 +25,12 @@ def test_changelog(client):
     assert r.content.decode().startswith("Changelog")
 
 
+def test_openapi_json(client):
+    r = client.get("/openapi.json")
+    assert r.status_code == 200
+    assert r.json()
+
+
 def test_not_found(client):
     r = client.get("/yadayada")
     assert r.status_code == 404
