@@ -24,7 +24,7 @@ class Person(Base):
     __tablename__ = "person"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String, nullable=False, unique=True)
+    username = Column(String, nullable=False)
     email = Column(String, nullable=False)
     firstname = Column(String)
     lastname = Column(String)
@@ -119,6 +119,8 @@ class TaxonomyClass(Base):
     name_fr = Column(String, nullable=False, index=True)
     name_en = Column(String, nullable=True, index=True)
     code = Column(String, nullable=False, index=True, unique=True)
+
+    __table_args__ = (UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),)
 
 
 class Taxonomy(Base):

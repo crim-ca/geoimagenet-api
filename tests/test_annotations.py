@@ -180,14 +180,14 @@ def test_annotation_log_triggers():
         )
 
         # update geometry
+        annotation_log_counts_before = session.query(AnnotationLog).count()
         polygon_wkt = "SRID=3857;POLYGON((0 0,1 0,2 1,0 1,0 0))"
         annotation.geometry = polygon_wkt
         session.commit()
+        annotation_log_counts_after = session.query(AnnotationLog).count()
 
-        wkt_geom = session.query(functions.ST_GeomFromEWKT(polygon_wkt)).scalar()
-        assert_log_equals(
-            get_last_log(), geometry=wkt_geom, annotation_id=annotation.id
-        )
+        # no annotation log was written
+        assert annotation_log_counts_before == annotation_log_counts_after
 
         # update annotator
         annotation.annotator_id = 2
