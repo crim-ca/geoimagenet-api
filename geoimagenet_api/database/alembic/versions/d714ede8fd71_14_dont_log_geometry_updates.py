@@ -54,6 +54,7 @@ trigger_annotation_save = """
                             lower(tg_op)::annotation_log_operation_enum
                         );
                     END IF;
+                    NEW.updated_at = now();
                     RETURN NEW; 
                 END;
             $$ LANGUAGE 'plpgsql';
