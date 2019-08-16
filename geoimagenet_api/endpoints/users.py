@@ -37,16 +37,19 @@ def _get_magpie_user(request: Request) -> User:
         email=user_data.get('email'),
     )
 
-    _create_user_if_not_in_database(magpie_user)
+    _update_user_data(magpie_user)
 
     return magpie_user
 
 
-def _create_user_if_not_in_database(magpie_user: User):
+def _update_user_data(magpie_user: User):
     """If the user doesn't exist in the database, create it"""
     if magpie_user.id is not None:
         with connection_manager.get_db_session() as session:
-            if not session.query(Person.id).filter_by(id=magpie_user.id).first():
+            stored_user_data = (
+                session.query(Person).filter_by(id=magpie_user.id).first()
+            )
+            if not stored_user_data:
                 session.add(Person(
                     id=magpie_user.id,
                     username=magpie_user.username,
@@ -55,6 +58,13 @@ def _create_user_if_not_in_database(magpie_user: User):
                     lastname=magpie_user.lastname,
                     organisation=magpie_user.organisation,
                 ))
+                session.commit()
+            else:
+                stored_user_data.username = magpie_user.username,
+                stored_user_data.email = magpie_user.email,
+                stored_user_data.firstname = magpie_user.firstname,
+                stored_user_data.lastname = magpie_user.lastname,
+                stored_user_data.organisation = magpie_user.organisation,
                 session.commit()
 
 

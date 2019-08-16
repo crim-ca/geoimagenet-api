@@ -43,8 +43,36 @@ def test_create_user_if_its_not_in_database():
         id=99,
         username="super_user",
         email="email",
-        group_names=["administrators"],
     )
-    users_routes._create_user_if_not_in_database(magpie_user)
+    users_routes._update_user_data(magpie_user)
     with connection_manager.get_db_session() as session:
         assert session.query(Person).filter_by(id=99).scalar().username == "super_user"
+
+
+def test_update_user_information():
+    magpie_user = User(
+        id=99,
+        username="username",
+        email="email",
+        firstname="firstname",
+        lastname="lastname",
+        organisation="organisation",
+    )
+    users_routes._update_user_data(magpie_user)
+
+    magpie_user = User(
+        id=99,
+        username="super_username",
+        email="super_email",
+        firstname="super_firstname",
+        lastname="super_lastname",
+        organisation="super_organisation",
+    )
+    users_routes._update_user_data(magpie_user)
+    with connection_manager.get_db_session() as session:
+        user = session.query(Person).filter_by(id=99).scalar()
+        assert user.username == "super_username"
+        assert user.email == "super_email"
+        assert user.firstname == "super_firstname"
+        assert user.lastname == "super_lastname"
+        assert user.organisation == "super_organisation"
