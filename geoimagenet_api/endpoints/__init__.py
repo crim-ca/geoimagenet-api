@@ -10,6 +10,7 @@ from geoimagenet_api.endpoints import (
     users,
     batches,
     annotations,
+    images,
 )
 
 router = APIRouter()
@@ -19,6 +20,7 @@ router.include_router(taxonomy.router, tags=["Taxonomy"])
 router.include_router(taxonomy_classes.router, tags=["Taxonomy Classes"])
 router.include_router(batches.router, tags=["Batches"])
 router.include_router(annotations.router, tags=["Annotations"])
+router.include_router(images.router, tags=["Images"])
 
 
 @router.get("/", response_model=ApiInfo, summary="General information")

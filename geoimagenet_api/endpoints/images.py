@@ -1,11 +1,52 @@
 import os
+from typing import List
 
+from fastapi import APIRouter
 from sqlalchemy import func, String, cast
 from sqlalchemy.orm import Query, Session, aliased
 from starlette.exceptions import HTTPException
 
-from geoimagenet_api.database.models import Image
-from geoimagenet_api.openapi_schemas import AnnotationProperties
+from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.database.models import Image as DBImage
+from geoimagenet_api.openapi_schemas import Image, AnnotationProperties
+
+router = APIRouter()
+
+
+@router.get("/images", response_model=List[Image], summary="Get images list with properties")
+def get():
+    with connection_manager.get_db_session() as session:
+        images = []
+        for image in session.query(DBImage):
+            images.append(Image(
+                id=image.id,
+                sensor_name=image.sensor_name,
+                bands=image.bands,
+                bits=image.bits,
+                filename=image.filename,
+                extension=image.extension,
+                layer_name=image.layer_name,
+            ))
+
+    return images
+
+
+@router.get("/images/{id}", response_model=Image, summary="Get an image by id")
+def get_by_id(id: int):
+    with connection_manager.get_db_session() as session:
+        image = session.query(DBImage).filter_by(id=id).first()
+        if image is None:
+            raise HTTPException(404, "Image id not found.")
+
+    return Image(
+        id=image.id,
+        sensor_name=image.sensor_name,
+        bands=image.bands,
+        bits=image.bits,
+        filename=image.filename,
+        extension=image.extension,
+        layer_name=image.layer_name,
+    )
 
 
 def query_rgbn_16_bit_image(session: Session) -> Query:
@@ -23,8 +64,8 @@ def query_rgbn_16_bit_image(session: Session) -> Query:
     Example: PLEIADES_RGBN_16
     See: :class:`geoimagenet_api.geoserver_setup.main.ImageData`
     """
-    image_alias1 = aliased(Image)
-    image_alias2 = aliased(Image)
+    image_alias1 = aliased(DBImage)
+    image_alias2 = aliased(DBImage)
 
     # subquery = (
     #     session.query(
@@ -40,7 +81,7 @@ def query_rgbn_16_bit_image(session: Session) -> Query:
     #     )
     #     .filter(image_alias2.bits == 16)
     #     .filter(image_alias2.bands == "RGBN")
-    #     .filter(image_alias2.sensor_name == Image.sensor_name)
+    #     .filter(image_alias2.sensor_name == DBImage.sensor_name)
     #     .order_by(func.levenshtein(image_alias1.filename, image_alias2.filename))
     #     .limit(1)
     #     .subquery()
@@ -63,11 +104,11 @@ def query_rgbn_16_bit_image(session: Session) -> Query:
 
     id_with_16_bit_name = (
         session.query(image_alias1.id.label("image_id"), image_name_16_bits)
-        .filter(image_alias2.bits == 16)
-        .filter(image_alias2.bands == "RGBN")
-        .filter(image_alias2.sensor_name == image_alias1.sensor_name)
-        .distinct(image_alias1.id)
-        .order_by(
+            .filter(image_alias2.bits == 16)
+            .filter(image_alias2.bands == "RGBN")
+            .filter(image_alias2.sensor_name == image_alias1.sensor_name)
+            .distinct(image_alias1.id)
+            .order_by(
             image_alias1.id,
             func.levenshtein(image_alias1.filename, image_alias2.filename),
         )
@@ -91,7 +132,7 @@ def image_id_from_properties(session: Session, properties: AnnotationProperties)
 
 
 def image_id_from_image_name(session: Session, image_name: str):
-    image_id = session.query(Image.id).filter(Image.layer_name == image_name).scalar()
+    image_id = session.query(DBImage.id).filter(DBImage.layer_name == image_name).scalar()
     if not image_id:
         raise HTTPException(400, f"Image layer name not found: {image_name}")
     return image_id

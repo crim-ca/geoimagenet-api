@@ -85,6 +85,16 @@ class BatchPostResult(BaseModel):
     response_from_ml: dict
 
 
+class Image(BaseModel):
+    id: int
+    sensor_name: str
+    bands: str
+    bits: int
+    filename: str
+    extension: str
+    layer_name: str
+
+
 class AnnotationCountByStatus(BaseModel):
     new: int = 0
     pre_released: int = 0

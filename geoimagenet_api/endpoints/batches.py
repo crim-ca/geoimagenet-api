@@ -9,7 +9,7 @@ import sentry_sdk
 from sqlalchemy import func, and_
 
 from geoimagenet_api.config import config
-from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image
+from geoimagenet_api.endpoints.images import query_rgbn_16_bit_image
 from geoimagenet_api.endpoints.taxonomy import get_latest_taxonomy_ids
 from geoimagenet_api.endpoints.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import (

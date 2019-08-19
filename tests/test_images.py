@@ -5,9 +5,38 @@ from starlette.exceptions import HTTPException
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Image
-from geoimagenet_api.endpoints.image import query_rgbn_16_bit_image, image_id_from_image_name, image_id_from_properties
+from geoimagenet_api.endpoints.images import query_rgbn_16_bit_image, image_id_from_image_name, image_id_from_properties
 from geoimagenet_api.openapi_schemas import AnnotationProperties
 from tests.test_annotations import write_annotation, _clean_annotation_session
+
+
+def test_get_images(client, pleiades_images):
+    r = client.get(f"/images")
+    images = r.json()
+    assert len([i for i in images if i["filename"].startswith("Pleiades")]) == 160
+
+    image = images[-1]
+    assert image["sensor_name"]
+    assert image["bands"]
+    assert image["bits"]
+    assert image["filename"]
+    assert image["extension"] == ".tif"
+    assert image["layer_name"]
+
+
+def test_get_image_by_id(client, pleiades_images):
+    # find a valid image id
+    id_ = client.get(f"/images").json()[10]["id"]
+    r = client.get(f"/images/{id_}")
+    image = r.json()
+
+    assert image["id"] == id_
+    assert image["sensor_name"]
+    assert image["bands"]
+    assert image["bits"]
+    assert image["filename"]
+    assert image["extension"] == ".tif"
+    assert image["layer_name"]
 
 
 def write_image(sensor_name, bands, bits, filename, extension, *, session=None):
@@ -33,7 +62,7 @@ def write_image(sensor_name, bands, bits, filename, extension, *, session=None):
             return _write(session)
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def pleiades_images(request) -> List[Image]:
     images_list = """
     Pleiades_20120912_RGBN_50cm_8bits_AOI_35_Montreal_QC
