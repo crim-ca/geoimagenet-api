@@ -390,11 +390,11 @@ class GeoServerDatastore:
         logger.debug(f"Creating stores")
 
         for data in image_data:
-            # if RGBN images exist, don't load RGB and NRG images
-            if data.bands in ("RGB", "NRG") and any(
-                i.sensor_name == data.sensor_name and i.bands == "RGBN"
+            if data.bands == "RGBN" and any(
+                i.sensor_name == data.sensor_name and i.bands in ("RGB", "NRG")
                 for i in image_data
             ):
+                # if RGB or NRG images exist, don't load RGBN images
                 continue
 
             def _create_coverage_store(path):

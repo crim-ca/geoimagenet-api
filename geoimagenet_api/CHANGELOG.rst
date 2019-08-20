@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+0.19.0 (2019-08-21)
+-------------------
+
+Changes
+~~~~~~~
+- Add an /images endpoint to query images information
+- Set update time correctly when updating an annotation
+- keep user information in sync with magpie database
+- don't log geometry updates, change some models constraints
+
 0.18.1 (2019-07-04)
 -------------------
 
