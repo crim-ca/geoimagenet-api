@@ -30,7 +30,7 @@ from geoimagenet_api.database.models import (
     ValidationEvent,
     ValidationValue,
     Image,
-)
+    Person)
 from geoimagenet_api.endpoints.taxonomy_classes import (
     flatten_taxonomy_classes_ids,
     get_taxonomy_classes_tree,
@@ -76,6 +76,7 @@ def get(
     taxonomy_class_id: int = None,
     review_requested: bool = None,
     current_user_only: bool = False,
+    username: str = None,
     with_geometry: bool = True,
 ):
     with connection_manager.get_db_session() as session:
@@ -103,6 +104,11 @@ def get(
         if current_user_only:
             logged_user_id = get_logged_user_id(request)
             query = query.filter_by(annotator_id=logged_user_id)
+        elif username:
+            user = session.query(Person.id).filter_by(username=username).first()
+            if not user:
+                raise HTTPException(404, f"username not found: {username}")
+            query = query.filter_by(annotator_id=user.id)
 
         properties = [f.key for f in fields if f.key not in ["geometry", "id"]]
         stream = geojson_stream(

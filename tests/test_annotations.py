@@ -554,12 +554,23 @@ def test_annotation_get_image_id(client):
         write_annotation(session=session, image_id=1)
         write_annotation(session=session, image_id=2)
 
-        # todo: get image_names from api
-
         params = {"image_name": "PLEIADES_RGB:test_image"}
         annotations = _get_annotations(client, params)
         assert len(annotations) == 1
         assert annotations[0]["properties"]["image_id"] == 1
+
+
+def test_annotation_get_username(client, simple_annotation_user_2):
+    params = {"username": "observateur"}
+    annotations = _get_annotations(client, params)
+    assert len(annotations) == 1
+    assert annotations[0]["properties"]["annotator_id"] == 2
+
+
+def test_annotation_get_username_not_found(client, simple_annotation_user_2):
+    params = {"username": "notfound"}
+    r = client.get(f"/annotations", params=params)
+    assert r.status_code == 404
 
 
 def test_annotation_get_status(client):
