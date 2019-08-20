@@ -12,6 +12,11 @@ Changes
 - keep user information in sync with magpie database
 - don't log geometry updates, change some models constraints
 
+Fix
+~~~
+- Fix bug after fastapi breaking change
+
+
 0.18.1 (2019-07-04)
 -------------------
 
