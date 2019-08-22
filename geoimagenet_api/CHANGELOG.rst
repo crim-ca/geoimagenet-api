@@ -2,6 +2,20 @@ Changelog
 =========
 
 
+1.0.0 (2019-08-22)
+-------------------
+
+Changes
+~~~~~~~
+- Add username parameter to GET /annotations. [David Caron]
+
+Fix
+~~~
+- Re-trigger annotation name generation for older annotations. [David
+  Caron]
+- Fix migrations when person email is null. [David Caron]
+
+
 0.19.0 (2019-08-21)
 -------------------
 
