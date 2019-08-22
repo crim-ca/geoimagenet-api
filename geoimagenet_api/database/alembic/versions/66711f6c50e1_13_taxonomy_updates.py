@@ -174,7 +174,6 @@ def upgrade():
             (taxonomy_class.c.id == energie_id) | (taxonomy_class.c.parent_id == energie_id)
         )
         ids_to_delete = [r.id for r in conn.execute(query)]
-        print(ids_to_delete)
 
         conn.execute(
             sa.delete(annotation_log).where(

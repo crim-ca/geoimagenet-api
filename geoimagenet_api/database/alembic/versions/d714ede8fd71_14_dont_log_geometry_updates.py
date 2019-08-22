@@ -63,9 +63,20 @@ trigger_annotation_save = """
             FOR EACH ROW EXECUTE PROCEDURE annotation_save_event();
         """
 
+person = sa.table(
+    "person",
+    sa.column("id", sa.Integer),
+    sa.column("username", sa.String),
+    sa.column("email", sa.String),
+)
+
+
 def upgrade():
-    op.alter_column('person', 'email', nullable=False)
-    op.drop_constraint('person_username_key', 'person', type_='unique')
+    op.execute(
+        sa.update(person).where(person.c.email == None).values({"email": "None"})
+    )
+    op.alter_column("person", "email", nullable=False)
+    op.drop_constraint("person_username_key", "person", type_="unique")
 
     # ---------
     # Triggers
@@ -73,9 +84,13 @@ def upgrade():
     op.execute("drop trigger if exists log_annotation_action on annotation cascade;")
     op.execute(trigger_annotation_save)
 
+
 def downgrade():
     op.create_unique_constraint('person_username_key', 'person', ['username'])
     op.alter_column('person', 'email', nullable=True)
+    op.execute(
+        sa.update(person).where(person.c.email == "None").values({"email": None})
+    )
 
     # ---------
     # Triggers
