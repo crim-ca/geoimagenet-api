@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        "person_relations",
+        "person_follower",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("follow_user_id", sa.Integer(), nullable=False),
@@ -28,4 +28,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table("person_relations")
+    op.drop_table("person_follower")

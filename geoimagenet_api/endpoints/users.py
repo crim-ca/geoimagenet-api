@@ -9,7 +9,7 @@ from geoimagenet_api.config import config
 
 from fastapi import APIRouter, HTTPException
 
-from geoimagenet_api.database.models import Person, PersonRelation
+from geoimagenet_api.database.models import Person, PersonFollower
 from geoimagenet_api.openapi_schemas import User, Follower
 from geoimagenet_api.utils import get_config_url
 
@@ -86,21 +86,34 @@ def get_logged_user_id(request: Request, raise_if_logged_out=True) -> Optional[i
     return logged_user.id
 
 
-@router.get("/users/current/followers", response_model=List[Follower], summary="Get followers for the current user")
+@router.get(
+    "/users/current/followers",
+    response_model=List[Follower],
+    summary="Get followers for the current user",
+)
 def get_followers(request: Request):
     logged_user_id = get_logged_user_id(request)
     with connection_manager.get_db_session() as session:
-        query = session.query(PersonRelation).filter_by(user_id=logged_user_id)
+        query = session.query(PersonFollower).filter_by(user_id=logged_user_id)
         followers = [Follower(id=q.follow_user_id, nickname=q.nickname) for q in query]
 
     return followers
 
 
-@router.post("/users/current/followers", status_code=201, summary="Add followers for the current user")
+@router.post(
+    "/users/current/followers",
+    status_code=201,
+    summary="Add followers for the current user",
+)
 def add_followers(request: Request, body: List[Follower]):
     logged_user_id = get_logged_user_id(request)
     with connection_manager.get_db_session() as session:
         for follower in body:
-            relation = PersonRelation(user_id=logged_user_id, follow_user_id=follower.id, nickname=follower.nickname)
-            session.add(relation)
+            session.add(
+                PersonFollower(
+                    user_id=logged_user_id,
+                    follow_user_id=follower.id,
+                    nickname=follower.nickname,
+                )
+            )
         session.commit()

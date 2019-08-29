@@ -36,8 +36,8 @@ def default_follower_nickname(context):
     return f"user {follow_user_id}"
 
 
-class PersonRelation(Base):
-    __tablename__ = "person_relations"
+class PersonFollower(Base):
+    __tablename__ = "person_follower"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
