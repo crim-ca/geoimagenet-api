@@ -114,3 +114,18 @@ def test_get_followers(client, magpie_current_user_1):
         session.delete(relation_1)
         session.delete(relation_2)
         session.commit()
+
+
+def test_add_followers(client, magpie_current_user_1):
+    data = [
+        {"id": 2, "nickname": "heyhey"},
+        {"id": 3, "nickname": "someone I know"},
+    ]
+    r = client.post("/users/current/followers", json=data)
+    r.raise_for_status()
+
+    with connection_manager.get_db_session() as session:
+        query = session.query(PersonRelation).filter_by(user_id=1).all()
+        results = [{"id": q.follow_user_id, "nickname": q.nickname} for q in query]
+
+        assert results == data

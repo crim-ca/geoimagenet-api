@@ -26,7 +26,7 @@ class User(BaseModel):
 
 
 class Follower(BaseModel):
-    id: int = None
+    id: int
     nickname: str
 
 
