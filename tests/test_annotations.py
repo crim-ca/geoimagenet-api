@@ -33,8 +33,10 @@ point = {"type": "Point", "coordinates": test_coordinates[0]}
 linestring = {"type": "LineString", "coordinates": test_coordinates}
 polygon = {"type": "Polygon", "coordinates": [test_coordinates]}
 
-# the logged in user is always user 1 during tests
-geoimagenet_api.endpoints.annotations.get_logged_user_id = lambda *a: 1
+
+@pytest.fixture(autouse=True)
+def magpie_current_user_1(monkeypatch):
+    monkeypatch.setattr(geoimagenet_api.endpoints.annotations, "get_logged_user_id", lambda *a: 1)
 
 
 @pytest.fixture(params=[point, linestring, polygon])

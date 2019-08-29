@@ -56,13 +56,6 @@ def reset_test_database():
     randomize_taxonomy_classes()
 
 
-@pytest.fixture(autouse=True)
-@mock.patch("geoimagenet_api.endpoints.annotations.get_logged_user_id")
-def magpie_return_user_1_logged_in(m):
-    """Some configuration values for testing."""
-    m.return_value = 1
-
-
 def randomize_taxonomy_classes():
     """Randomize the return value of TaxonomyClass. This is necessary to test some algorithms."""
     from geoimagenet_api.database.models import TaxonomyClass

@@ -11,8 +11,11 @@ from geoimagenet_api.database.models import (
 
 image_id_to_cleanup = 3
 
-# the logged in user is always user 1 during tests
-geoimagenet_api.endpoints.annotations.get_logged_user_id = lambda *a: 1
+
+@pytest.fixture(autouse=True)
+def magpie_current_user_1(monkeypatch):
+    monkeypatch.setattr(geoimagenet_api.endpoints.annotations, "get_logged_user_id", lambda *a: 1)
+
 
 def make_annotation(id, user_id, taxonomy_class, status):
     return Annotation(

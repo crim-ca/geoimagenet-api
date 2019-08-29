@@ -1,12 +1,18 @@
 import pytest
 from unittest import mock
 
+import geoimagenet_api
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Person
 
 from geoimagenet_api.openapi_schemas import User
 
-import geoimagenet_api.endpoints.users as users_routes
+import geoimagenet_api.endpoints.users
+
+
+@pytest.fixture()
+def magpie_current_user_1(monkeypatch):
+    monkeypatch.setattr(geoimagenet_api.endpoints.users, "get_logged_user_id", lambda *a: 1)
 
 
 def test_get_logged_user():
@@ -29,7 +35,7 @@ def test_get_logged_user():
         response = mock.Mock()
         response.json.return_value = mock_json
         mock_requests.get.return_value = response
-        user_id = users_routes.get_logged_user_id(request)
+        user_id = geoimagenet_api.endpoints.users.get_logged_user_id(request)
         assert user_id == 99
 
     # cleanup
@@ -44,7 +50,7 @@ def test_create_user_if_its_not_in_database():
         username="super_user",
         email="email",
     )
-    users_routes._update_user_data(magpie_user)
+    geoimagenet_api.endpoints.users._update_user_data(magpie_user)
     with connection_manager.get_db_session() as session:
         assert session.query(Person).filter_by(id=99).scalar().username == "super_user"
 
@@ -58,7 +64,7 @@ def test_update_user_information():
         lastname="lastname",
         organisation="organisation",
     )
-    users_routes._update_user_data(magpie_user)
+    geoimagenet_api.endpoints.users._update_user_data(magpie_user)
 
     magpie_user = User(
         id=99,
@@ -68,7 +74,7 @@ def test_update_user_information():
         lastname="super_lastname",
         organisation="super_organisation",
     )
-    users_routes._update_user_data(magpie_user)
+    geoimagenet_api.endpoints.users._update_user_data(magpie_user)
     with connection_manager.get_db_session() as session:
         user = session.query(Person).filter_by(id=99).scalar()
         assert user.username == "super_username"
