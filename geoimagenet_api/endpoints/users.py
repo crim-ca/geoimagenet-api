@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 import requests
 import sentry_sdk
@@ -9,8 +9,8 @@ from geoimagenet_api.config import config
 
 from fastapi import APIRouter, HTTPException
 
-from geoimagenet_api.database.models import Person
-from geoimagenet_api.openapi_schemas import User
+from geoimagenet_api.database.models import Person, PersonRelation
+from geoimagenet_api.openapi_schemas import User, Follower
 from geoimagenet_api.utils import get_config_url
 
 router = APIRouter()
@@ -84,3 +84,13 @@ def get_logged_user_id(request: Request, raise_if_logged_out=True) -> Optional[i
     if raise_if_logged_out and logged_user.id is None:  # pragma: no cover
         raise HTTPException(403, "You are not logged in.")
     return logged_user.id
+
+
+@router.get("/users/current/followers", response_model=List[Follower], summary="Get followers")
+def get_followers(request: Request):
+    logged_user_id = get_logged_user_id(request)
+    with connection_manager.get_db_session() as session:
+        query = session.query(PersonRelation).filter_by(user_id=logged_user_id)
+        followers = [Follower(id=q.follow_user_id, nickname=q.nickname) for q in query]
+
+    return followers

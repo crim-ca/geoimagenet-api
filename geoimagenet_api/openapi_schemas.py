@@ -25,6 +25,11 @@ class User(BaseModel):
     organisation: str = None
 
 
+class Follower(BaseModel):
+    id: int = None
+    nickname: str
+
+
 class TaxonomyClass(BaseModel):
     id: int
     name_fr: str

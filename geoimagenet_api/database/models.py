@@ -31,6 +31,20 @@ class Person(Base):
     organisation = Column(String)
 
 
+def default_follower_nickname(context):
+    follow_user_id = context.get_current_parameters()['follow_user_id']
+    return f"user {follow_user_id}"
+
+
+class PersonRelation(Base):
+    __tablename__ = "person_relations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
+    follow_user_id = Column(Integer, nullable=False)
+    nickname = Column(String, default=default_follower_nickname)
+
+
 class AnnotationStatus(enum.Enum):
     new = "new"
     pre_released = "pre_released"

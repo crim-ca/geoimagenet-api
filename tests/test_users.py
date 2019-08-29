@@ -3,7 +3,7 @@ from unittest import mock
 
 import geoimagenet_api
 from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.database.models import Person
+from geoimagenet_api.database.models import Person, PersonRelation
 
 from geoimagenet_api.openapi_schemas import User
 
@@ -82,3 +82,35 @@ def test_update_user_information():
         assert user.firstname == "super_firstname"
         assert user.lastname == "super_lastname"
         assert user.organisation == "super_organisation"
+
+
+def test_get_followers(client, magpie_current_user_1):
+    with connection_manager.get_db_session() as session:
+        # given
+        relation_1 = PersonRelation(user_id=1, follow_user_id=2, nickname="super1")
+        relation_2 = PersonRelation(user_id=1, follow_user_id=3, nickname="super2")
+        session.add(relation_1)
+        session.add(relation_2)
+        session.commit()
+
+        # when
+        r = client.get("/users/current/followers")
+        r.raise_for_status()
+
+        relations = r.json()
+
+        # then
+        assert relations == [
+            {
+                "id": 2,
+                "nickname": "super1",
+            },
+            {
+                "id": 3,
+                "nickname": "super2",
+            },
+        ]
+
+        session.delete(relation_1)
+        session.delete(relation_2)
+        session.commit()
