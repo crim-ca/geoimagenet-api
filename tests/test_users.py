@@ -126,3 +126,26 @@ def test_add_followers(client, magpie_current_user_1):
         results = [{"id": q.follow_user_id, "nickname": q.nickname} for q in query]
 
         assert results == data
+
+
+def test_delete_followers(client, magpie_current_user_1):
+    with connection_manager.get_db_session() as session:
+        # given
+        follower_1 = PersonFollower(user_id=1, follow_user_id=2, nickname="super1")
+        follower_2 = PersonFollower(user_id=1, follow_user_id=3, nickname="super2")
+        session.add(follower_1)
+        session.add(follower_2)
+        session.commit()
+
+        # when
+        r = client.delete("/users/current/followed_users/2")
+        r.raise_for_status()
+
+        followed_ids = [
+            q.follow_user_id for q in session.query(PersonFollower).filter_by(user_id=1)
+        ]
+
+        assert followed_ids == [3]
+
+        session.delete(follower_2)
+        session.commit()

@@ -117,3 +117,22 @@ def add_followers(request: Request, body: List[Follower]):
                 )
             )
         session.commit()
+
+
+@router.delete(
+    "/users/current/followed_users/{user_id}",
+    status_code=204,
+    summary="Add followers for the current user",
+)
+def delete_followers(request: Request, user_id: int):
+    logged_user_id = get_logged_user_id(request)
+    with connection_manager.get_db_session() as session:
+        follower = (
+            session.query(PersonFollower)
+            .filter_by(user_id=logged_user_id, follow_user_id=user_id)
+            .first()
+        )
+        if follower is None:
+            raise HTTPException(404, f"User id not found: {user_id}")
+        session.delete(follower)
+        session.commit()
