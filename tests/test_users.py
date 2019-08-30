@@ -103,6 +103,7 @@ def test_get_followers(client, magpie_current_user_1):
             {"id": 3, "nickname": "super2"},
         ]
 
+        # cleanup
         session.delete(follower_1)
         session.delete(follower_2)
         session.commit()
@@ -118,6 +119,24 @@ def test_add_followers(client, magpie_current_user_1):
         results = [{"id": q.follow_user_id, "nickname": q.nickname} for q in query]
 
         assert results == data
+
+        # cleanup
+        session.query(PersonFollower).filter_by(user_id=1).delete()
+        session.commit()
+
+
+def test_add_followers_already_exists(client, magpie_current_user_1):
+    data = [{"id": 2, "nickname": "heyhey"}]
+    r = client.post("/users/current/followed_users", json=data)
+    r.raise_for_status()
+
+    r = client.post("/users/current/followed_users", json=data)
+    assert r.status_code == 409
+
+    # cleanup
+    with connection_manager.get_db_session() as session:
+        session.query(PersonFollower).filter_by(user_id=1).delete()
+        session.commit()
 
 
 def test_delete_followers(client, magpie_current_user_1):
@@ -139,5 +158,6 @@ def test_delete_followers(client, magpie_current_user_1):
 
         assert followed_ids == [3]
 
+        # cleanup
         session.delete(follower_2)
         session.commit()

@@ -2,6 +2,8 @@ from typing import Optional, List
 
 import requests
 import sentry_sdk
+from sqlalchemy.exc import IntegrityError
+
 from geoimagenet_api.database.connection import connection_manager
 from starlette.requests import Request
 
@@ -116,7 +118,10 @@ def add_followers(request: Request, body: List[Follower]):
                     nickname=follower.nickname,
                 )
             )
-        session.commit()
+        try:
+            session.commit()
+        except IntegrityError:
+            raise HTTPException(409, "The current user already follows the requested user ids.")
 
 
 @router.delete(
