@@ -87,7 +87,7 @@ def get_logged_user_id(request: Request, raise_if_logged_out=True) -> Optional[i
 
 
 @router.get(
-    "/users/current/followers",
+    "/users/current/followed_users",
     response_model=List[Follower],
     summary="Get followers for the current user",
 )
@@ -101,7 +101,7 @@ def get_followers(request: Request):
 
 
 @router.post(
-    "/users/current/followers",
+    "/users/current/followed_users",
     status_code=201,
     summary="Add followers for the current user",
 )
