@@ -2,6 +2,17 @@ Changelog
 =========
 
 
+1.1.0 (2019-08-30)
+-------------------
+
+
+New
+~~~
+- Add GET on /users/current/followed_users
+- Add POST on /users/current/followed_users
+- Add DELETE on /users/current/followed_users/{user_id}
+
+
 1.0.0 (2019-08-22)
 -------------------
 
