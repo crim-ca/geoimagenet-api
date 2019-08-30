@@ -44,6 +44,10 @@ class PersonFollower(Base):
     follow_user_id = Column(Integer, nullable=False)
     nickname = Column(String, default=default_follower_nickname)
 
+    __table_args__ = (
+        UniqueConstraint("user_id", "follow_user_id", name="uc_person_follower"),
+    )
+
 
 class AnnotationStatus(enum.Enum):
     new = "new"

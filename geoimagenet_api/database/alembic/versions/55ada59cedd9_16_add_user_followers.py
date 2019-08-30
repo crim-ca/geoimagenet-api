@@ -24,6 +24,9 @@ def upgrade():
         sa.Column("follow_user_id", sa.Integer(), nullable=False),
         sa.Column("nickname", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "user_id", "follow_user_id", name="uc_person_follower"
+        ),
     )
 
 
