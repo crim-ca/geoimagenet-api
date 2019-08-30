@@ -12,7 +12,9 @@ import geoimagenet_api.endpoints.users
 
 @pytest.fixture()
 def magpie_current_user_1(monkeypatch):
-    monkeypatch.setattr(geoimagenet_api.endpoints.users, "get_logged_user_id", lambda *a: 1)
+    monkeypatch.setattr(
+        geoimagenet_api.endpoints.users, "get_logged_user_id", lambda *a: 1
+    )
 
 
 def test_get_logged_user():
@@ -45,11 +47,7 @@ def test_get_logged_user():
 
 
 def test_create_user_if_its_not_in_database():
-    magpie_user = User(
-        id=99,
-        username="super_user",
-        email="email",
-    )
+    magpie_user = User(id=99, username="super_user", email="email")
     geoimagenet_api.endpoints.users._update_user_data(magpie_user)
     with connection_manager.get_db_session() as session:
         assert session.query(Person).filter_by(id=99).scalar().username == "super_user"
@@ -101,14 +99,8 @@ def test_get_followers(client, magpie_current_user_1):
 
         # then
         assert followers == [
-            {
-                "id": 2,
-                "nickname": "super1",
-            },
-            {
-                "id": 3,
-                "nickname": "super2",
-            },
+            {"id": 2, "nickname": "super1"},
+            {"id": 3, "nickname": "super2"},
         ]
 
         session.delete(follower_1)
