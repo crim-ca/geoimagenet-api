@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 from typing import Tuple, Dict, Union, List
 
 from fastapi import APIRouter, Query, Body
@@ -79,6 +80,8 @@ def get(
     current_user_only: bool = False,
     annotator_id: int = None,
     with_geometry: bool = True,
+    last_updated_since: datetime = None,
+    last_updated_before: datetime = None,
 ):
     with connection_manager.get_db_session() as session:
         fields = [
@@ -100,7 +103,7 @@ def get(
             query = query.filter(DBAnnotation.image_id == image_id)
         if status:
             query = query.filter(DBAnnotation.status == status)
-        if taxonomy_class_id:
+        if taxonomy_class_id is not None:
             query = query.filter(DBAnnotation.taxonomy_class_id == taxonomy_class_id)
         if review_requested is not None:
             query = query.filter(DBAnnotation.review_requested == review_requested)
@@ -111,6 +114,11 @@ def get(
             if not session.query(Person.id).filter_by(id=annotator_id).first():
                 raise HTTPException(404, f"annotator_id not found: {annotator_id}")
             query = query.filter(DBAnnotation.annotator_id == annotator_id)
+
+        if last_updated_since:
+            query = query.filter(DBAnnotation.updated_at >= last_updated_since)
+        if last_updated_before:
+            query = query.filter(DBAnnotation.updated_at <= last_updated_before)
 
         properties = [f.key for f in fields if f.key not in ["geometry", "id"]]
         stream = geojson_stream(

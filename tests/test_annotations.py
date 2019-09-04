@@ -1,4 +1,5 @@
 import contextlib
+from datetime import timedelta, datetime
 
 import pytest
 from geoalchemy2 import functions
@@ -582,6 +583,28 @@ def test_annotation_get_username(client, simple_annotation_user_2):
     annotations = _get_annotations(client, params)
     assert len(annotations) == 1
     assert annotations[0]["properties"]["annotator_id"] == 2
+
+
+def test_annotation_get_last_updated(client):
+    with _clean_annotation_session() as session:
+        annotation_1 = write_annotation(session=session)
+        annotation_2 = write_annotation(session=session)
+        time_between = annotation_1.updated_at + timedelta(milliseconds=1)
+
+        params = {"last_updated_since": time_between}
+        annotations = _get_annotations(client, params)
+        assert annotations[0]["id"] == f"annotation.{annotation_2.id}"
+
+        params = {"last_updated_before": time_between}
+        annotations = _get_annotations(client, params)
+        assert annotations[0]["id"] == f"annotation.{annotation_1.id}"
+
+        params = {
+            "last_updated_since": annotation_1.updated_at + timedelta(milliseconds=-1),
+            "last_updated_before": datetime.now(),
+        }
+        annotations = _get_annotations(client, params)
+        assert len(annotations) == 2
 
 
 def test_annotation_get_username_not_found(client, simple_annotation_user_2):
