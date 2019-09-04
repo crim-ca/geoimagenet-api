@@ -52,7 +52,7 @@ Contents
    :maxdepth: 3
 
    installation
-   usage
+   annotation_import_export
    database
    tests
    configuration

@@ -1,10 +1,7 @@
 
-*****
-Usage
-*****
-
-Transferring validated annotations between instances
-====================================================
+***********************************
+Importing and exporting annotations
+***********************************
 
 It is possible to transfer annotations from one deployed instance to another.
 You have to export, and import the annotations. The file format to do the transfer
@@ -22,3 +19,7 @@ will be as followed:
  - The status property will be the one provided in the annotation properties, as opposed to
    being forced to `new` for the regular POST on `/annotations`
  - The review_requested flag will behave in the same way as the status property
+
+As a reference, here is a simple python script to import annotations:
+
+.. literalinclude:: examples/import-export.py
