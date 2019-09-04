@@ -30,7 +30,8 @@ from geoimagenet_api.database.models import (
     ValidationEvent,
     ValidationValue,
     Image,
-    Person)
+    Person,
+)
 from geoimagenet_api.endpoints.taxonomy_classes import (
     flatten_taxonomy_classes_ids,
     get_taxonomy_classes_tree,
@@ -76,7 +77,7 @@ def get(
     taxonomy_class_id: int = None,
     review_requested: bool = None,
     current_user_only: bool = False,
-    username: str = None,
+    annotator_id: int = None,
     with_geometry: bool = True,
 ):
     with connection_manager.get_db_session() as session:
@@ -96,21 +97,20 @@ def get(
         query = session.query(*fields).join(Image).join(DBTaxonomyClass)
         if image_name:
             image_id = image_id_from_image_name(session, image_name)
-            query = query.filter_by(image_id=image_id)
+            query = query.filter(DBAnnotation.image_id == image_id)
         if status:
-            query = query.filter_by(status=status)
+            query = query.filter(DBAnnotation.status == status)
         if taxonomy_class_id:
-            query = query.filter_by(taxonomy_class_id=taxonomy_class_id)
+            query = query.filter(DBAnnotation.taxonomy_class_id == taxonomy_class_id)
         if review_requested is not None:
-            query = query.filter_by(review_requested=review_requested)
+            query = query.filter(DBAnnotation.review_requested == review_requested)
         if current_user_only:
             logged_user_id = get_logged_user_id(request)
-            query = query.filter_by(annotator_id=logged_user_id)
-        elif username:
-            user = session.query(Person.id).filter_by(username=username).first()
-            if not user:
-                raise HTTPException(404, f"username not found: {username}")
-            query = query.filter_by(annotator_id=user.id)
+            query = query.filter(DBAnnotation.annotator_id == logged_user_id)
+        elif annotator_id:
+            if not session.query(Person.id).filter_by(id=annotator_id).first():
+                raise HTTPException(404, f"annotator_id not found: {annotator_id}")
+            query = query.filter(DBAnnotation.annotator_id == annotator_id)
 
         properties = [f.key for f in fields if f.key not in ["geometry", "id"]]
         stream = geojson_stream(
@@ -123,7 +123,8 @@ def get(
 @router.put("/annotations", status_code=204, summary="Modify")
 def put(
     request: Request,
-    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID,
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
+    srid: int = DEFAULT_SRID,
 ):
     logged_user_id = get_logged_user_id(request)
 
@@ -142,7 +143,9 @@ def put(
             if not annotation:
                 raise HTTPException(404, f"Annotation id not found: {id_}")
             if annotation.annotator_id != logged_user_id:
-                raise HTTPException(403, "You are trying to update an annotation another user created.")
+                raise HTTPException(
+                    403, "You are trying to update an annotation another user created."
+                )
 
             geom = _serialize_geometry(geometry, srid)
 
@@ -164,7 +167,8 @@ def put(
 )
 def post(
     request: Request,
-    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...), srid: int = DEFAULT_SRID
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
+    srid: int = DEFAULT_SRID,
 ):
     logged_user_id = get_logged_user_id(request)
     written_annotations = []
@@ -233,7 +237,10 @@ def _update_status(
                     status_filter = DBAnnotation.status == from_status
                     if only_logged_user:
                         filters.append(
-                            and_(DBAnnotation.annotator_id == logged_user_id, status_filter)
+                            and_(
+                                DBAnnotation.annotator_id == logged_user_id,
+                                status_filter,
+                            )
                         )
                     else:
                         filters.append(status_filter)
@@ -243,7 +250,9 @@ def _update_status(
         def _filter_annotation_ids(query) -> Union[Query, Tuple]:
             annotation_ids = _get_annotation_ids_integers(update_info.annotation_ids)
 
-            existing_ids = session.query(DBAnnotation.id).filter(DBAnnotation.id.in_(annotation_ids))
+            existing_ids = session.query(DBAnnotation.id).filter(
+                DBAnnotation.id.in_(annotation_ids)
+            )
             existing_ids = [a.id for a in existing_ids]
             missing_ids = set(annotation_ids).difference(existing_ids)
             if missing_ids:
@@ -259,7 +268,8 @@ def _update_status(
                 # some annotation ids were not in a good state and
                 # a wrong transition was requested
                 raise HTTPException(
-                    403, "Status update refused. One or more status transition not allowed."
+                    403,
+                    "Status update refused. One or more status transition not allowed.",
                 )
 
             return query

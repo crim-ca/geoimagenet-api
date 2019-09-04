@@ -578,14 +578,14 @@ def test_annotation_get_image_id(client):
 
 
 def test_annotation_get_username(client, simple_annotation_user_2):
-    params = {"username": "observateur"}
+    params = {"annotator_id": 2}
     annotations = _get_annotations(client, params)
     assert len(annotations) == 1
     assert annotations[0]["properties"]["annotator_id"] == 2
 
 
 def test_annotation_get_username_not_found(client, simple_annotation_user_2):
-    params = {"username": "notfound"}
+    params = {"annotator_id": 999}
     r = client.get(f"/annotations", params=params)
     assert r.status_code == 404
 
