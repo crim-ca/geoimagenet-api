@@ -2,9 +2,11 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Tuple, Dict, Union, List
 
+import psycopg2
+import psycopg2.extras
+import sqlalchemy.exc
 from fastapi import APIRouter, Query, Body
 from sqlalchemy import and_, or_
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -138,15 +140,15 @@ def put(
     logged_user_id = get_logged_user_id(request)
 
     with connection_manager.get_db_session() as session:
-        json_annotations = _geojson_features_from_body(body)
-        for json_annotation in json_annotations:
-            properties = json_annotation.properties
-            geometry = json_annotation.geometry
+        features = _geojson_features_from_body(body)
+        for feature in features:
+            properties = feature.properties
+            geometry = feature.geometry
 
-            if json_annotation.id is None:
+            if feature.id is None:
                 raise HTTPException(400, "Property 'id' is required")
 
-            id_ = _get_annotation_ids_integers([json_annotation.id])[0]
+            id_ = _get_annotation_ids_integers([feature.id])[0]
 
             annotation = session.query(DBAnnotation).filter_by(id=id_).first()
             if not annotation:
@@ -167,7 +169,7 @@ def put(
             annotation.geometry = geom
         try:
             session.commit()
-        except IntegrityError as e:  # pragma: no cover
+        except sqlalchemy.exc.IntegrityError as e:  # pragma: no cover
             raise HTTPException(400, f"Error: {e}")
 
 
@@ -200,45 +202,84 @@ def post(
 
 def _post_annotations(request, body, srid, verify=True):
     logged_user_id = get_logged_user_id(request)
-    written_annotations = []
 
     with connection_manager.get_db_session() as session:
-        taxonomy_class_codes = dict(
+        taxonomy_class_dict = dict(
             session.query(DBTaxonomyClass.code, DBTaxonomyClass.id)
         )
+        taxonomy_class_ids = set(taxonomy_class_dict.values())
 
-        features = _geojson_features_from_body(body)
-        for feature in features:
-            geom = _serialize_geometry(feature.geometry, srid)
-            properties = feature.properties
+        images_dict = dict(session.query(Image.layer_name, Image.id))
+        image_ids = set(images_dict.values())
 
-            if not properties.taxonomy_class_code:
-                raise HTTPException(400, "taxonomy_class_code is required")
-            image_id = image_id_from_properties(session, properties)
+    features = _geojson_features_from_body(body)
 
-            taxonomy_class_id = (
-                properties.taxonomy_class_id
-                or taxonomy_class_codes[properties.taxonomy_class_code]
+    def _make_values(feature: GeoJsonFeature):
+        props = feature.properties
+
+        annotator_id = logged_user_id
+        geom = feature.geometry.json()
+
+        if props.taxonomy_class_code:
+            if props.taxonomy_class_code not in taxonomy_class_dict:
+                raise HTTPException(404, f"taxonomy_class_code not found: {props.taxonomy_class_code}")
+            taxonomy_class_id = taxonomy_class_dict[props.taxonomy_class_code]
+        elif props.taxonomy_class_id:
+            if props.taxonomy_class_id not in taxonomy_class_ids:
+                raise HTTPException(404, f"taxonomy_class_id not found: {props.taxonomy_class_id}")
+            taxonomy_class_id = props.taxonomy_class_id
+        else:
+            raise HTTPException(400, f"One of taxonomy_class_id or taxonomy_class_code required")
+
+        status = AnnotationStatus.new.value if verify else props.status.value
+        review_requested = False if verify else props.review_requested
+
+        if props.image_name:
+            if props.image_name not in images_dict:
+                raise HTTPException(404, f"image_name not found: {props.image_name}")
+            image_id = images_dict[props.image_name]
+        elif props.image_id:
+            if props.image_id not in image_ids:
+                raise HTTPException(404, f"image_id not found: {props.image_id}")
+            image_id = props.image_id
+        else:
+            raise HTTPException(400, f"One of image_name or image_id required")
+
+        return (
+            annotator_id,
+            geom,
+            taxonomy_class_id,
+            status,
+            review_requested,
+            image_id,
+        )
+
+    geom_template = f"ST_SetSRID(ST_GeomFromGeoJSON(%s), {srid})"
+    if srid != DEFAULT_SRID:
+        geom_template = f"ST_Transform({geom_template}, {DEFAULT_SRID})"
+
+    template = f"(%s, {geom_template}, %s, %s, %s, %s)"
+
+    connection = connection_manager.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            fields = "annotator_id, geometry, taxonomy_class_id, status, review_requested, image_id"
+            result = psycopg2.extras.execute_values(
+                cursor,
+                f"INSERT INTO annotation ({fields}) VALUES %s RETURNING id;",
+                map(_make_values, features),
+                template=template,
+                page_size=100,
+                fetch=True,
             )
-            annotation = DBAnnotation(
-                annotator_id=logged_user_id,
-                geometry=geom,
-                taxonomy_class_id=taxonomy_class_id,
-                image_id=image_id,
-            )
-            if not verify:
-                annotation.status = properties.status
-                annotation.review_requested = properties.review_requested
+            written_ids = [r[0] for r in result]
+            connection.commit()
+    except psycopg2.IntegrityError as e:  # pragma: no cover
+        raise HTTPException(400, f"Error: {e}")
+    finally:
+        connection.close()
 
-            session.add(annotation)
-            written_annotations.append(annotation)
-
-        try:
-            session.commit()
-        except IntegrityError as e:  # pragma: no cover
-            raise HTTPException(400, f"Error: {e}")
-
-        return [a.id for a in written_annotations]
+    return written_ids
 
 
 allowed_status_transitions = {

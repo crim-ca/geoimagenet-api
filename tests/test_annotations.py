@@ -59,6 +59,10 @@ def any_geojson(request, geojson_geometry):
         return geojson_geometry
 
 
+def _now_in_database(session) -> datetime:
+    return session.execute("select now()").first()[0].replace(tzinfo=None)
+
+
 def write_annotation(
     *,
     session=None,
@@ -138,23 +142,26 @@ def assert_log_equals(
     assert log.operation == operation
 
 
-def test_annotation_all_fields(client, simple_annotation):
-    annotations = client.get("/annotations").json()
-    properties = annotations["features"][0]["properties"]
+def test_annotation_all_fields(client):
+    with _clean_annotation_session() as session:
+        write_annotation(session=session)
+        annotations = client.get("/annotations").json()
+        properties = annotations["features"][0]["properties"]
 
-    # see geoimagenet.database.migrations.load_testing_data
-    assert properties["taxonomy_class_id"] == 2
-    assert properties["taxonomy_class_code"] == "RESI"
-    assert properties["annotator_id"] == 1
-    assert properties["image_id"] == 1
-    assert properties["image_name"] == "PLEIADES_RGB:test_image"
-    assert properties["status"] == "new"
-    assert properties["name"] == "RESI_+000.000004_+000.000004"
-    assert properties["review_requested"] is False
+        # see geoimagenet.database.migrations.load_testing_data
+        assert properties["taxonomy_class_id"] == 2
+        assert properties["taxonomy_class_code"] == "RESI"
+        assert properties["annotator_id"] == 1
+        assert properties["image_id"] == 1
+        assert properties["image_name"] == "PLEIADES_RGB:test_image"
+        assert properties["status"] == "new"
+        assert properties["name"] == "RESI_+000.000004_+000.000004"
+        assert properties["review_requested"] is False
 
-    now = datetime.now()
-    a_second_ago = now - timedelta(seconds=1)
-    assert a_second_ago < datetime.fromisoformat(properties["updated_at"]) < now
+        now = _now_in_database(session)
+        a_second_ago = now - timedelta(seconds=1)
+        updated_at = datetime.fromisoformat(properties["updated_at"])
+        assert a_second_ago < updated_at < now
 
 
 def test_annotation_log_triggers():
@@ -274,7 +281,7 @@ def test_annotations_put_id_required(client, geojson_geometry):
 def test_annotations_post_image_doesnt_exist(client, geojson_geometry):
     geojson_geometry["properties"]["image_name"] = "doesnt exist"
     r = client.post(f"/annotations", json=geojson_geometry)
-    assert r.status_code == 400
+    assert r.status_code == 404
 
 
 def test_annotations_put_image_doesnt_exist(
@@ -284,7 +291,7 @@ def test_annotations_put_image_doesnt_exist(
     geojson_geometry["id"] = f"annotation.{annotation_id}"
     geojson_geometry["properties"]["image_name"] = "doesnt exist"
     r = client.put(f"/annotations", json=geojson_geometry)
-    assert r.status_code == 400
+    assert r.status_code == 404
 
 
 def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry):
@@ -600,9 +607,10 @@ def test_annotation_get_last_updated(client):
         annotations = _get_annotations(client, params)
         assert annotations[0]["id"] == f"annotation.{annotation_1.id}"
 
+        now = _now_in_database(session)
         params = {
             "last_updated_since": annotation_1.updated_at + timedelta(milliseconds=-1),
-            "last_updated_before": datetime.now(),
+            "last_updated_before": now,
         }
         annotations = _get_annotations(client, params)
         assert len(annotations) == 2
@@ -950,10 +958,22 @@ def test_annotation_post_properties_import(client):
         assert annotation_2["properties"]["review_requested"]
 
 
-def test_annotation_post_from_get_taxonomy_code_required(client, simple_annotation):
-    annotations_before = client.get("/annotations").json()
-    del annotations_before["features"][0]["properties"]["taxonomy_class_code"]
-    r = client.post("/annotations", json=annotations_before)
-    assert r.status_code == 400
+@pytest.mark.skip(msg="only for load testing purposes")
+def test_annotations_post_load_testing(client):
+    from time import perf_counter
 
+    with _clean_annotation_session() as session:
+        write_annotation(session=session)
+        annotations = client.get("/annotations").json()
 
+        n_features = 1000
+
+        annotations["features"] = annotations["features"] * n_features
+
+        pc = perf_counter()
+
+        r = client.post("/annotations", json=annotations)
+        r.raise_for_status()
+        print(r.json())
+
+        print(f"{perf_counter() - pc: .2f} seconds")

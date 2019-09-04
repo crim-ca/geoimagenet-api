@@ -134,5 +134,5 @@ def image_id_from_properties(session: Session, properties: AnnotationProperties)
 def image_id_from_image_name(session: Session, image_name: str):
     image_id = session.query(DBImage.id).filter(DBImage.layer_name == image_name).scalar()
     if not image_id:
-        raise HTTPException(400, f"Image layer name not found: {image_name}")
+        raise HTTPException(404, f"Image layer name not found: {image_name}")
     return image_id
