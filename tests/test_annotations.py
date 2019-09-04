@@ -908,7 +908,12 @@ def test_annotation_post_properties(client):
 
 def test_annotation_post_properties_status_review(client):
     with _clean_annotation_session() as session:
-        write_annotation(session=session, user_id=1, status=AnnotationStatus.validated, review_requested=True)
+        write_annotation(
+            session=session,
+            user_id=1,
+            status=AnnotationStatus.validated,
+            review_requested=True,
+        )
         annotation_1 = client.get("/annotations").json()
 
         r = client.post("/annotations", json=annotation_1)
@@ -925,7 +930,12 @@ def test_annotation_post_properties_status_review(client):
 
 def test_annotation_post_properties_import(client):
     with _clean_annotation_session() as session:
-        write_annotation(session=session, user_id=1, status=AnnotationStatus.validated, review_requested=True)
+        write_annotation(
+            session=session,
+            user_id=1,
+            status=AnnotationStatus.validated,
+            review_requested=True,
+        )
         annotation_1 = client.get("/annotations").json()
 
         r = client.post("/annotations/import", json=annotation_1)
