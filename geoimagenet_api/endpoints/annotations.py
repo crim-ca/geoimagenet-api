@@ -83,15 +83,17 @@ def get(
         fields = [
             DBAnnotation.id,
             DBAnnotation.taxonomy_class_id,
+            DBTaxonomyClass.code.label("taxonomy_class_code"),
             DBAnnotation.annotator_id,
             DBAnnotation.image_id,
+            Image.layer_name.label("image_name"),
             DBAnnotation.name,
             DBAnnotation.review_requested,
             DBAnnotation.status,
         ]
         if with_geometry:
             fields.append(func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"))
-        query = session.query(*fields)
+        query = session.query(*fields).join(Image).join(DBTaxonomyClass)
         if image_name:
             image_id = image_id_from_image_name(session, image_name)
             query = query.filter_by(image_id=image_id)

@@ -138,6 +138,22 @@ def assert_log_equals(
     assert log.operation == operation
 
 
+def test_annotation_all_fields(client, simple_annotation):
+    annotations = client.get("/annotations").json()
+    properties = annotations["features"][0]["properties"]
+
+    assert properties["taxonomy_class_id"] == 2
+    assert properties["taxonomy_class_code"] == "test"
+    assert properties["annotator_id"] == 1
+    assert properties["image_id"] == 1
+    assert properties["image_name"] == "test"
+    assert properties["status"] == "new"
+    assert properties["name"] == 1
+    assert properties["review_requested"] == False
+
+
+
+
 def test_annotation_log_triggers():
     with _clean_annotation_session() as session:
         start_geometry = "SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))"
