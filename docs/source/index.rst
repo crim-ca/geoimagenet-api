@@ -52,6 +52,7 @@ Contents
    :maxdepth: 3
 
    installation
+   usage
    database
    tests
    configuration

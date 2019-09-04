@@ -882,3 +882,68 @@ def test_friendly_name():
 
         session.query(Annotation).filter_by(id=annotation.id).delete()
         session.commit()
+
+
+def test_annotation_post_properties(client):
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, user_id=1)
+
+        annotations_before = client.get("/annotations").json()
+        # remove some properties that should not be relied upon when creating a new annotation
+        del annotations_before["features"][0]["properties"]["taxonomy_class_id"]
+        del annotations_before["features"][0]["properties"]["image_id"]
+        r = client.post("/annotations", json=annotations_before)
+        r.raise_for_status()
+
+        annotations = client.get("/annotations").json()
+        assert len(annotations["features"]) == 2
+
+        f1, f2 = annotations["features"]
+        props1, props2 = f1["properties"], f2["properties"]
+        del props1["updated_at"]
+        del props2["updated_at"]
+
+        assert props1 == props2
+
+
+def test_annotation_post_properties_status_review(client):
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, user_id=1, status=AnnotationStatus.validated, review_requested=True)
+        annotation_1 = client.get("/annotations").json()
+
+        r = client.post("/annotations", json=annotation_1)
+        r.raise_for_status()
+
+        annotation_1 = annotation_1["features"][0]
+        assert annotation_1["properties"]["status"] == "validated"
+        assert annotation_1["properties"]["review_requested"]
+        annotation_2 = client.get("/annotations").json()["features"][-1]
+
+        assert annotation_2["properties"]["status"] == "new"
+        assert not annotation_2["properties"]["review_requested"]
+
+
+def test_annotation_post_properties_import(client):
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, user_id=1, status=AnnotationStatus.validated, review_requested=True)
+        annotation_1 = client.get("/annotations").json()
+
+        r = client.post("/annotations/import", json=annotation_1)
+        r.raise_for_status()
+
+        annotation_1 = annotation_1["features"][0]
+        assert annotation_1["properties"]["status"] == "validated"
+        assert annotation_1["properties"]["review_requested"]
+        annotation_2 = client.get("/annotations").json()["features"][-1]
+
+        assert annotation_2["properties"]["status"] == "validated"
+        assert annotation_2["properties"]["review_requested"]
+
+
+def test_annotation_post_from_get_taxonomy_code_required(client, simple_annotation):
+    annotations_before = client.get("/annotations").json()
+    del annotations_before["features"][0]["properties"]["taxonomy_class_code"]
+    r = client.post("/annotations", json=annotations_before)
+    assert r.status_code == 400
+
+

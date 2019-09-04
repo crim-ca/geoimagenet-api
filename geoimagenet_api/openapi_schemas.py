@@ -174,8 +174,9 @@ AnyGeojsonGeometry = Union[Point, LineString, Polygon, MultiPolygon]
 
 
 class AnnotationProperties(BaseModel):
-    taxonomy_class_id: int
+    # one of image_name or image_id is required
     taxonomy_class_code: str = None
+    taxonomy_class_id: int = None
     annotator_id: int = None
     # one of image_name or image_id is required
     image_id: int = None

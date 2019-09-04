@@ -179,22 +179,57 @@ def post(
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
     srid: int = DEFAULT_SRID,
 ):
+    return _post_annotations(request, body, srid)
+
+
+@router.post(
+    "/annotations/import",
+    response_model=List[int],
+    status_code=201,
+    summary="Import",
+    description="Import annotations without validating status or permissions. "
+    "This route should be reserved for administrators.",
+)
+def post(
+    request: Request,
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
+    srid: int = DEFAULT_SRID,
+):
+    return _post_annotations(request, body, srid, verify=False)
+
+
+def _post_annotations(request, body, srid, verify=True):
     logged_user_id = get_logged_user_id(request)
     written_annotations = []
 
     with connection_manager.get_db_session() as session:
+        taxonomy_class_codes = dict(
+            session.query(DBTaxonomyClass.code, DBTaxonomyClass.id)
+        )
+
         features = _geojson_features_from_body(body)
         for feature in features:
             geom = _serialize_geometry(feature.geometry, srid)
             properties = feature.properties
+
+            if not properties.taxonomy_class_code:
+                raise HTTPException(400, "taxonomy_class_code is required")
             image_id = image_id_from_properties(session, properties)
 
+            taxonomy_class_id = (
+                properties.taxonomy_class_id
+                or taxonomy_class_codes[properties.taxonomy_class_code]
+            )
             annotation = DBAnnotation(
                 annotator_id=logged_user_id,
                 geometry=geom,
-                taxonomy_class_id=properties.taxonomy_class_id,
+                taxonomy_class_id=taxonomy_class_id,
                 image_id=image_id,
             )
+            if not verify:
+                annotation.status = properties.status
+                annotation.review_requested = properties.review_requested
+
             session.add(annotation)
             written_annotations.append(annotation)
 
