@@ -1,6 +1,7 @@
 import enum
 import json
 import re
+from datetime import datetime
 from typing import List
 
 import sqlalchemy.orm
@@ -41,7 +42,7 @@ async def geojson_stream(
         data = {
             "type": "Feature",
             "id": f"annotation.{r.id}",
-            "properties": {p: _get_attr(r, p) for p in properties},
+            "properties": {p: _get_attr_str(r, p) for p in properties},
         }
 
         if with_geometry:
@@ -56,10 +57,12 @@ async def geojson_stream(
     yield ending_brackets
 
 
-def _get_attr(object, name):
+def _get_attr_str(object, name):
     value = getattr(object, name)
     if isinstance(value, enum.Enum):
         value = value.value
+    elif isinstance(value, datetime):
+        value = str(value)
     return value
 
 

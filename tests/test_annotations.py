@@ -153,6 +153,10 @@ def test_annotation_all_fields(client, simple_annotation):
     assert properties["name"] == "RESI_+000.000004_+000.000004"
     assert properties["review_requested"] is False
 
+    now = datetime.now()
+    a_second_ago = now - timedelta(seconds=1)
+    assert a_second_ago < datetime.fromisoformat(properties["updated_at"]) < now
+
 
 def test_annotation_log_triggers():
     with _clean_annotation_session() as session:

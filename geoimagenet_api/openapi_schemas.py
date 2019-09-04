@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from datetime import datetime
 from typing import List, Union, Any, Optional
 
 from pydantic import BaseModel, Schema
@@ -179,6 +181,7 @@ class AnnotationProperties(BaseModel):
     image_id: int = None
     image_name: str = None
     status: AnnotationStatus = AnnotationStatus.new
+    updated_at: datetime = None
     name: str = None
     review_requested: Optional[bool] = None
 

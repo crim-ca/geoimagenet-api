@@ -94,6 +94,7 @@ def get(
             DBAnnotation.name,
             DBAnnotation.review_requested,
             DBAnnotation.status,
+            DBAnnotation.updated_at,
         ]
         if with_geometry:
             fields.append(func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"))
