@@ -142,16 +142,15 @@ def test_annotation_all_fields(client, simple_annotation):
     annotations = client.get("/annotations").json()
     properties = annotations["features"][0]["properties"]
 
+    # see geoimagenet.database.migrations.load_testing_data
     assert properties["taxonomy_class_id"] == 2
-    assert properties["taxonomy_class_code"] == "test"
+    assert properties["taxonomy_class_code"] == "RESI"
     assert properties["annotator_id"] == 1
     assert properties["image_id"] == 1
-    assert properties["image_name"] == "test"
+    assert properties["image_name"] == "PLEIADES_RGB:test_image"
     assert properties["status"] == "new"
-    assert properties["name"] == 1
-    assert properties["review_requested"] == False
-
-
+    assert properties["name"] == "RESI_+000.000004_+000.000004"
+    assert properties["review_requested"] is False
 
 
 def test_annotation_log_triggers():
