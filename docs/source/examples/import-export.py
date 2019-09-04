@@ -38,13 +38,15 @@ r = session_1.get(f"{host_from}/api/v1/annotations", params=params, verify=verif
 r.raise_for_status()
 
 annotations = r.json()
-n_annotations = len(annotations['features'])
+n_annotations = len(annotations["features"])
 
 print(f"Received {n_annotations} annotations")
 
 if n_annotations:
     session_2 = login(host_to, "admin")
-    r = session_2.post(f"{host_to}/api/v1/annotations/import", json=annotations)
+    r = session_2.post(
+        f"{host_to}/api/v1/annotations/import", json=annotations, verify=verify_ssl
+    )
     r.raise_for_status()
 
     written_count = len(r.json())
