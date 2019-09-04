@@ -37,7 +37,9 @@ polygon = {"type": "Polygon", "coordinates": [test_coordinates]}
 
 @pytest.fixture(autouse=True)
 def magpie_current_user_1(monkeypatch):
-    monkeypatch.setattr(geoimagenet_api.endpoints.annotations, "get_logged_user_id", lambda *a: 1)
+    monkeypatch.setattr(
+        geoimagenet_api.endpoints.annotations, "get_logged_user_id", lambda *a: 1
+    )
 
 
 @pytest.fixture(params=[point, linestring, polygon])
@@ -45,10 +47,7 @@ def geojson_geometry(request):
     return {
         "type": "Feature",
         "geometry": request.param,
-        "properties": {
-            "taxonomy_class_id": 1,
-            "image_name": "PLEIADES_RGB:test_image",
-        },
+        "properties": {"taxonomy_class_id": 1, "image_name": "PLEIADES_RGB:test_image"},
     }
 
 
@@ -290,18 +289,12 @@ def test_annotations_put_image_doesnt_exist(
 
 def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry):
     with _clean_annotation_session() as session:
-        annotation = write_annotation(
-            session=session,
-            user_id=2,
-        )
+        annotation = write_annotation(session=session, user_id=2)
 
         annotation_id = annotation.id
         geojson_geometry["id"] = f"annotation.{annotation_id}"
 
-        r = client.put(
-            f"/annotations",
-            json=geojson_geometry,
-        )
+        r = client.put(f"/annotations", json=geojson_geometry)
         assert r.status_code == 403
 
 
@@ -356,7 +349,9 @@ def test_annotations_put_image_id(client, simple_annotation, any_geojson):
     r = client.put("/annotations", json=any_geojson)
     assert r.status_code == 204
     with connection_manager.get_db_session() as session:
-        annotation = session.query(Annotation).filter_by(id=simple_annotation.id).first()
+        annotation = (
+            session.query(Annotation).filter_by(id=simple_annotation.id).first()
+        )
         assert annotation.image_id == 2
 
 
@@ -461,7 +456,9 @@ def test_annotations_put(client, any_geojson, simple_annotation):
 
         annotation2 = session.query(Annotation).filter_by(id=annotation_id).one()
         assert annotation2.taxonomy_class_id == properties.taxonomy_class_id
-        assert annotation2.image_id == 1  # there should be an image of id 1 named test_image.tif
+        assert (
+            annotation2.image_id == 1
+        )  # there should be an image of id 1 named test_image.tif
 
         # you can't change the status of an annotation this way
         assert annotation2.status == AnnotationStatus.new
