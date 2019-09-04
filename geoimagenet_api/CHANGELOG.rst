@@ -2,8 +2,31 @@ Changelog
 =========
 
 
+1.2.0 (2019-09-04)
+------------------
+
+New
+~~~
+- Add POST on /annotations/import
+  It is now possible to import annotations using a route where no
+  verification takes place for the status and the review_requested flag
+- Add 'updated_at' property to return value on GET /annotations.
+- Add 'last_updated_since' and 'last_updated_before' parameters to
+  GET on /annotations
+
+Changes
+~~~~~~~
+- POST on /annotations is 5x faster
+- Don't stream on GET /annotations because twitcher can't handle it
+- Add script to documentation to import and export annotations
+- Change query from username to annotator_id on GET /annotations
+  The username could be different than the one in the magpie database
+  and there is no way to know. The single source of truth is the user id
+- Add taxonomy_class_code and image_name to GET /annotations
+
+
 1.1.0 (2019-08-30)
--------------------
+------------------
 
 
 New
@@ -14,7 +37,7 @@ New
 
 
 1.0.0 (2019-08-22)
--------------------
+------------------
 
 Changes
 ~~~~~~~
