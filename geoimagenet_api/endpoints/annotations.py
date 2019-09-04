@@ -10,7 +10,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.sql import func
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import StreamingResponse
+from starlette.responses import Response
 
 from geoimagenet_api.endpoints.images import (
     image_id_from_image_name,
@@ -127,8 +127,9 @@ def get(
         stream = geojson_stream(
             query, properties=properties, with_geometry=with_geometry
         )
+        data = "".join(stream)
 
-        return StreamingResponse(stream, media_type="application/json")
+        return Response(data, media_type="application/json")
 
 
 @router.put("/annotations", status_code=204, summary="Modify")

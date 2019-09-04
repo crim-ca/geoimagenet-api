@@ -10,7 +10,7 @@ from starlette.requests import Request
 from geoimagenet_api.config import config
 
 
-async def geojson_stream(
+def geojson_stream(
     query: sqlalchemy.orm.Query, properties: List[str], with_geometry: bool = True
 ):
     """Stream the geojson features from the database.
