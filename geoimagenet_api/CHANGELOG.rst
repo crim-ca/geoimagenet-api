@@ -2,6 +2,22 @@ Changelog
 =========
 
 
+1.2.1 (2019-09-12)
+------------------
+
+Changes
+~~~~~~~
+- Changes to taxonomy classes: [David Caron]
+
+  Add:
+   - Commercial fen
+   - Pedestrian path
+   - Bike path
+
+  Rename:
+   - Cemetary -> Cemetery
+
+
 1.2.0 (2019-09-04)
 ------------------
 
