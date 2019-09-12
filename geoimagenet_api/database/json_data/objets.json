@@ -612,6 +612,20 @@
                         "en": "Tunnel (entrance and exit)"
                     },
                     "code": "TUNN"
+                },
+                {
+                    "name": {
+                        "fr": "Piste cyclable",
+                        "en": "Bike path"
+                    },
+                    "code": "BIKE"
+                },
+                {
+                    "name": {
+                        "fr": "Sentier piétonnier",
+                        "en": "Pedestrian path"
+                    },
+                    "code": "PATH"
                 }
             ]
         },
@@ -1324,6 +1338,13 @@
                         "en": "Shallow water"
                     },
                     "code": "SHAL"
+                },
+                {
+                    "name": {
+                        "fr": "Tourbière exploitée",
+                        "en": "Commercial fen"
+                    },
+                    "code": "COMF"
                 }
             ]
         },
