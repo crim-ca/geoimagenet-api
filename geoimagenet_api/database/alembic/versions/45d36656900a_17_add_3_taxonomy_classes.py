@@ -24,9 +24,15 @@ taxonomy_class = sa.table(
     sa.column("code", sa.String),
 )
 
+taxonomy = sa.table("taxonomy", sa.column("id", sa.Integer))
+
 
 def upgrade():
     conn = op.get_bind()
+
+    has_taxonomy = conn.execute(sa.select([sa.func.count(taxonomy.c.id)])).fetchone()[0]
+    if not has_taxonomy:
+        return
 
     objects_id = sa.select([taxonomy_class.c.id]).where(
         taxonomy_class.c.name_en == "Objects"
@@ -104,6 +110,10 @@ def upgrade():
 
 def downgrade():
     conn = op.get_bind()
+
+    has_taxonomy = conn.execute(sa.select([sa.func.count(taxonomy.c.id)])).fetchone()[0]
+    if not has_taxonomy:
+        return
 
     conn.execute(
         sa.delete(taxonomy_class).where(
