@@ -2,8 +2,8 @@ geoalchemy2
 alembic
 psycopg2-binary
 sqlalchemy-utils
-text-unidecode
 python-slugify
+text-unidecode==1.2
 dateparser
 sentry-sdk
 click
@@ -14,4 +14,3 @@ fastapi
 requests
 uvicorn
 urllib3<=1.24.2
-unidecode

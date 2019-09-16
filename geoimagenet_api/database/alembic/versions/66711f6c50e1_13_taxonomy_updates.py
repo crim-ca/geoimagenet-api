@@ -11,7 +11,7 @@ from itertools import permutations
 from pathlib import Path
 from typing import Iterable
 
-import unidecode
+from text_unidecode import unidecode
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql.expression import bindparam
@@ -55,7 +55,7 @@ def make_codes_from_name(name: str) -> Iterable[str]:
         return ValueError("'name' must not be empty")
 
     # remove accents, capitalize
-    name = unidecode.unidecode(name).upper()
+    name = unidecode(name).upper()
     # remove non A-Z characters
     name = "".join(re.findall(r"[A-Z]", name))
 
