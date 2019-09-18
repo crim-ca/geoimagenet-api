@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+1.2.2 (2019-09-18)
+------------------
+
+Changes
+~~~~~~~
+- chg: dev: remove unidecode dependency and fix text-unidecode==1.2
+
+
 1.2.1 (2019-09-12)
 ------------------
 
