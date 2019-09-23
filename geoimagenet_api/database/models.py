@@ -186,8 +186,10 @@ class Image(Base):
         index=True,
         comment="Must not be set explicitly, this column is updated by a trigger.",
     )
+    trace = Column(Geometry("POLYGON", srid=3857, spatial_index=False))
     __table_args__ = (
         UniqueConstraint("sensor_name", "bands", "bits", "filename", name="uc_image"),
+        Index("idx_image_trace", trace, postgresql_using="gist"),
     )
 
     def __repr__(self):
