@@ -1,10 +1,13 @@
+from pathlib import Path
 from typing import List
 
 from loguru import logger
 
+from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.database.models import Image
 from geoimagenet_api.geoserver_setup.geoserver_datastore import GeoServerDatastore
 from geoimagenet_api.geoserver_setup.image_data import ImageData
-from geoimagenet_api.geoserver_setup.utils import find_date
+from geoimagenet_api.geoserver_setup.utils import find_date, load_image_trace_geometry
 from geoimagenet_api import config
 
 
@@ -54,6 +57,49 @@ class GeoServerMirror(GeoServerDatastore):
         self.create_annotation_workspace()
         self.create_annotation_store()
         self.create_annotation_layer()
+
+        self.write_postgis_image_info(image_data)
+
+    def write_postgis_image_info(self, image_data: List[ImageData]):
+        logger.info(f"Writing images information in database")
+        with connection_manager.get_db_session() as session:
+            for data in image_data:
+                for image_path in data.images_list:
+                    wkt_trace = load_image_trace_geometry(
+                        Path(self.get_config("images_folder")),
+                        data.sensor_name,
+                        image_path.stem,
+                    )
+                    db_image = Image(
+                        sensor_name=data.sensor_name,
+                        bands=data.bands,
+                        bits=data.bits,
+                        filename=image_path.stem,
+                        extension=image_path.suffix,
+                        trace=wkt_trace,
+                    )
+                    existing = (
+                        session.query(Image)
+                        .filter_by(
+                            sensor_name=data.sensor_name,
+                            bands=data.bands,
+                            bits=data.bits,
+                            filename=image_path.stem,
+                            extension=image_path.suffix,
+                        )
+                        .first()
+                    )
+                    if existing:
+                        logger.info(f"Image already in database: {db_image}")
+                        if not existing.trace and wkt_trace is not None:
+                            existing.trace = wkt_trace
+                            logger.info(f"Updated trace geometry: {db_image}")
+                    else:
+                        session.add(db_image)
+                        logger.info(f"Added Image information: {db_image}")
+
+            if not self.dry_run:
+                session.commit()
 
     def create_annotation_workspace(self):
         logger.debug(f"Creating annotation workspace")

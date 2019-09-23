@@ -15,12 +15,8 @@ import yaml
 from geoserver.catalog import Catalog
 from geoserver.store import DataStore, CoverageStore, WmsStore
 from loguru import logger
-from sqlalchemy.exc import IntegrityError
 
-from geoimagenet_api.database.connection import connection_manager
-from geoimagenet_api.database.models import Image
 from geoimagenet_api.geoserver_setup.image_data import ImageData
-from geoimagenet_api.geoserver_setup.utils import load_image_trace_geometry
 
 
 @dataclass
@@ -68,54 +64,10 @@ class GeoServerDatastore:
         image_data = self.parse_images()
 
         image_data_8bit = [i for i in image_data if i.bits == 8]
-        image_data_not_8bit = [i for i in image_data if i.bits != 8]
 
         self.create_workspaces(image_data_8bit)
         self.create_styles(styles)
         self.create_coverage_stores(image_data_8bit)
-
-        self.write_postgis_image_info(image_data_8bit + image_data_not_8bit)
-
-    def write_postgis_image_info(self, image_data: List[ImageData]):
-        logger.info(f"Writing images information in database")
-        with connection_manager.get_db_session() as session:
-            for data in image_data:
-                for image_path in data.images_list:
-                    wkt_trace = load_image_trace_geometry(
-                        Path(self.get_config("images_folder")),
-                        data.sensor_name,
-                        image_path.stem,
-                    )
-                    db_image = Image(
-                        sensor_name=data.sensor_name,
-                        bands=data.bands,
-                        bits=data.bits,
-                        filename=image_path.stem,
-                        extension=image_path.suffix,
-                        trace=wkt_trace,
-                    )
-                    existing = (
-                        session.query(Image)
-                        .filter_by(
-                            sensor_name=data.sensor_name,
-                            bands=data.bands,
-                            bits=data.bits,
-                            filename=image_path.stem,
-                            extension=image_path.suffix,
-                        )
-                        .first()
-                    )
-                    if existing:
-                        logger.info(f"Image already in database: {db_image}")
-                        if not existing.trace and wkt_trace is not None:
-                            existing.trace = wkt_trace
-                            logger.info(f"Updated trace geometry: {db_image}")
-                    else:
-                        session.add(db_image)
-                        logger.info(f"Added Image information: {db_image}")
-
-            if not self.dry_run:
-                session.commit()
 
     def request(
         self,
