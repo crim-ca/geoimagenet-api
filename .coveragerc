@@ -5,6 +5,7 @@ omit = */geoserver_setup/*
        */alembic/*
        */tests/*
        */database/connection.py
+include = geoimagenet_api/geoserver_setup/utils.py
 
 [report]
 # Regexes for lines to exclude from consideration

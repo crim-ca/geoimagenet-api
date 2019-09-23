@@ -20,6 +20,7 @@ from sqlalchemy.exc import IntegrityError
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Image
 from geoimagenet_api.geoserver_setup.image_data import ImageData
+from geoimagenet_api.geoserver_setup.utils import load_image_trace_geometry
 
 
 @dataclass
@@ -80,21 +81,39 @@ class GeoServerDatastore:
         with connection_manager.get_db_session() as session:
             for data in image_data:
                 for image_path in data.images_list:
+                    wkt_trace = load_image_trace_geometry(
+                        Path(self.get_config("images_folder")),
+                        data.sensor_name,
+                        image_path.stem,
+                    )
                     db_image = Image(
                         sensor_name=data.sensor_name,
                         bands=data.bands,
                         bits=data.bits,
                         filename=image_path.stem,
                         extension=image_path.suffix,
+                        trace=wkt_trace,
                     )
-                    session.add(db_image)
-                    try:
-                        session.flush()
-                    except IntegrityError:
+                    existing = (
+                        session.query(Image)
+                        .filter_by(
+                            sensor_name=data.sensor_name,
+                            bands=data.bands,
+                            bits=data.bits,
+                            filename=image_path.stem,
+                            extension=image_path.suffix,
+                        )
+                        .first()
+                    )
+                    if existing:
                         logger.info(f"Image already in database: {db_image}")
-                        session.rollback()
+                        if not existing.trace and wkt_trace is not None:
+                            existing.trace = wkt_trace
+                            logger.info(f"Updated trace geometry: {db_image}")
                     else:
+                        session.add(db_image)
                         logger.info(f"Added Image information: {db_image}")
+
             if not self.dry_run:
                 session.commit()
 
@@ -278,9 +297,11 @@ class GeoServerDatastore:
         def _parse_folder_name(name: str):
             match = re.match(r"^([^_]+)_([^_]+)_([^_]+)$", name)
             if not match:
-                logger.warning(
-                    f"Folder name not of the format '{{sensor}}_{{bands}}_{{bits}}': {name}"
-                )
+                match_contours = re.match(r"^([^_]+)_CONTOURS$", name)
+                if not match_contours:
+                    logger.warning(
+                        f"Folder name not of the format '{{sensor}}_{{bands}}_{{bits}}': {name}"
+                    )
                 return
             return match.groups()
 
