@@ -4,6 +4,8 @@ import sys
 import csv
 
 from loguru import logger
+from shapely.geometry import Polygon
+import shapely.wkt
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Image
@@ -148,11 +150,11 @@ class GeoServerMirror(GeoServerDatastore):
                         if existing:
                             logger.info(f"Image already in database: {image_name}")
                             if not existing.trace:
-                                wkt = self._get_wkt(data.sensor_name, image_name)
+                                wkt = self._get_ewkt(data.sensor_name, image_name)
                                 existing.trace = wkt
                                 logger.info(f"Updated trace geometry: {image_name}")
                         else:
-                            wkt = self._get_wkt(data.sensor_name, image_name)
+                            wkt = self._get_ewkt(data.sensor_name, image_name)
                             db_image = Image(
                                 sensor_name=data.sensor_name,
                                 bands=data.bands,
@@ -167,7 +169,7 @@ class GeoServerMirror(GeoServerDatastore):
             if not self.dry_run:
                 session.commit()
 
-    def _get_wkt(self, sensor_name, layer_name):
+    def _get_ewkt(self, sensor_name, layer_name):
         traces_layer_names = [
             layer["name"]
             for layer in self.datastore.request(
@@ -182,14 +184,18 @@ class GeoServerMirror(GeoServerDatastore):
         params = {
             "typeNames": f"{sensor_name}_CONTOURS:{trace_layer}",
             "outputFormat": "csv",
+            "srsName": "EPSG:3857",
         }
         content = self.datastore.wfs(params=params).content.decode()
         separator = "\r\n" if "\r\n" in content else "\n"
         header, *geometries = csv.reader(content.split(separator))
         geom_index = header.index("the_geom")
-        wkt_trace = geometries[0][geom_index]
+        wkt = geometries[0][geom_index]
+        # convert multipolygon to polygon wkt
+        polygon_wkt = Polygon(shapely.wkt.loads(wkt)[0].exterior.coords).wkt
+        ewkt = "SRID=3857;" + polygon_wkt
 
-        return wkt_trace
+        return ewkt
 
     def create_annotation_workspace(self):
         logger.debug(f"Creating annotation workspace")
