@@ -16,6 +16,7 @@ Note: ALL functions are meant to be case insensitive, and return capital letters
 
 import re
 import dataclasses
+from typing import Dict
 
 re_pleiades = re.compile(
     r"""
@@ -74,9 +75,15 @@ def _is_name_variation(match1: ImageMatch, match2: ImageMatch):
     )
 
 
-def find_matching_name(image_name, names_list):
+def find_matching_name(image_name, names_list, name_filter: Dict = None):
     """Finds an image in the same group, ignoring bands, bits, trace and bbox attributes"""
+    if name_filter is None:
+        name_filter = {}
+
     image_name_match = pleiades_match(image_name)
     for name in names_list:
-        if _is_name_variation(image_name_match, pleiades_match(name)):
+        match2 = pleiades_match(name)
+        if not all(getattr(match2, k) == v for k, v in name_filter.items()):
+            continue
+        if _is_name_variation(image_name_match, match2):
             return name
