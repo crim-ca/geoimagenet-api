@@ -1,4 +1,4 @@
-FROM python:3.7-alpine3.8
+FROM python:3.7-alpine
 
 LABEL Description="GeoImageNet API" Vendor="CRIM" Maintainer="david.caron@crim.ca"
 
@@ -8,11 +8,11 @@ COPY requirements* setup.py README.md ./
 
 RUN echo "http://mirror.leaseweb.com/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
-    apk add postgresql-libs geos-dev libc-dev && \
-    apk add --virtual .build-deps gcc musl-dev postgresql-dev make && \
+    apk add postgresql-libs gcc musl-dev geos-dev && \
+    apk add --virtual .build-deps postgresql-dev make && \
     pip install --upgrade pip setuptools gunicorn && \
     pip install --no-cache-dir -e . && \
-    apk --purge del .build-deps gcc musl-dev postgresql-dev make
+    apk --purge del .build-deps postgresql-dev make
 
 EXPOSE 8080
 
