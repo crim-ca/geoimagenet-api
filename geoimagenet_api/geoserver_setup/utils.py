@@ -7,6 +7,7 @@ from tzlocal import get_localzone
 import warnings
 from pathlib import Path
 from loguru import logger
+from epsg_ident import EpsgIdent
 
 import shapefile
 from shapely.geometry import shape, Polygon
@@ -43,27 +44,56 @@ def find_date(string: str):
 def load_image_trace_geometry(
     images_folder: Path, sensor_name: str, image_filename_stem: str
 ) -> Optional[str]:
-    """Finds from the config and loads as a WKT the image trace"""
+    """Finds from the config and loads as a WKT the image trace
+
+    Reprojects to EPSG:3857 if necessary.
+    """
     image_trace = find_image_trace(images_folder, sensor_name, image_filename_stem)
     if not image_trace:
         logger.warning(f"Could not find trace for image: {image_filename_stem}")
         return
 
     extension = image_trace.suffix[1:].lower()
-    wkt = None
+    ewkt = None
     if extension == "shp":
-        wkt = _load_shapefile(str(image_trace))
+        ewkt = _load_shapefile_ewkt(str(image_trace))
     else:
         logger.warning(f"Can't load '.{extension}' images traces yet.")
 
-    return wkt
+    if ewkt is not None:
+        ewkt = reproject_ewkt(ewkt)
+
+    return ewkt
 
 
-def _load_shapefile(path) -> str:
+def reproject_ewkt(ewkt, to_epsg=3857):
+    """Transforms a ewkt string with sqlalchemy and postgis functions"""
+    from sqlalchemy import func
+
+    if not ewkt.startswith("SRID="):
+        raise ValueError("ewkt should start with 'SRID='")
+
+    source_epsg = ewkt[len('SRID='):ewkt.find(";")]
+
+    if source_epsg == str(to_epsg):
+        return ewkt
+    return func.ST_AsEWKT(func.ST_Transform(func.ST_GeomFromEWKT(ewkt), to_epsg))
+
+
+def _load_shapefile_ewkt(path: str) -> str:
+    prj = Path(path).with_suffix(".prj")
+    if not prj.exists():
+        raise ValueError("No projection file found for shapefile")
+    ident = EpsgIdent()
+    ident.read_prj_from_file(str(prj))
+    epsg = ident.get_epsg()
+
     with shapefile.Reader(path) as shp:
         first_geom = shp.shape(0)
-        polygon = Polygon(shape(first_geom).exterior.coords)
-        return polygon.wkt
+        wkt = Polygon(shape(first_geom).exterior.coords).wkt
+
+    ewkt = f"SRID={epsg};" + wkt
+    return ewkt
 
 
 def find_image_trace(images_folder, sensor_name, image_filename_stem: str) -> Path:

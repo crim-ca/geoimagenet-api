@@ -101,7 +101,7 @@ class GeoServerMirror(GeoServerDatastore):
                     image_name = image_path.stem
                     if existing:
                         logger.info(f"Image already in database: {image_name}")
-                        if not existing.trace:
+                        if existing.trace is None:
                             wkt = load_image_trace_geometry(
                                 images_folder, data.sensor_name, image_name
                             )
@@ -149,7 +149,7 @@ class GeoServerMirror(GeoServerDatastore):
 
                         if existing:
                             logger.info(f"Image already in database: {image_name}")
-                            if not existing.trace:
+                            if existing.trace is None:
                                 wkt = self._get_ewkt(data.sensor_name, image_name)
                                 existing.trace = wkt
                                 logger.info(f"Updated trace geometry: {image_name}")
