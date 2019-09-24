@@ -1,6 +1,6 @@
 from itertools import chain
 import os
-from typing import List, Optional
+from typing import Optional
 
 import pytz
 from tzlocal import get_localzone
@@ -8,7 +8,7 @@ import warnings
 from pathlib import Path
 from loguru import logger
 
-import fiona
+import shapefile
 from shapely.geometry import shape, Polygon
 
 from geoimagenet_api.geoserver_setup.images_names_utils import find_matching_name
@@ -60,10 +60,9 @@ def load_image_trace_geometry(
 
 
 def _load_shapefile(path) -> str:
-    with fiona.open(path) as shp:
-        first_geom = next(iter(shp))
-        s = shape(first_geom["geometry"])
-        polygon = Polygon(s.exterior.coords)
+    with shapefile.Reader(path) as shp:
+        first_geom = shp.shape(0)
+        polygon = Polygon(shape(first_geom).exterior.coords)
         return polygon.wkt
 
 
