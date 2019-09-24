@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import List
+import sys
+import csv
 
 from loguru import logger
 
@@ -10,6 +12,9 @@ from geoimagenet_api.geoserver_setup.geoserver_datastore import GeoServerDatasto
 from geoimagenet_api.geoserver_setup.image_data import ImageInfo
 from geoimagenet_api.geoserver_setup.utils import find_date, load_image_trace_geometry
 from geoimagenet_api import config
+
+
+csv.field_size_limit(sys.maxsize)
 
 
 class GeoServerMirror(GeoServerDatastore):
@@ -179,8 +184,8 @@ class GeoServerMirror(GeoServerDatastore):
             "outputFormat": "csv",
         }
         content = self.datastore.wfs(params=params).content.decode()
-        # note: can't use python csv module because fields can be too large (>131072)
-        header, *geometries = content.split("\n")
+        separator = "\r\n" if "\r\n" in content else "\n"
+        header, *geometries = csv.reader(content.split(separator))
         geom_index = header.index("the_geom")
         wkt_trace = geometries[0][geom_index]
 
