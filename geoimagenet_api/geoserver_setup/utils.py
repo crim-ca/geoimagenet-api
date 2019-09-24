@@ -1,6 +1,6 @@
 from itertools import chain
 import os
-from typing import List
+from typing import List, Optional
 
 import pytz
 from tzlocal import get_localzone
@@ -10,6 +10,8 @@ from loguru import logger
 
 import fiona
 from shapely.geometry import shape, Polygon
+
+from geoimagenet_api.geoserver_setup.images_names_utils import find_matching_name
 
 with warnings.catch_warnings():
     # ignore importing the ABCs from 'collections' instead of from 'collections.abc'
@@ -40,11 +42,12 @@ def find_date(string: str):
 
 def load_image_trace_geometry(
     images_folder: Path, sensor_name: str, image_filename_stem: str
-) -> str:
+) -> Optional[str]:
     """Finds from the config and loads as a WKT the image trace"""
-    image_trace = _find_image_trace(images_folder, sensor_name, image_filename_stem)
+    image_trace = find_image_trace(images_folder, sensor_name, image_filename_stem)
     if not image_trace:
         logger.warning(f"Could not find trace for image: {image_filename_stem}")
+        return
 
     extension = image_trace.suffix[1:].lower()
     wkt = None
@@ -64,43 +67,15 @@ def _load_shapefile(path) -> str:
         return polygon.wkt
 
 
-def _find_image_trace(images_folder, sensor_name, image_filename_stem: str) -> Path:
+def find_image_trace(images_folder, sensor_name, image_filename_stem: str) -> Path:
     contour_folder = images_folder / f"{sensor_name}_CONTOURS"
     if contour_folder in images_folder.iterdir():
-        contour_filenames = [f.name for f in contour_folder.iterdir()]
-        matching_contour = _match_trace_filename(contour_filenames, image_filename_stem)
+        shapefiles = [f for f in contour_folder.iterdir() if f.suffix.lower() == ".shp"]
+
+        matching_contour = find_matching_name(
+            image_filename_stem, [f.stem for f in shapefiles]
+        )
         if matching_contour:
-            return contour_folder / matching_contour
-
-
-def _match_trace_filename(
-    contour_filenames: List[str], image_filename_stem: str
-) -> str:
-    def make_trace_name_variations(name):
-        from itertools import combinations
-
-        possible_replacements = [
-            # replace from trace filename to image filename
-            ("rgbn", "rgb"),
-            ("rgbn", "nrg"),
-            ("16bits", "8bits"),
-            ("_trace", ""),
-        ]
-        yield name
-        for n in range(1, len(possible_replacements) + 1):
-            for replacements in combinations(possible_replacements, n):
-                replaced_name = name
-                for repl in replacements:
-                    replaced_name = replaced_name.replace(repl[0], repl[1])
-                yield replaced_name
-
-    image_filename_stem = image_filename_stem.lower()
-
-    for filename in contour_filenames:
-        lower_filename = filename.lower()
-        name, extension = lower_filename.rsplit(".", 1)
-        if extension not in allowed_image_trace_extensions:
-            continue
-        for variation in make_trace_name_variations(name):
-            if image_filename_stem == variation:
-                return filename
+            for contour in shapefiles:
+                if contour.stem == matching_contour:
+                    return contour

@@ -16,7 +16,10 @@ from geoserver.catalog import Catalog
 from geoserver.store import DataStore, CoverageStore, WmsStore
 from loguru import logger
 
-from geoimagenet_api.geoserver_setup.image_data import ImageData
+from geoimagenet_api.geoserver_setup.image_data import ImageData, ImageInfo
+from geoimagenet_api.geoserver_setup.utils import (
+    find_image_trace,
+)
 
 
 @dataclass
@@ -68,6 +71,10 @@ class GeoServerDatastore:
         self.create_workspaces(image_data_8bit)
         self.create_styles(styles)
         self.create_coverage_stores(image_data_8bit)
+
+        self.create_contours_workspaces(image_data)
+        self.create_contours_datastores(image_data)
+        self.create_contours_layers(image_data)
 
     def request(
         self,
@@ -131,6 +138,18 @@ class GeoServerDatastore:
                 return response.json()
             except JSONDecodeError:
                 return response.content
+
+    def wfs(self, params):
+        url = self.geoserver_url.replace("/rest", "/") + "wfs"
+        params["request"] = "GetFeature"
+        params["exceptions"] = "application/json"
+        r = requests.get(
+            url,
+            params=params,
+            verify=not self.skip_ssl,
+        )
+        r.raise_for_status()
+        return r
 
     def _get_data_file(self, filename) -> Path:
         return Path(__file__).parent / "geoserver_requests" / filename
@@ -305,7 +324,7 @@ class GeoServerDatastore:
                     if not self.dry_run:
                         self.catalog.delete(workspace, recurse=True)
 
-    def create_workspaces(self, image_data: List[ImageData]):
+    def create_workspaces(self, image_data: List[Union[ImageData, ImageInfo]]):
         logger.debug(f"Creating workspaces")
         existing_workspaces = self.workspaces
         existing_workspaces_names = [w.name for w in existing_workspaces]
@@ -321,6 +340,99 @@ class GeoServerDatastore:
                             name=workspace_name, uri=workspace_name
                         )
                         existing_workspaces_names.append(workspace_name)
+
+    def create_contours_workspaces(self, image_data: List[Union[ImageData, ImageInfo]]):
+        logger.debug(f"Creating contours workspaces")
+        existing_workspaces_names = [w.name for w in self.workspaces]
+
+        for data in image_data:
+            workspace_name = f"{data.sensor_name}_CONTOURS"
+            if workspace_name not in existing_workspaces_names:
+                logger.info(
+                    f"CREATE workspace: name={workspace_name}, uri={workspace_name}"
+                )
+                if not self.dry_run:
+                    self.catalog.create_workspace(
+                        name=workspace_name, uri=workspace_name
+                    )
+                    existing_workspaces_names.append(workspace_name)
+
+    def create_contours_datastores(self, image_data: List[Union[ImageData, ImageInfo]]):
+        logger.debug(f"Creating contours datastores")
+        images_folder = self.get_config("images_folder").rstrip("/") + "/"
+        escaped_images_folder = images_folder.replace("/", r"\/")
+
+        for data in image_data:
+            workspace_name = f"{data.sensor_name}_CONTOURS"
+            existing_stores = self.request(
+                "get", f"/workspaces/{workspace_name}/datastores"
+            )
+            existing_stores_names = [
+                s["name"] for s in existing_stores["dataStores"]["dataStore"]
+            ]
+
+            store_name = workspace_name  # same name
+
+            if store_name not in existing_stores_names:
+                logger.info(
+                    f"CREATE datastore: name={workspace_name}, uri={workspace_name}"
+                )
+                if not self.dry_run:
+                    data = {
+                        "dataStore": {
+                            "name": store_name,
+                            "type": "Directory of spatial files (shapefiles)",
+                            "enabled": True,
+                            "workspace": {"name": workspace_name},
+                            "connectionParameters": {
+                                "entry": [
+                                    {"@key": "filetype", "$": "shapefile"},
+                                    {
+                                        "@key": "url",
+                                        "$": f"file:{escaped_images_folder}PLEIADES_CONTOURS",
+                                    },
+                                ]
+                            },
+                        }
+                    }
+                    self.request(
+                        "post", f"/workspaces/{workspace_name}/datastores", data=data
+                    )
+                    existing_stores_names.append(store_name)
+
+    def create_contours_layers(self, image_data: List[ImageData]):
+        images_folder = Path(self.get_config("images_folder"))
+        for image_data in image_data:
+            workspace_name = f"{image_data.sensor_name}_CONTOURS"
+            store_name = workspace_name
+            existing_layers = self.request(
+                "get", f"/workspaces/{workspace_name}/layers"
+            )
+            existing_layers_names = [
+                s["name"] for s in existing_layers["layers"]["layer"]
+            ]
+            for image in image_data.images_list:
+                image_trace = find_image_trace(
+                    images_folder, image_data.sensor_name, image.stem
+                )
+                if not image_trace:
+                    logger.warning(f"Could not find trace for image: {image.stem}")
+                    continue
+
+                layer_name = image_trace.stem
+
+                if layer_name not in existing_layers_names:
+                    logger.info(
+                        f"CREATE contour layer: {layer_name}"
+                    )
+                    if not self.dry_run:
+                        data = {"featureType": {"name": layer_name}}
+                        self.request(
+                            "post",
+                            f"/workspaces/{workspace_name}/datastores/{store_name}/featuretypes",
+                            data=data,
+                        )
+                        existing_layers_names.append(layer_name)
 
     def create_styles(self, styles: List[Style]):
         logger.debug(f"Creating styles")

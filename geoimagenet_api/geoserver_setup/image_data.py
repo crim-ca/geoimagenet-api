@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
@@ -42,3 +43,30 @@ class ImageData:
         for bands in bands_list:
             names.append(f"{self.sensor_name}_{bands}")
         return names
+
+
+@dataclass
+class ImageInfo:
+    """Data structure similar to `ImageData` but without images_list.
+
+    More suitable when the images folder is not local and can't be iterated upon."""
+    sensor_name: str
+    bands: str
+    bits: int
+
+    @classmethod
+    def from_workspace_name(cls, name: str, bits=8):
+        """Workspace name must be like: PLEIADES_RGB"""
+        splits = name.upper().split("_")
+        if not len(splits) == 2:
+            raise ValueError("Workspace name must be of the form {sensor_name}_{bands}")
+        sensor_name, bands = splits
+        other_bands = bands
+        for b in "RGBN":
+            other_bands = other_bands.replace(b, "")
+        if other_bands:
+            raise ValueError(f"Band format not recognized: {bands}")
+        return cls(sensor_name=sensor_name, bands=bands, bits=bits)
+
+    def workspace_names(self, bands=None):
+        return [f"{self.sensor_name}_{self.bands}"]
