@@ -79,15 +79,15 @@ def _is_name_variation(match1: ImageMatch, match2: ImageMatch):
     )
 
 
-def find_matching_name(image_name, names_list, name_filter: Dict = None):
+def find_matching_name(image_name, names_list, attrs_filter: Dict = None):
     """Finds an image in the same group, ignoring bands, bits, trace and bbox attributes"""
-    if name_filter is None:
-        name_filter = {}
+    if attrs_filter is None:
+        attrs_filter = {}
 
     image_name_match = pleiades_match(image_name)
     for name in names_list:
         match2 = pleiades_match(name)
-        if not all(getattr(match2, k) == v for k, v in name_filter.items()):
+        if not all(getattr(match2, k) == v for k, v in attrs_filter.items()):
             continue
         if _is_name_variation(image_name_match, match2):
             return name

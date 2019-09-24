@@ -72,7 +72,7 @@ def find_image_trace(images_folder, sensor_name, image_filename_stem: str) -> Pa
         shapefiles = [f for f in contour_folder.iterdir() if f.suffix.lower() == ".shp"]
 
         matching_contour = find_matching_name(
-            image_filename_stem, [f.stem for f in shapefiles], name_filter={"trace": True}
+            image_filename_stem, [f.stem for f in shapefiles], attrs_filter={"trace": True}
         )
         if matching_contour:
             for contour in shapefiles:
