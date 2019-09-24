@@ -45,17 +45,21 @@ class ImageMatch:
     city: str
     province: str
     identifier: str = None
-    trace: str = None
-    bbox: str = None
+    trace: bool = False
+    bbox: bool = False
 
 
 def pleiades_match(name) -> ImageMatch:
     attrs = {}
     m = re_pleiades.match(name)
     for field in dataclasses.fields(ImageMatch):
-        attrs[field.name] = m.group(field.name)
-        if attrs[field.name] is not None:
-            attrs[field.name] = attrs[field.name].upper()
+        value = m.group(field.name)
+        if value is not None:
+            value = field.type(value)
+            if field.type is str:
+                value = value.upper()
+
+        attrs[field.name] = value
     return ImageMatch(**attrs)
 
 
