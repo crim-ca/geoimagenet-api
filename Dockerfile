@@ -8,8 +8,8 @@ COPY requirements* setup.py README.md ./
 
 RUN echo "http://mirror.leaseweb.com/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
-    apk add postgresql-libs && \
-    apk add --virtual .build-deps gcc musl-dev postgresql-dev geos-dev make && \
+    apk add postgresql-libs geos-dev && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev make && \
     pip install --upgrade pip setuptools gunicorn && \
     pip install --no-cache-dir -e . && \
     apk --purge del .build-deps gcc musl-dev postgresql-dev make
