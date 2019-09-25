@@ -8,11 +8,11 @@ COPY requirements.txt .
 
 RUN echo "http://mirror.leaseweb.com/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
-    apk add postgresql-libs gcc musl-dev geos-dev && \
-    apk add --virtual .build-deps postgresql-dev make && \
+    apk add postgresql-libs && \
+    apk add --virtual .build-deps postgresql-dev gcc musl-dev make && \
     pip install --upgrade pip setuptools gunicorn && \
     pip install --no-cache-dir -r requirements.txt && \
-    apk --purge del .build-deps postgresql-dev make
+    apk --purge del .build-deps postgresql-dev gcc musl-dev make
 
 COPY geoimagenet_api/__init__.py geoimagenet_api/__about__.py ./geoimagenet_api/
 COPY requirements* setup.py README.md ./

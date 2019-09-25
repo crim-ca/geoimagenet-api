@@ -14,6 +14,3 @@ fastapi
 requests
 uvicorn
 urllib3<=1.24.2
-pyshp
-epsg_ident
-shapely
