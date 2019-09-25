@@ -75,96 +75,65 @@ class GeoServerMirror(GeoServerDatastore):
 
         self.write_postgis_image_info(images_info)
 
-    def write_postgis_image_16_bits_info(self):
-        """Write image information in the database. This function should only be called when the
-        environment has access to all the images (when it's connected to the nas) and usually not
-        while developing. However, it should not have any adverse effets when the images are
-        not available."""
-        logger.info(f"Writing 8 bits and 16 bits images information in database")
-
-        image_data = self.parse_images()
-        images_folder = Path(self.get_config("images_folder"))
-
-        with connection_manager.get_db_session() as session:
-            for data in image_data:
-                for image_path in data.images_list:
-                    existing = (
-                        session.query(Image)
-                        .filter_by(
-                            sensor_name=data.sensor_name,
-                            bands=data.bands,
-                            bits=data.bits,
-                            filename=image_path.stem,
-                        )
-                        .first()
-                    )
-                    image_name = image_path.stem
-                    if existing:
-                        logger.info(f"Image already in database: {image_name}")
-                        if existing.trace is None:
-                            wkt = load_image_trace_geometry(
-                                images_folder, data.sensor_name, image_name
-                            )
-                            existing.trace = wkt
-                            logger.info(f"Updated trace geometry: {image_name}")
-                    else:
-                        wkt = load_image_trace_geometry(
-                            images_folder, data.sensor_name, image_name
-                        )
-                        db_image = Image(
-                            sensor_name=data.sensor_name,
-                            bands=data.bands,
-                            bits=data.bits,
-                            filename=image_name,
-                            extension=image_path.suffix,
-                            trace=wkt,
-                        )
-                        session.add(db_image)
-                        logger.info(f"Added image information: {image_name}")
-
-            if not self.dry_run:
-                session.commit()
-
     def write_postgis_image_info(self, image_data: List[ImageInfo]):
-        """Make sure the information in the Image table in postgis contains what is available
-        in the WMS service, and has all traces wkt geometries.
+        """Write image information into the postgis database.
 
-        If something is in the postgis table and not in the wms service, it's not deleted."""
+        Try to take as much information from the remote geoserver datastore from
+        wms layers and wfs queries.
+
+        When local images are available in images_folder, they will also be inserted.
+
+        This configuration makes setting up a development environment much simpler.
+        When you don't have access to the images, there is nothing you need to do. But
+        when the images are available (in production) the information will be added
+        without having to specify anything if images_folder is setup correctly.
+        """
         logger.info(f"Writing images information in database")
+
         with connection_manager.get_db_session() as session:
+
+            def write_image_info(image_name, sensor_name, bands, bits):
+                existing = (
+                    session.query(Image)
+                    .filter_by(
+                        sensor_name=sensor_name,
+                        bands=bands,
+                        bits=bits,
+                        filename=image_name,
+                    )
+                    .first()
+                )
+
+                if existing:
+                    logger.info(f"Image already in database: {image_name}")
+                    if existing.trace is None:
+                        wkt = self._get_ewkt(sensor_name, image_name)
+                        existing.trace = wkt
+                        logger.info(f"Updated trace geometry: {image_name}")
+                else:
+                    wkt = self._get_ewkt(sensor_name, image_name)
+                    db_image = Image(
+                        sensor_name=sensor_name,
+                        bands=bands,
+                        bits=bits,
+                        filename=image_name,
+                        extension=".tif",  # we assume the tiff extension
+                        trace=wkt,
+                    )
+                    session.add(db_image)
+                    logger.info(f"Added image information: {image_name}")
+
             for data in image_data:
                 for workspace_name in data.workspace_names():
                     for store in self.datastore.get_stores(workspace_name):
-                        image_name = store.name
-                        existing = (
-                            session.query(Image)
-                            .filter_by(
-                                sensor_name=data.sensor_name,
-                                bands=data.bands,
-                                bits=data.bits,
-                                filename=image_name,
-                            )
-                            .first()
-                        )
+                        write_image_info(store.name, data.sensor_name, data.bands, data.bits)
 
-                        if existing:
-                            logger.info(f"Image already in database: {image_name}")
-                            if existing.trace is None:
-                                wkt = self._get_ewkt(data.sensor_name, image_name)
-                                existing.trace = wkt
-                                logger.info(f"Updated trace geometry: {image_name}")
-                        else:
-                            wkt = self._get_ewkt(data.sensor_name, image_name)
-                            db_image = Image(
-                                sensor_name=data.sensor_name,
-                                bands=data.bands,
-                                bits=data.bits,
-                                filename=image_name,
-                                extension=".tif",  # we assume the tiff extension
-                                trace=wkt,
-                            )
-                            session.add(db_image)
-                            logger.info(f"Added image information: {image_name}")
+            image_data_on_drive = self.parse_images()
+
+            for data in image_data_on_drive:
+                for image_path in data.images_list:
+                    image_name = image_path.stem
+                    write_image_info(image_name, data.sensor_name, data.bands, data.bits)
 
             if not self.dry_run:
                 session.commit()
