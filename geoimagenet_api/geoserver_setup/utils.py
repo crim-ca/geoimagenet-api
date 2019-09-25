@@ -1,16 +1,12 @@
+import re
 from itertools import chain
 import os
-from typing import Optional
 
 import pytz
 from tzlocal import get_localzone
 import warnings
 from pathlib import Path
 from loguru import logger
-from epsg_ident import EpsgIdent
-
-import shapefile
-from shapely.geometry import shape, Polygon
 
 from geoimagenet_api.geoserver_setup.images_names_utils import find_matching_name
 
@@ -53,3 +49,26 @@ def find_image_trace(images_folder, sensor_name, image_filename_stem: str) -> Pa
             for contour in shapefiles:
                 if contour.stem == matching_contour:
                     return contour
+
+
+def wkt_multipolygon_to_polygon(wkt: str) -> str:
+    """Take the first polygon from a wkt multipolygon and return it as a polygon.
+
+    If there is any hole in this first polygon, return the first ring.
+    """
+    srid = None
+    if wkt.startswith("SRID="):
+        srid, wkt = wkt.split(";")
+
+    if wkt.startswith("POLYGON"):
+        pass
+    elif wkt.startswith("MULTIPOLYGON"):
+        geom = re.search(r"\(\(\((.+?)\)", wkt).group(1)
+        wkt = f"POLYGON (({geom}))"
+    else:
+        raise ValueError("Expected a multipolygon or a polygon")
+
+    if srid:
+        wkt = ";".join([srid, wkt])
+
+    return wkt

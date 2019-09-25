@@ -4,15 +4,13 @@ import sys
 import csv
 
 from loguru import logger
-from shapely.geometry import Polygon
-import shapely.wkt
 
 from geoimagenet_api.database.connection import connection_manager
 from geoimagenet_api.database.models import Image
 from geoimagenet_api.geoserver_setup import images_names_utils
 from geoimagenet_api.geoserver_setup.geoserver_datastore import GeoServerDatastore
 from geoimagenet_api.geoserver_setup.image_data import ImageInfo
-from geoimagenet_api.geoserver_setup.utils import find_date, load_image_trace_geometry
+from geoimagenet_api.geoserver_setup.utils import find_date, wkt_multipolygon_to_polygon
 from geoimagenet_api import config
 
 
@@ -161,7 +159,7 @@ class GeoServerMirror(GeoServerDatastore):
         geom_index = header.index("the_geom")
         wkt = geometries[0][geom_index]
         # convert multipolygon to polygon wkt
-        polygon_wkt = Polygon(shapely.wkt.loads(wkt)[0].exterior.coords).wkt
+        polygon_wkt = wkt_multipolygon_to_polygon(wkt)
         ewkt = "SRID=3857;" + polygon_wkt
 
         return ewkt

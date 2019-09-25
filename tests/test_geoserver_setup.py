@@ -3,8 +3,8 @@ from pathlib import Path
 from geoimagenet_api.geoserver_setup import images_names_utils
 from geoimagenet_api.geoserver_setup.utils import (
     find_date,
-    load_image_trace_geometry,
     find_image_trace,
+    wkt_multipolygon_to_polygon,
 )
 
 
@@ -190,3 +190,14 @@ def test_find_matching_name():
         images_names_utils.find_matching_name(image_name, names_list)
         == "Pleiades_20150517_RGBN_50cm_16bits_AOI_6_Newmarket_ON_trace"
     )
+
+
+def test_multipolygon_wkt():
+    multipolygon = (
+        "SRID=3857;MULTIPOLYGON (((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),"
+        "(30 20, 20 15, 20 25, 30 20)),"
+        "((40 40, 20 45, 45 30, 40 40)))"
+    )
+
+    polygon = wkt_multipolygon_to_polygon(multipolygon)
+    assert polygon == "SRID=3857;POLYGON ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35))"
