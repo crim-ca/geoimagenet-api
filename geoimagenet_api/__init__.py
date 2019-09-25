@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from starlette.responses import PlainTextResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 import sentry_sdk
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from geoimagenet_api.__about__ import __version__, __author__, __email__
 from geoimagenet_api.database import connection, migrations
@@ -42,6 +43,8 @@ if sentry_dsn:
 
 
 application = FastAPI()
+
+application.add_middleware(ProxyHeadersMiddleware)
 
 if config.get("allow_cors", bool):  # pragma: no cover
     application.add_middleware(
