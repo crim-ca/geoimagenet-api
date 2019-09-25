@@ -25,13 +25,6 @@ def test_find_image_trace():
     )
 
 
-def test_load_image_trace():
-    images_folder = Path(__file__).parent / "data"
-    image_filename_stem = "Pleiades_20120912_RGB_50cm_8bits_AOI_35_Montreal_QC"
-    wkt = load_image_trace_geometry(images_folder, "PLEIADES", image_filename_stem)
-    assert wkt.startswith("POLYGON")
-
-
 def test_re_match_pleides_8_bits_rgb():
     m = images_names_utils.re_pleiades.match(
         "Pleiades_20130630_RGB_50cm_8bits_AOI_16_Lethbridge_AB"
