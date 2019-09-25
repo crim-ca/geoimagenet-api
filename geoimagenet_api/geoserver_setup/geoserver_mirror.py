@@ -1,11 +1,20 @@
+from pathlib import Path
 from typing import List
+import sys
+import csv
 
 from loguru import logger
 
+from geoimagenet_api.database.connection import connection_manager
+from geoimagenet_api.database.models import Image
+from geoimagenet_api.geoserver_setup import images_names_utils
 from geoimagenet_api.geoserver_setup.geoserver_datastore import GeoServerDatastore
-from geoimagenet_api.geoserver_setup.image_data import ImageData
-from geoimagenet_api.geoserver_setup.utils import find_date
+from geoimagenet_api.geoserver_setup.image_data import ImageInfo
+from geoimagenet_api.geoserver_setup.utils import find_date, wkt_multipolygon_to_polygon
 from geoimagenet_api import config
+
+
+csv.field_size_limit(sys.maxsize)
 
 
 class GeoServerMirror(GeoServerDatastore):
@@ -43,17 +52,117 @@ class GeoServerMirror(GeoServerDatastore):
         )
 
     def configure(self):
-        image_data = self.parse_images()
-        image_data_8bit = [i for i in image_data if i.bits == 8]
-        self.create_workspaces(image_data_8bit)
+        workspaces_request = self.datastore.request("get", "/workspaces.json")
+        images_info = []
+        for w in workspaces_request["workspaces"]["workspace"]:
+            try:
+                images_info.append(ImageInfo.from_workspace_name(w["name"]))
+            except ValueError:
+                pass
+        print(images_info)
 
-        self.create_wms_stores(image_data_8bit)
-        self.create_wms_layers(image_data_8bit)
-        self.delete_cached_layers(image_data_8bit)
+        self.create_workspaces(images_info)
+
+        self.create_wms_stores(images_info)
+        self.create_wms_layers(images_info)
+        self.delete_cached_layers(images_info)
 
         self.create_annotation_workspace()
         self.create_annotation_store()
         self.create_annotation_layer()
+
+        self.write_postgis_image_info(images_info)
+
+    def write_postgis_image_info(self, image_data: List[ImageInfo]):
+        """Write image information into the postgis database.
+
+        Try to take as much information from the remote geoserver datastore from
+        wms layers and wfs queries.
+
+        When local images are available in images_folder, they will also be inserted.
+
+        This configuration makes setting up a development environment much simpler.
+        When you don't have access to the images, there is nothing you need to do. But
+        when the images are available (in production) the information will be added
+        without having to specify anything if images_folder is setup correctly.
+        """
+        logger.info(f"Writing images information in database")
+
+        with connection_manager.get_db_session() as session:
+
+            def write_image_info(image_name, sensor_name, bands, bits):
+                existing = (
+                    session.query(Image)
+                    .filter_by(
+                        sensor_name=sensor_name,
+                        bands=bands,
+                        bits=bits,
+                        filename=image_name,
+                    )
+                    .first()
+                )
+
+                if existing:
+                    logger.info(f"Image already in database: {image_name}")
+                    if existing.trace is None:
+                        wkt = self._get_ewkt(sensor_name, image_name)
+                        existing.trace = wkt
+                        logger.info(f"Updated trace geometry: {image_name}")
+                else:
+                    wkt = self._get_ewkt(sensor_name, image_name)
+                    db_image = Image(
+                        sensor_name=sensor_name,
+                        bands=bands,
+                        bits=bits,
+                        filename=image_name,
+                        extension=".tif",  # we assume the tiff extension
+                        trace=wkt,
+                    )
+                    session.add(db_image)
+                    logger.info(f"Added image information: {image_name}")
+
+            for data in image_data:
+                for workspace_name in data.workspace_names():
+                    for store in self.datastore.get_stores(workspace_name):
+                        write_image_info(store.name, data.sensor_name, data.bands, data.bits)
+
+            image_data_on_drive = self.parse_images()
+
+            for data in image_data_on_drive:
+                for image_path in data.images_list:
+                    image_name = image_path.stem
+                    write_image_info(image_name, data.sensor_name, data.bands, data.bits)
+
+            if not self.dry_run:
+                session.commit()
+
+    def _get_ewkt(self, sensor_name, layer_name):
+        traces_layer_names = [
+            layer["name"]
+            for layer in self.datastore.request(
+                "get", f"/workspaces/{sensor_name}_CONTOURS/layers"
+            )["layers"]["layer"]
+        ]
+        trace_layer = images_names_utils.find_matching_name(
+            layer_name, traces_layer_names
+        )
+        if not trace_layer:
+            logger.error(f"Could not find trace layer for: {layer_name}")
+        params = {
+            "typeNames": f"{sensor_name}_CONTOURS:{trace_layer}",
+            "outputFormat": "csv",
+            "srsName": "EPSG:3857",
+        }
+        content = self.datastore.wfs(params=params).content.decode()
+        separator = "\r\n" if "\r\n" in content else "\n"
+        header, *geometries = csv.reader(content.split(separator))
+        geom_index = header.index("the_geom")
+        wkt = geometries[0][geom_index]
+        # convert multipolygon to polygon wkt
+        polygon_wkt = wkt_multipolygon_to_polygon(wkt)
+        ewkt = "SRID=3857;" + polygon_wkt
+
+        return ewkt
 
     def create_annotation_workspace(self):
         logger.debug(f"Creating annotation workspace")
@@ -133,11 +242,11 @@ class GeoServerMirror(GeoServerDatastore):
                 "nativeCRS": "EPSG:3857",
                 "srs": "EPSG:3857",
                 "nativeBoundingBox": {
-                  "minx": -2.0037508342789244E7,
-                  "maxx": 2.0037508342789244E7,
-                  "miny": -2.00489661040146E7,
-                  "maxy": 2.0048966104014594E7,
-                  "crs": "EPSG:3857",
+                    "minx": -2.0037508342789244e7,
+                    "maxx": 2.0037508342789244e7,
+                    "miny": -2.00489661040146e7,
+                    "maxy": 2.0048966104014594e7,
+                    "crs": "EPSG:3857",
                 },
                 "projectionPolicy": "FORCE_DECLARED",
                 "enabled": True,
@@ -152,31 +261,29 @@ class GeoServerMirror(GeoServerDatastore):
                 data=data,
             )
 
-    def delete_cached_layers(self, image_data_8bit: List[ImageData]):
+    def delete_cached_layers(self, images_info: List[ImageInfo]):
         existing_layers = self.request("get", f"/layers.json", gwc=True)
-
-        for image_data in image_data_8bit:
-
-            def _delete_cached_layers(path):
-                layer_name = path.stem
-                for workspace_name in image_data.workspace_names():
-                    cached_layer_name = f"{workspace_name}:{layer_name}"
+        cached_layers_to_delete = []
+        for image_data in images_info:
+            for workspace_name in image_data.workspace_names():
+                for store in self.datastore.get_stores(workspace_name):
+                    cached_layer_name = f"{workspace_name}:{store.name}"
                     if cached_layer_name in existing_layers:
-                        logger.info(f"DELETE cached layer: {cached_layer_name}")
-                        if not self.dry_run:
-                            self.request(
-                                "delete",
-                                f"/layers/{cached_layer_name}",
-                                gwc=True,
-                                ignore_codes=[404],
-                            )
+                        cached_layers_to_delete.append(cached_layer_name)
 
-            self.map_threaded(_delete_cached_layers, image_data.images_list)
+        def _delete_cached_layer(layer_name):
+            logger.info(f"DELETE cached layer: {layer_name}")
+            if not self.dry_run:
+                self.request(
+                    "delete", f"/layers/{layer_name}", gwc=True, ignore_codes=[404]
+                )
 
-    def create_wms_stores(self, image_data_8bit: List[ImageData]):
+        self.map_threaded(_delete_cached_layer, cached_layers_to_delete)
+
+    def create_wms_stores(self, images_info: List[ImageInfo]):
         logger.info("Creating wms stores")
 
-        for image_data in image_data_8bit:
+        for image_data in images_info:
             for workspace_name in image_data.workspace_names():
                 r = self.request("get", f"/workspaces/{workspace_name}/wmsstores")
                 existing_wms_stores_names = []
@@ -212,14 +319,14 @@ class GeoServerMirror(GeoServerDatastore):
                             data=data,
                         )
 
-    def create_wms_layers(self, image_data_8bit: List[ImageData]):
+    def create_wms_layers(self, images_info: List[ImageInfo]):
         logger.info("Creating wms layers")
 
         attributions = {
             meta["name"]: meta["attribution"] for meta in self.get_config("metadata")
         }
 
-        for image_data in image_data_8bit:
+        for image_data in images_info:
             for workspace_name in image_data.workspace_names():
 
                 def _create_wms_layers(store):

@@ -32,7 +32,7 @@ class Person(Base):
 
 
 def default_follower_nickname(context):
-    follow_user_id = context.get_current_parameters()['follow_user_id']
+    follow_user_id = context.get_current_parameters()["follow_user_id"]
     return f"user {follow_user_id}"
 
 
@@ -66,7 +66,7 @@ class Annotation(Base):
     annotator_id = Column(Integer, ForeignKey("person.id"), nullable=False, index=True)
     geometry = Column(
         Geometry("GEOMETRY", srid=3857, spatial_index=False), nullable=False
-    )
+    )  # see __table_args__ for index
     updated_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
     taxonomy_class_id = Column(
         Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
@@ -100,7 +100,9 @@ class AnnotationLog(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     annotation_id = Column(Integer, nullable=False, index=True)
     annotator_id = Column(Integer, ForeignKey("person.id"), index=True)
-    geometry = Column(Geometry("GEOMETRY", srid=3857, spatial_index=False))
+    geometry = Column(
+        Geometry("GEOMETRY", srid=3857, spatial_index=False)
+    )  # see __table_args__ for index
     created_at = Column(DateTime, server_default=text("NOW()"))
     taxonomy_class_id = Column(Integer, ForeignKey("taxonomy_class.id"), index=True)
     image_id = Column(Integer, ForeignKey("image.id"), nullable=True, index=True)
@@ -138,7 +140,9 @@ class TaxonomyClass(Base):
     name_en = Column(String, nullable=True, index=True)
     code = Column(String, nullable=False, index=True, unique=True)
 
-    __table_args__ = (UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),)
+    __table_args__ = (
+        UniqueConstraint("parent_id", "name_fr", name="uc_taxonomy_class"),
+    )
 
 
 class Taxonomy(Base):
@@ -186,8 +190,10 @@ class Image(Base):
         index=True,
         comment="Must not be set explicitly, this column is updated by a trigger.",
     )
+    trace = Column(Geometry("POLYGON", srid=3857, spatial_index=False))
     __table_args__ = (
         UniqueConstraint("sensor_name", "bands", "bits", "filename", name="uc_image"),
+        Index("idx_image_trace", trace, postgresql_using="gist"),
     )
 
     def __repr__(self):

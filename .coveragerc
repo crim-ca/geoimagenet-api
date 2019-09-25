@@ -1,10 +1,12 @@
 # .coveragerc to control coverage.py
 [run]
 branch = False
-omit = */geoserver_setup/*
-       */alembic/*
-       */tests/*
-       */database/connection.py
+omit = geoimagenet_api/geoserver_setup/geoserver_datastore.py
+       geoimagenet_api/geoserver_setup/geoserver_mirror.py
+       geoimagenet_api/geoserver_setup/main.py
+       tests/*
+       geoimagenet_api/database/alembic/*
+       geoimagenet_api/database/connection.py
 
 [report]
 # Regexes for lines to exclude from consideration

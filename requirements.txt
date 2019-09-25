@@ -3,7 +3,7 @@ alembic
 psycopg2-binary
 sqlalchemy-utils
 python-slugify
-text-unidecode==1.2
+text-unidecode
 dateparser
 sentry-sdk
 click

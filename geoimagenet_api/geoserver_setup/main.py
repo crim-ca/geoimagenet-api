@@ -23,6 +23,7 @@ def main(
     seed_cache_only=False,
     concurrent_seeds=None,
     setup_datastore=False,
+    setup_images_16_bits=False,
     gs_mirror_insecure=False,
     dry_run=False,
 ):
@@ -46,7 +47,7 @@ def main(
         if setup_datastore:
             datastore.configure()
         logger.info(f"## Configuring GeoServer mirror instance")
-        GeoServerMirror(
+        mirror = GeoServerMirror(
             gs_datastore_url,
             gs_datastore_user,
             gs_datastore_password,
@@ -56,7 +57,10 @@ def main(
             gs_yaml_config,
             dry_run=dry_run,
             skip_ssl=gs_mirror_insecure,
-        ).configure()
+        )
+        mirror.configure()
+        if setup_images_16_bits:
+            mirror.write_postgis_image_16_bits_info()
 
 
 @click.command()
@@ -71,6 +75,11 @@ def main(
     is_flag=True,
     help="By default, the datastore images are not configured "
     "(so that development environments don't interfere with production).",
+)
+@click.option(
+    "--setup-images-16-bits",
+    is_flag=True,
+    help="Write 16bits image information in the postgis database (required when creating batches)",
 )
 @click.option(
     "--gs-yaml-config",
@@ -123,6 +132,7 @@ def cli(
     seed_cache_only,
     concurrent_seeds,
     setup_datastore,
+    setup_images_16_bits,
     gs_mirror_insecure,
 ):
     """The command line interface to configure the geoserver datastore and a cascading WMS geoserver
@@ -173,6 +183,7 @@ def cli(
         seed_cache_only,
         concurrent_seeds,
         setup_datastore,
+        setup_images_16_bits,
         gs_mirror_insecure,
         dry_run,
     )
