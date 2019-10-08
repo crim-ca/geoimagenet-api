@@ -128,7 +128,6 @@ def add_followers(request: Request, body: List[Follower]):
 @router.delete(
     "/users/current/followed_users/{user_id}",
     status_code=204,
-    response_class=Response,
     summary="Add followers for the current user",
 )
 def delete_followers(request: Request, user_id: int):
@@ -143,3 +142,5 @@ def delete_followers(request: Request, user_id: int):
             raise HTTPException(404, f"User id not found: {user_id}")
         session.delete(follower)
         session.commit()
+
+    return Response(status_code=204)

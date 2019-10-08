@@ -132,7 +132,7 @@ def get(
         return Response(data, media_type="application/json")
 
 
-@router.put("/annotations", status_code=204, response_class=Response, summary="Modify")
+@router.put("/annotations", status_code=204, summary="Modify")
 def put(
     request: Request,
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
@@ -172,6 +172,8 @@ def put(
             session.commit()
         except sqlalchemy.exc.IntegrityError as e:  # pragma: no cover
             raise HTTPException(400, f"Error: {e}")
+
+    return Response(status_code=204)
 
 
 @router.post(
@@ -411,22 +413,22 @@ def _record_validation_events(session, desired_status, user_id, query):
         )
 
 
-@router.post("/annotations/release", status_code=204, response_class=Response, summary="Release")
+@router.post("/annotations/release", status_code=204, summary="Release")
 def update_status_release(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.released, request)
 
 
-@router.post("/annotations/validate", status_code=204, response_class=Response, summary="Validate")
+@router.post("/annotations/validate", status_code=204, summary="Validate")
 def update_status_validate(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.validated, request)
 
 
-@router.post("/annotations/reject", status_code=204, response_class=Response, summary="Reject")
+@router.post("/annotations/reject", status_code=204, summary="Reject")
 def update_status_reject(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.rejected, request)
 
 
-@router.post("/annotations/delete", status_code=204, response_class=Response, summary="Delete")
+@router.post("/annotations/delete", status_code=204, summary="Delete")
 def update_status_delete(request: Request, update: status_update_type = Body(...)):
     return _update_status(update, AnnotationStatus.deleted, request)
 
@@ -554,7 +556,6 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
 @router.post(
     "/annotations/request_review",
     status_code=204,
-    response_class=Response,
     summary="Request review",
 )
 def request_review(body: AnnotationRequestReview, request: Request):
@@ -575,3 +576,5 @@ def request_review(body: AnnotationRequestReview, request: Request):
             )
         )
         session.commit()
+
+    return Response(status_code=204)
