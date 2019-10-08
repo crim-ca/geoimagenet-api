@@ -3,6 +3,7 @@ from typing import Optional, List
 import requests
 import sentry_sdk
 from sqlalchemy.exc import IntegrityError
+from starlette.responses import Response
 
 from geoimagenet_api.database.connection import connection_manager
 from starlette.requests import Request
@@ -127,6 +128,7 @@ def add_followers(request: Request, body: List[Follower]):
 @router.delete(
     "/users/current/followed_users/{user_id}",
     status_code=204,
+    response_class=Response,
     summary="Add followers for the current user",
 )
 def delete_followers(request: Request, user_id: int):
