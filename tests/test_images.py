@@ -1,6 +1,7 @@
 from typing import List
 
 import pytest
+from sqlalchemy import func
 from starlette.exceptions import HTTPException
 
 from geoimagenet_api.database.connection import connection_manager
@@ -178,3 +179,27 @@ def test_image_id_from_properties_raises_400(pleiades_images):
         )
         with pytest.raises(HTTPException):
             image_id_from_properties(session, properties)
+
+
+def test_image_trace_simplified(pleiades_images):
+    with _clean_annotation_session() as session:
+        # --- given
+        image_name = "PLEIADES_NRG:Pleiades_20150917_RGBN_50cm_8bits_AOI_5_Edmunston_NB"
+        image = session.query(Image).filter_by(layer_name=image_name).scalar()
+
+        # --- when
+        geometry = "SRID=4326;POLYGON((-71 39,-71 41,-69 41,-69 39,-71 39))"
+        image.trace = func.ST_Transform(func.ST_GeomFromEWKT(geometry), 3857)
+        session.commit()
+
+        # --- then
+        trace_simplified_before = image.trace_simplified
+        assert trace_simplified_before is not None
+
+        # --- when
+        new_geometry = "SRID=4326;POLYGON((-71 39,-71 41,-59 41,-59 39,-71 39))"
+        image.trace = func.ST_Transform(func.ST_GeomFromEWKT(new_geometry), 3857)
+        session.commit()
+
+        # --- then
+        assert trace_simplified_before != image.trace_simplified
