@@ -393,6 +393,8 @@ def _update_status(
 
         session.commit()
 
+    return Response(status_code=204)
+
 
 def _record_validation_events(session, desired_status, user_id, query):
     # record validation events
