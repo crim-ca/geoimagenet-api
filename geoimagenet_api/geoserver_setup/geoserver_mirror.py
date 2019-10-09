@@ -21,6 +21,7 @@ class GeoServerMirror(GeoServerDatastore):
     annotation_workspace = "GeoImageNet"
     annotation_store = "annotations"
     annotation_table = "annotation"
+    image_trace_table = "image"
 
     def __init__(
         self,
@@ -69,7 +70,8 @@ class GeoServerMirror(GeoServerDatastore):
 
         self.create_annotation_workspace()
         self.create_annotation_store()
-        self.create_annotation_layer()
+        self.create_annotation_layer(self.annotation_table)
+        self.create_annotation_layer(self.image_trace_table)
 
         self.write_postgis_image_info(images_info)
 
@@ -105,6 +107,7 @@ class GeoServerMirror(GeoServerDatastore):
                 if existing:
                     logger.info(f"Image already in database: {image_name}")
                     if existing.trace is None:
+                        # note: the trace_simplified column is updated with a trigger
                         wkt = self._get_ewkt(sensor_name, image_name)
                         existing.trace = wkt
                         logger.info(f"Updated trace geometry: {image_name}")
@@ -221,7 +224,7 @@ class GeoServerMirror(GeoServerDatastore):
                 data=data,
             )
 
-    def create_annotation_layer(self):
+    def create_annotation_layer(self, table_name):
         existing_layers = self.request(
             "get",
             f"/workspaces/{self.annotation_workspace}/datastores/{self.annotation_store}/featuretypes.json",
@@ -232,13 +235,13 @@ class GeoServerMirror(GeoServerDatastore):
                 d["name"] for d in existing_layers["featureTypes"]["featureType"]
             ]
 
-        if self.annotation_table in existing_layers_names:
-            logger.info(f"annotation layer already exists")
+        if table_name in existing_layers_names:
+            logger.info(f"{table_name} layer already exists")
             return
 
         data = {
             "featureType": {
-                "name": self.annotation_table,
+                "name": table_name,
                 "nativeCRS": "EPSG:3857",
                 "srs": "EPSG:3857",
                 "nativeBoundingBox": {
