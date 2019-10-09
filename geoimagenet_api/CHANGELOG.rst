@@ -2,6 +2,20 @@ Changelog
 =========
 
 
+1.3.0 (2019-10-09)
+------------------
+
+New
+~~~
+- geoserver_setup: Load image traces when present in the CONTOURS folder.
+- geoserver_setup: Add image table to geoserver wfs.
+- Add trace_simplified column and trigger (updated automatically when trace gets updated).
+
+Fix
+~~~
+- Fix header Content-Length=4 for 204 No Content return codes.
+
+
 1.2.2 (2019-09-18)
 ------------------
 
