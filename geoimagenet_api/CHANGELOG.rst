@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+1.4.0 (2019-10-18)
+------------------
+
+New
+~~~
+- Add POST on /annotations/datasets for external datasets
+
+
 1.3.1 (2019-10-09)
 ------------------
 
