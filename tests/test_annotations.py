@@ -1,5 +1,6 @@
 import contextlib
 from datetime import timedelta, datetime
+from typing import Optional
 
 import pytest
 from geoalchemy2 import functions
@@ -13,26 +14,74 @@ from geoimagenet_api.database.models import (
     AnnotationLogOperation,
     AnnotationStatus,
     TaxonomyClass,
+    Image,
+    ValidationEvent,
+    ValidationValue,
 )
 from geoimagenet_api.openapi_schemas import AnnotationProperties
 
-wkt_string = {
-    "Point": "POINT(100 0)",
-    "LineString": "LINESTRING(100 0,101 0,101 1,100 1,100 0)",
-    "Polygon": "POLYGON((100 0,101 0,101 1,100 1,100 0))",
+test_bbox_4326_wkt = "SRID=4326;POLYGON ((-73 44, -72 44, -72 45, -73 45, -73 44))"
+test_bbox_4326_coords = [[-73, 44], [-72, 44], [-72, 45], [-73, 45], [-73, 44]]
+test_4326_coords_inside = [
+    [-72.9, 44.1],
+    [-72.1, 44.1],
+    [-72.1, 44.9],
+    [-72.9, 44.9],
+    [-72.9, 44.1],
+]
+test_bbox_3857_wkt = (
+    "SRID=3857;POLYGON(("
+    "-8126322.82790897 5465442.18332275,"
+    "-8015003.3371157 5465442.18332275,"
+    "-8015003.3371157 5621521.48619207,"
+    "-8126322.82790897 5621521.48619207,"
+    "-8126322.82790897 5465442.18332275))"
+)
+test_bbox_3857_coords = (
+    (-8126322.82790897, 5465442.18332275),
+    (-8015003.3371157, 5465442.18332275),
+    (-8015003.3371157, 5621521.48619207),
+    (-8126322.82790897, 5621521.48619207),
+    (-8126322.82790897, 5465442.18332275),
+)
+
+test_3857_coords_inside = (
+    (-8115190.87882964, 5480930.4774991),
+    (-8026135.28619502, 5480930.4774991),
+    (-8026135.28619502, 5605792.24720735),
+    (-8115190.87882964, 5605792.24720735),
+    (-8115190.87882964, 5480930.4774991),
+)
+
+wkt_string_4326 = {
+    "Point": "POINT(-72.9 44.1)",
+    "LineString": "LINESTRING(-72.9 44.1, -72.1 44.1, -72.1 44.9, -72.9 44.9, -72.9 44.1)",
+    "Polygon": "POLYGON((-72.9 44.1, -72.1 44.1, -72.1 44.9, -72.9 44.9, -72.9 44.1))",
 }
 
-test_coordinates = [
-    [100.0, 0.0],
-    [101.0, 0.0],
-    [101.0, 1.0],
-    [100.0, 1.0],
-    [100.0, 0.0],
-]
+point_4326 = {"type": "Point", "coordinates": test_4326_coords_inside[0]}
+linestring_4326 = {"type": "LineString", "coordinates": test_4326_coords_inside}
+polygon_4326 = {"type": "Polygon", "coordinates": [test_4326_coords_inside]}
 
-point = {"type": "Point", "coordinates": test_coordinates[0]}
-linestring = {"type": "LineString", "coordinates": test_coordinates}
-polygon = {"type": "Polygon", "coordinates": [test_coordinates]}
+wkt_string_3857 = {
+    "Point": "POINT(-8115190.87882964 5480930.4774991)",
+    "LineString": "LINESTRING("
+    "-8115190.87882964 5480930.4774991,"
+    "-8026135.28619502 5480930.4774991,"
+    "-8026135.28619502 5605792.24720735,"
+    "-8115190.87882964 5605792.24720735,"
+    "-8115190.87882964 5480930.4774991)",
+    "Polygon": "POLYGON(("
+    "-8115190.87882964 5480930.4774991,"
+    "-8026135.28619502 5480930.4774991,"
+    "-8026135.28619502 5605792.24720735,"
+    "-8115190.87882964 5605792.24720735,"
+    "-8115190.87882964 5480930.4774991))",
+}
+
+point_3857 = {"type": "Point", "coordinates": test_3857_coords_inside[0]}
+linestring_3857 = {"type": "LineString", "coordinates": test_3857_coords_inside}
+polygon_3857 = {"type": "Polygon", "coordinates": [test_3857_coords_inside]}
 
 
 @pytest.fixture(autouse=True)
@@ -42,21 +91,69 @@ def magpie_current_user_1(monkeypatch):
     )
 
 
-@pytest.fixture(params=[point, linestring, polygon])
-def geojson_geometry(request):
+@pytest.fixture(autouse=True, scope="module")
+def dummy_images(request):
+    image_ids = []
+
+    with connection_manager.get_db_session() as session:
+        for bands, bits in [("RGB", 8), ("NRG", 8), ("RGBN", 8), ("RGBN", 16)]:
+            image = Image(
+                sensor_name="PLEIADES",
+                bands=bands,
+                bits=bits,
+                filename="test_image_bbox_10",
+                extension="tif",
+                trace="SRID=3857;POLYGON((0 0,10 0,10 10,0 10,0 0))",
+            )
+            session.add(image)
+            session.flush()
+            image_ids.append(image.id)
+        session.commit()
+
+    def delete_images():
+        with connection_manager.get_db_session() as session:
+            session.query(Image).filter(Image.id.in_(image_ids)).delete(
+                synchronize_session=False
+            )
+            session.commit()
+
+    request.addfinalizer(delete_images)
+
+    return image_ids
+
+
+@pytest.fixture(params=[point_3857, linestring_3857, polygon_3857])
+def geojson_geometry_3857(request):
+    return _geojson_geometry(request.param)
+
+
+@pytest.fixture(params=[point_4326, linestring_4326, polygon_4326])
+def geojson_geometry_4326(request):
+    return _geojson_geometry(request.param)
+
+
+def _geojson_geometry(geometry):
     return {
         "type": "Feature",
-        "geometry": request.param,
+        "geometry": geometry,
         "properties": {"taxonomy_class_id": 1, "image_name": "PLEIADES_RGB:test_image"},
     }
 
 
 @pytest.fixture(params=["collection", "single"])
-def any_geojson(request, geojson_geometry):
+def any_geojson_4326(request, geojson_geometry_4326):
     if request.param == "collection":
-        return {"type": "FeatureCollection", "features": [geojson_geometry]}
+        return {"type": "FeatureCollection", "features": [geojson_geometry_4326]}
     else:
-        return geojson_geometry
+        return geojson_geometry_4326
+
+
+@pytest.fixture(params=["collection", "single"])
+def any_geojson_3857(request, geojson_geometry_3857):
+    if request.param == "collection":
+        return {"type": "FeatureCollection", "features": [geojson_geometry_3857]}
+    else:
+        return geojson_geometry_3857
 
 
 def _now_in_database(session) -> datetime:
@@ -69,9 +166,9 @@ def write_annotation(
     user_id=1,
     taxonomy_class=2,
     status=AnnotationStatus.new,
-    image_id=1,
+    image_id: Optional[int] = 1,
     review_requested=False,
-    geometry="SRID=3857;POLYGON((0 0,1 0,1 1,0 1,0 0))",
+    geometry=f"SRID=3857;{wkt_string_3857['Polygon']}",
 ):
     def _write(_session):
         annotation = Annotation(
@@ -155,7 +252,7 @@ def test_annotation_all_fields(client):
         assert properties["image_id"] == 1
         assert properties["image_name"] == "PLEIADES_RGB:test_image"
         assert properties["status"] == "new"
-        assert properties["name"] == "RESI_+000.000004_+000.000004"
+        assert properties["name"] == "RESI_+044.500000_-072.500000"
         assert properties["review_requested"] is False
 
         now = _now_in_database(session)
@@ -261,54 +358,54 @@ def test_log_delete_annotation():
         )
 
 
-def test_annotations_put_not_found(client, geojson_geometry):
-    geojson_geometry["id"] = "annotation.1234567"
-    r = client.put(f"/annotations", json=geojson_geometry)
+def test_annotations_put_not_found(client, geojson_geometry_3857):
+    geojson_geometry_3857["id"] = "annotation.1234567"
+    r = client.put(f"/annotations", json=geojson_geometry_3857)
     assert r.status_code == 404
 
 
-def test_annotations_put_not_an_int(client, geojson_geometry):
-    geojson_geometry["id"] = "annotation.not_an_int"
-    r = client.put(f"/annotations", json=geojson_geometry)
+def test_annotations_put_not_an_int(client, geojson_geometry_3857):
+    geojson_geometry_3857["id"] = "annotation.not_an_int"
+    r = client.put(f"/annotations", json=geojson_geometry_3857)
     assert r.status_code == 400
 
 
-def test_annotations_put_id_required(client, geojson_geometry):
-    r = client.put(f"/annotations", json=geojson_geometry)
+def test_annotations_put_id_required(client, geojson_geometry_3857):
+    r = client.put(f"/annotations", json=geojson_geometry_3857)
     assert r.status_code == 400
 
 
-def test_annotations_post_image_doesnt_exist(client, geojson_geometry):
-    geojson_geometry["properties"]["image_name"] = "doesnt exist"
-    r = client.post(f"/annotations", json=geojson_geometry)
+def test_annotations_post_image_doesnt_exist(client, geojson_geometry_3857):
+    geojson_geometry_3857["properties"]["image_name"] = "doesnt exist"
+    r = client.post(f"/annotations", json=geojson_geometry_3857)
     assert r.status_code == 404
 
 
 def test_annotations_put_image_doesnt_exist(
-    client, geojson_geometry, simple_annotation
+    client, geojson_geometry_3857, simple_annotation
 ):
     annotation_id = simple_annotation.id
-    geojson_geometry["id"] = f"annotation.{annotation_id}"
-    geojson_geometry["properties"]["image_name"] = "doesnt exist"
-    r = client.put(f"/annotations", json=geojson_geometry)
+    geojson_geometry_3857["id"] = f"annotation.{annotation_id}"
+    geojson_geometry_3857["properties"]["image_name"] = "doesnt exist"
+    r = client.put(f"/annotations", json=geojson_geometry_3857)
     assert r.status_code == 404
 
 
-def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry):
+def test_annotations_put_not_allowed_other_user_admin(client, geojson_geometry_3857):
     with _clean_annotation_session() as session:
         annotation = write_annotation(session=session, user_id=2)
 
         annotation_id = annotation.id
-        geojson_geometry["id"] = f"annotation.{annotation_id}"
+        geojson_geometry_3857["id"] = f"annotation.{annotation_id}"
 
-        r = client.put(f"/annotations", json=geojson_geometry)
+        r = client.put(f"/annotations", json=geojson_geometry_3857)
         assert r.status_code == 403
 
 
-def test_annotations_post_srid(client, any_geojson):
+def test_annotations_post_srid(client, any_geojson_4326):
     from_srid = 4326
     query = {"srid": from_srid}
-    r = client.post("/annotations", json=any_geojson, params=query)
+    r = client.post("/annotations", json=any_geojson_4326, params=query)
     written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
@@ -316,25 +413,18 @@ def test_annotations_post_srid(client, any_geojson):
         geom = session.query(func.ST_AsText(annotation.geometry)).scalar()
 
         geometry_type = geom[: geom.find("(")].title().replace("string", "String")
-        initial_coordinates = wkt_string[geometry_type]
-        transformed = func.ST_AsText(
-            func.ST_Transform(
-                func.ST_GeomFromText(initial_coordinates, from_srid), 3857
-            )
-        )
-        expected = session.query(transformed).scalar()
-        assert expected == geom
+        assert wkt_string_3857[geometry_type] == geom
 
 
-def test_annotations_post_image_id(client, any_geojson):
+def test_annotations_post_image_id(client, any_geojson_3857):
     """POST an annotation using the image_id instead of the image_name"""
-    if any_geojson["type"] == "FeatureCollection":
-        properties = any_geojson["features"][0]["properties"]
+    if any_geojson_3857["type"] == "FeatureCollection":
+        properties = any_geojson_3857["features"][0]["properties"]
     else:
-        properties = any_geojson["properties"]
+        properties = any_geojson_3857["properties"]
     properties["image_id"] = 2
     del properties["image_name"]
-    r = client.post("/annotations", json=any_geojson)
+    r = client.post("/annotations", json=any_geojson_3857)
     written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
@@ -342,18 +432,18 @@ def test_annotations_post_image_id(client, any_geojson):
         assert annotation.image_id == 2
 
 
-def test_annotations_put_image_id(client, simple_annotation, any_geojson):
+def test_annotations_put_image_id(client, simple_annotation, any_geojson_3857):
     """POST an annotation using the image_id instead of the image_name"""
-    if any_geojson["type"] == "FeatureCollection":
-        feature = any_geojson["features"][0]
+    if any_geojson_3857["type"] == "FeatureCollection":
+        feature = any_geojson_3857["features"][0]
     else:
-        feature = any_geojson
+        feature = any_geojson_3857
     feature["properties"]["image_id"] = 2
     del feature["properties"]["image_name"]
 
     feature["id"] = f"annotation.{simple_annotation.id}"
 
-    r = client.put("/annotations", json=any_geojson)
+    r = client.put("/annotations", json=any_geojson_3857)
     assert r.status_code == 204
     with connection_manager.get_db_session() as session:
         annotation = (
@@ -362,31 +452,24 @@ def test_annotations_put_image_id(client, simple_annotation, any_geojson):
         assert annotation.image_id == 2
 
 
-def test_annotations_put_srid(client, any_geojson, simple_annotation):
+def test_annotations_put_srid(client, any_geojson_4326, simple_annotation):
     with connection_manager.get_db_session() as session:
         annotation_id = simple_annotation.id
-        if any_geojson["type"] == "FeatureCollection":
-            any_geojson["features"][0]["id"] = f"annotation.{annotation_id}"
+        if any_geojson_4326["type"] == "FeatureCollection":
+            any_geojson_4326["features"][0]["id"] = f"annotation.{annotation_id}"
         else:
-            any_geojson["id"] = f"annotation.{annotation_id}"
+            any_geojson_4326["id"] = f"annotation.{annotation_id}"
 
         from_srid = 4326
         query = {"srid": from_srid}
-        r = client.put(f"/annotations", json=any_geojson, params=query)
+        r = client.put(f"/annotations", json=any_geojson_4326, params=query)
         assert r.status_code == 204
 
         annotation = session.query(Annotation).filter_by(id=annotation_id).one()
         geom = session.query(func.ST_AsText(annotation.geometry)).scalar()
 
         geometry_type = geom[: geom.find("(")].title().replace("string", "String")
-        initial_coordinates = wkt_string[geometry_type]
-        transformed = func.ST_AsText(
-            func.ST_Transform(
-                func.ST_GeomFromText(initial_coordinates, from_srid), 3857
-            )
-        )
-        expected = session.query(transformed).scalar()
-        assert expected == geom
+        assert wkt_string_3857[geometry_type] == geom
 
 
 def test_annotations_request_review(client, simple_annotation):
@@ -442,23 +525,23 @@ def test_annotations_request_review_not_found(client, simple_annotation):
     assert r.status_code == 404
 
 
-def test_annotations_put(client, any_geojson, simple_annotation):
+def test_annotations_put(client, any_geojson_3857, simple_annotation):
     with connection_manager.get_db_session() as session:
         annotation_id = simple_annotation.id
         annotator_id = simple_annotation.annotator_id
 
-        if any_geojson["type"] == "FeatureCollection":
-            first_feature = any_geojson["features"][0]
+        if any_geojson_3857["type"] == "FeatureCollection":
+            first_feature = any_geojson_3857["features"][0]
             first_feature["id"] = f"annotation.{annotation_id}"
             first_feature["status"] = f"released"
             properties = AnnotationProperties(**first_feature["properties"])
         else:
-            first_feature = any_geojson
-            any_geojson["id"] = f"annotation.{annotation_id}"
-            any_geojson["status"] = f"released"
-            properties = AnnotationProperties(**any_geojson["properties"])
+            first_feature = any_geojson_3857
+            any_geojson_3857["id"] = f"annotation.{annotation_id}"
+            any_geojson_3857["status"] = f"released"
+            properties = AnnotationProperties(**any_geojson_3857["properties"])
 
-        r = client.put(f"/annotations", json=any_geojson)
+        r = client.put(f"/annotations", json=any_geojson_3857)
         assert r.status_code == 204
 
         annotation2 = session.query(Annotation).filter_by(id=annotation_id).one()
@@ -470,7 +553,7 @@ def test_annotations_put(client, any_geojson, simple_annotation):
         # you can't change the status of an annotation this way
         assert annotation2.status == AnnotationStatus.new
 
-        wkt = "SRID=3857;" + wkt_string[first_feature["geometry"]["type"]]
+        wkt = "SRID=3857;" + wkt_string_3857[first_feature["geometry"]["type"]]
 
         wkt_geom = (
             "SRID=3857;" + session.query(func.ST_AsText(annotation2.geometry)).scalar()
@@ -478,8 +561,8 @@ def test_annotations_put(client, any_geojson, simple_annotation):
         assert wkt_geom == wkt
 
 
-def test_annotation_post(client, any_geojson):
-    r = client.post(f"/annotations", json=any_geojson)
+def test_annotation_post(client, any_geojson_3857):
+    r = client.post(f"/annotations", json=any_geojson_3857)
     written_ids = r.json()
     assert r.status_code == 201
     with connection_manager.get_db_session() as session:
@@ -564,6 +647,7 @@ def _clean_annotation_session():
             yield session
         finally:
             # cleanup
+            session.query(ValidationEvent).delete()
             session.query(Annotation).delete()
             session.query(AnnotationLog).delete()
             session.commit()
@@ -956,6 +1040,118 @@ def test_annotation_post_properties_import(client):
 
         assert annotation_2["properties"]["status"] == "validated"
         assert annotation_2["properties"]["review_requested"]
+
+
+def test_annotation_post_datasets(client, dummy_images):
+    with _clean_annotation_session() as session:
+        write_annotation(
+            session=session,
+            image_id=dummy_images[0],
+            geometry="SRID=3857;POLYGON((0 0,10 0,10 10,0 10,0 0))",
+        )
+        feature_collection = client.get("/annotations").json()
+        annotation_1 = feature_collection["features"][0]
+        r = client.post("/annotations/datasets", json=feature_collection)
+        r.raise_for_status()
+        annotation_2 = client.get("/annotations").json()["features"][-1]
+
+        assert (
+            annotation_1["properties"]["image_id"]
+            == annotation_2["properties"]["image_id"]
+        )
+
+        logs = session.query(AnnotationLog).all()[-3:]
+        assert logs[0].status == AnnotationStatus.new
+        assert logs[1].status == AnnotationStatus.pre_released
+        assert logs[2].status == AnnotationStatus.released
+
+        assert annotation_2["properties"]["status"] == "released"
+
+
+def test_annotation_post_datasets_no_image_id(client, dummy_images):
+    with _clean_annotation_session() as session:
+        write_annotation(
+            session=session,
+            image_id=None,
+            geometry="SRID=3857;POLYGON((0 0,10 0,10 10,0 10,0 0))",
+        )
+        feature_collection = client.get("/annotations").json()
+        r = client.post("/annotations/datasets", json=feature_collection)
+        r.raise_for_status()
+        annotation_2 = client.get("/annotations").json()["features"][-1]
+
+        assert annotation_2["properties"]["image_id"] in dummy_images
+        assert annotation_2["properties"]["status"] == "released"
+
+
+def test_annotation_post_datasets_reject_outside_image(client, dummy_images):
+    with _clean_annotation_session() as session:
+        annotation = _geojson_geometry(polygon_3857)
+        annotation["geometry"]["coordinates"] = [
+            [[20.0, 20.0], [21.0, 20.0], [21.0, 21.0], [20.0, 21.0], [20.0, 20.0]]
+        ]
+        del annotation["properties"]["image_name"]
+
+        r = client.post("/annotations/datasets", json=annotation)
+        r.raise_for_status()
+
+        json = r.json()
+        assert json["total_annotations"] == 1
+        assert json["accepted_annotations"] == 0
+        assert json["rejected_annotations"] == 1
+
+        annotation_1 = client.get("/annotations").json()
+        assert annotation_1["features"][0]["properties"]["status"] == "rejected"
+
+        # assert logs
+        logs = session.query(AnnotationLog).all()[-3:]
+        assert logs[0].status == AnnotationStatus.new
+        assert logs[1].status == AnnotationStatus.pre_released
+        assert logs[2].status == AnnotationStatus.rejected
+
+        # assert validation events
+        event = session.query(ValidationEvent).first()
+        assert event.annotation_id == int(
+            annotation_1["features"][0]["id"].replace("annotation.", "")
+        )
+        assert event.validator_id == 1
+        assert event.validation_value == ValidationValue.rejected
+
+
+def test_annotation_post_datasets_keep_user_id_and_not_status(client, dummy_images):
+    with _clean_annotation_session() as session:
+        write_annotation(
+            session=session,
+            image_id=dummy_images[0],
+            geometry="SRID=3857;POLYGON((0 0,10 0,10 10,0 10,0 0))",
+            status=AnnotationStatus.validated,
+            review_requested=True,
+        )
+        feature_collection = client.get("/annotations").json()
+        feature_collection["features"][0]["properties"]["annotator_id"] = 2
+
+        r = client.post("/annotations/datasets", json=feature_collection)
+        r.raise_for_status()
+
+        annotation_2 = client.get("/annotations").json()["features"][-1]
+
+        assert annotation_2["properties"]["annotator_id"] == 2
+        assert annotation_2["properties"]["status"] == "released"
+        assert not annotation_2["properties"]["review_requested"]
+
+
+def test_annotation_post_datasets_default_user_id(client, dummy_images):
+    with _clean_annotation_session() as session:
+        write_annotation(session=session, user_id=1)
+        annotation_1 = client.get("/annotations").json()
+        del annotation_1["features"][0]["properties"]["annotator_id"]
+
+        r = client.post("/annotations/datasets", json=annotation_1)
+        r.raise_for_status()
+
+        annotation_2 = client.get("/annotations").json()["features"][-1]
+
+        assert annotation_2["properties"]["annotator_id"] == 1
 
 
 @pytest.mark.skip(msg="only for load testing purposes")

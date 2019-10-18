@@ -100,7 +100,7 @@ def get(
         ]
         if with_geometry:
             fields.append(func.ST_AsGeoJSON(DBAnnotation.geometry).label("geometry"))
-        query = session.query(*fields).join(Image).join(DBTaxonomyClass)
+        query = session.query(*fields).outerjoin(Image).join(DBTaxonomyClass)
         if image_name:
             image_id = image_id_from_image_name(session, image_name)
             query = query.filter(DBAnnotation.image_id == image_id)
@@ -188,11 +188,12 @@ def post(
 
 
 @router.post(
-    "/annotations/import",
-    response_model=List[int],
-    status_code=201,
-    summary="Import",
-    description="Import annotations without validating status or permissions. "
+    "/annotations/datasets",
+    response_model=Dict[str, int],
+    status_code=200,
+    summary="Dataset",
+    description="Batch import a dataset from an external source (not another "
+    "GeoImageNet instance) keeping the provided annotator_id"
     "This route should be reserved for administrators.",
 )
 def post(
@@ -200,10 +201,97 @@ def post(
     body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
     srid: int = DEFAULT_SRID,
 ):
-    return _post_annotations(request, body, srid, verify=False)
+    logged_user_id = get_logged_user_id(request)
+
+    total_annotations = len(_geojson_features_from_body(body))
+    annotation_ids = _post_annotations(
+        request, body, srid, trust_annotator_id=True, raise_outside_image=False
+    )
+
+    with connection_manager.get_db_session() as session:
+        query_annotation_ids = session.query(DBAnnotation).filter(
+            DBAnnotation.id.in_(annotation_ids)
+        )
+
+        query_annotation_ids.update(
+            {DBAnnotation.status: AnnotationStatus.pre_released},
+            synchronize_session=False,
+        )
+        session.commit()
+
+        # reject annotations that don't have an image
+        query_annotation_ids.filter(DBAnnotation.image_id == None).update(
+            {DBAnnotation.status: AnnotationStatus.rejected}, synchronize_session=False
+        )
+        session.commit()
+
+        # release annotations that are on an image
+        query_annotation_ids.filter(DBAnnotation.image_id != None).update(
+            {DBAnnotation.status: AnnotationStatus.released}, synchronize_session=False
+        )
+        session.commit()
+
+        accepted_annotations = (
+            session.query(func.count(DBAnnotation.id))
+            .filter(DBAnnotation.id.in_(annotation_ids))
+            .filter(DBAnnotation.image_id != None)
+            .scalar()
+        )
+
+        rejected_annotations_query = (
+            session.query(DBAnnotation.id)
+            .filter(DBAnnotation.id.in_(annotation_ids))
+            .filter(DBAnnotation.image_id == None)
+            .all()
+        )
+        rejected_annotations = len(rejected_annotations_query)
+        if rejected_annotations:
+            _record_validation_events(session, AnnotationStatus.rejected, logged_user_id, rejected_annotations_query)
+            session.commit()
+
+    return {
+        "total_annotations": total_annotations,
+        "accepted_annotations": accepted_annotations,
+        "rejected_annotations": rejected_annotations,
+    }
 
 
-def _post_annotations(request, body, srid, verify=True):
+@router.post(
+    "/annotations/import",
+    response_model=List[int],
+    status_code=201,
+    summary="Import",
+    description="Import annotations from another GeoImageNet instance keeping "
+    "the provided status or permissions. "
+    "This route should be reserved for administrators.",
+)
+def post(
+    request: Request,
+    body: Union[GeoJsonFeature, GeoJsonFeatureCollection] = Body(...),
+    srid: int = DEFAULT_SRID,
+):
+    return _post_annotations(request, body, srid, trust_status=True)
+
+
+def _post_annotations(
+    request,
+    body,
+    srid,
+    *,
+    trust_status=False,
+    trust_annotator_id=False,
+    raise_outside_image=True,
+) -> List[int]:
+    """
+
+    :param request: request instance
+    :param body: POST content
+    :param srid: EPSG code
+    :param trust_status: Insert the provided status and review_requested field, not the defaults for new annotations
+    :param trust_annotator_id: Insert the provided annotator_id in the annotation properties, not the logged user id
+    :param raise_outside_image: Raise an error when an annotation is outside all of the images
+    :return: A list of written annotation ids
+    """
     logged_user_id = get_logged_user_id(request)
 
     with connection_manager.get_db_session() as session:
@@ -217,49 +305,98 @@ def _post_annotations(request, body, srid, verify=True):
 
     features = _geojson_features_from_body(body)
 
-    def _make_values(feature: GeoJsonFeature):
+    # configure feature properties
+    for feature in features:
         props = feature.properties
 
-        annotator_id = logged_user_id
-        geom = feature.geometry.json()
+        props.annotator_id = (
+            props.annotator_id
+            if trust_annotator_id and props.annotator_id
+            else logged_user_id
+        )
 
         if props.taxonomy_class_code:
             if props.taxonomy_class_code not in taxonomy_class_dict:
-                raise HTTPException(404, f"taxonomy_class_code not found: {props.taxonomy_class_code}")
-            taxonomy_class_id = taxonomy_class_dict[props.taxonomy_class_code]
+                raise HTTPException(
+                    404, f"taxonomy_class_code not found: {props.taxonomy_class_code}"
+                )
+            props.taxonomy_class_id = taxonomy_class_dict[props.taxonomy_class_code]
         elif props.taxonomy_class_id:
             if props.taxonomy_class_id not in taxonomy_class_ids:
-                raise HTTPException(404, f"taxonomy_class_id not found: {props.taxonomy_class_id}")
-            taxonomy_class_id = props.taxonomy_class_id
+                raise HTTPException(
+                    404, f"taxonomy_class_id not found: {props.taxonomy_class_id}"
+                )
+            props.taxonomy_class_id = props.taxonomy_class_id
         else:
-            raise HTTPException(400, f"One of taxonomy_class_id or taxonomy_class_code required")
+            raise HTTPException(
+                400, f"One of taxonomy_class_id or taxonomy_class_code required"
+            )
 
-        status = AnnotationStatus.new.value if verify else props.status.value
-        review_requested = False if verify else props.review_requested
+        props.status = (
+            props.status.value if trust_status else AnnotationStatus.new.value
+        )
+        props.review_requested = props.review_requested if trust_status else False
 
         if props.image_name:
             if props.image_name not in images_dict:
                 raise HTTPException(404, f"image_name not found: {props.image_name}")
-            image_id = images_dict[props.image_name]
-        elif props.image_id:
+            props.image_id = images_dict[props.image_name]
+        elif props.image_id is not None:
             if props.image_id not in image_ids:
                 raise HTTPException(404, f"image_id not found: {props.image_id}")
-            image_id = props.image_id
-        else:
-            raise HTTPException(400, f"One of image_name or image_id required")
-
-        return (
-            annotator_id,
-            geom,
-            taxonomy_class_id,
-            status,
-            review_requested,
-            image_id,
-        )
+            props.image_id = props.image_id
 
     geom_template = f"ST_SetSRID(ST_GeomFromGeoJSON(%s), {srid})"
     if srid != DEFAULT_SRID:
         geom_template = f"ST_Transform({geom_template}, {DEFAULT_SRID})"
+
+    # configure image ids with image bounding boxes
+    values = []
+    for n, f in enumerate(features):
+        geom = geom_template % f"'{f.geometry.json()}'"
+        values.append(f"({geom}, {n})")
+
+    with connection_manager.get_db_session() as session:
+        rows = session.execute(
+            """
+            with geometry_list (geometry, sort_order) as (
+                values {}
+            )
+            select array_agg(image.id)
+            from image
+                right join geometry_list on ST_Contains(image.trace, geometry_list.geometry)
+            group by geometry_list.sort_order
+            order by geometry_list.sort_order;
+        """.format(
+                " ".join(values)
+            )
+        )
+        feature_image_ids = [q[0] for q in rows]
+
+    for feature, image_ids in zip(features, feature_image_ids):
+        image_id = feature.properties.image_id
+        if image_id:
+            if image_id not in image_ids:
+                raise HTTPException(
+                    400,
+                    f"One of the annotations is not contained within the given image",
+                )
+        elif image_ids:
+            feature.properties.image_id = image_ids[0]
+        elif raise_outside_image:
+            raise HTTPException(
+                400, f"One of the annotations is not contained within an image"
+            )
+
+    def _make_values(feature: GeoJsonFeature):
+        return (
+            feature.properties.annotator_id,
+            feature.geometry.json(),
+            feature.properties.taxonomy_class_id,
+            feature.properties.status,
+            feature.properties.review_requested,
+            feature.properties.image_id,
+        )
 
     template = f"(%s, {geom_template}, %s, %s, %s, %s)"
 
@@ -406,11 +543,11 @@ def _record_validation_events(session, desired_status, user_id, query):
         session.bulk_save_objects(
             [
                 ValidationEvent(
-                    annotation_id=a.id,
+                    annotation_id=annotation.id,
                     validator_id=user_id,
                     validation_value=validation_value[desired_status],
                 )
-                for a in query
+                for annotation in query
             ]
         )
 
@@ -555,11 +692,7 @@ def _ensure_annotation_owner(annotation_ids: List[int], logged_user: int):
             )
 
 
-@router.post(
-    "/annotations/request_review",
-    status_code=204,
-    summary="Request review",
-)
+@router.post("/annotations/request_review", status_code=204, summary="Request review")
 def request_review(body: AnnotationRequestReview, request: Request):
     """Set the 'review_requested' field for a list of annotations"""
     logged_user_id = get_logged_user_id(request)

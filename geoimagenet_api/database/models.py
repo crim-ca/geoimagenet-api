@@ -71,7 +71,7 @@ class Annotation(Base):
     taxonomy_class_id = Column(
         Integer, ForeignKey("taxonomy_class.id"), nullable=False, index=True
     )
-    image_id = Column(Integer, ForeignKey("image.id"), nullable=False, index=True)
+    image_id = Column(Integer, ForeignKey("image.id"), nullable=True, index=True)
     status = Column(
         Enum(AnnotationStatus, name="annotation_status_enum"),
         nullable=False,

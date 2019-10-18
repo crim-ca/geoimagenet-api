@@ -168,6 +168,12 @@ def load_testing_data():
             "bits": 8,
             "filename": "test_image",
             "extension": ".tif",
+            "trace": "SRID=3857;POLYGON(("
+                     "-8126322.82790897 5465442.18332275,"
+                     "-8015003.3371157 5465442.18332275,"
+                     "-8015003.3371157 5621521.48619207,"
+                     "-8126322.82790897 5621521.48619207,"
+                     "-8126322.82790897 5465442.18332275))",
         }
         session.add(models.Image(**image_data))
         image_data["filename"] = "test_image2"
