@@ -14,7 +14,10 @@ image_id_to_cleanup = 3
 
 @pytest.fixture(autouse=True)
 def magpie_current_user_1(monkeypatch):
-    monkeypatch.setattr(geoimagenet_api.endpoints.annotations, "get_logged_user_id", lambda *a: 1)
+    from geoimagenet_api.endpoints.annotations import annotations, status
+
+    monkeypatch.setattr(annotations, "get_logged_user_id", lambda *a: 1)
+    monkeypatch.setattr(status, "get_logged_user_id", lambda *a: 1)
 
 
 def make_annotation(id, user_id, taxonomy_class, status):
@@ -57,9 +60,7 @@ def cleanup_annotations(request):
     def delete_annotations():
         with connection_manager.get_db_session() as session:
             session.query(ValidationEvent).delete()
-            session.query(Annotation).filter_by(
-                image_id=image_id_to_cleanup
-            ).delete()
+            session.query(Annotation).filter_by(image_id=image_id_to_cleanup).delete()
             session.commit()
 
     request.addfinalizer(delete_annotations)
@@ -358,7 +359,8 @@ def test_validate_write_validation_in_database(cleanup_annotations, client):
 def test_validate_write_rejection_in_database(cleanup_annotations, client):
     ids = insert_annotations(
         # user_id, taxonomy_class, status
-        (2, 2, AnnotationStatus.released), (2, 1, AnnotationStatus.released)
+        (2, 2, AnnotationStatus.released),
+        (2, 1, AnnotationStatus.released),
     )
     post_annotation_ids(client, "reject", ids)
 

@@ -86,9 +86,11 @@ polygon_3857 = {"type": "Polygon", "coordinates": [test_3857_coords_inside]}
 
 @pytest.fixture(autouse=True)
 def magpie_current_user_1(monkeypatch):
-    monkeypatch.setattr(
-        geoimagenet_api.endpoints.annotations, "get_logged_user_id", lambda *a: 1
-    )
+    from geoimagenet_api.endpoints.annotations import annotations, status, import_export
+
+    monkeypatch.setattr(annotations, "get_logged_user_id", lambda *a: 1)
+    monkeypatch.setattr(status, "get_logged_user_id", lambda *a: 1)
+    monkeypatch.setattr(import_export, "get_logged_user_id", lambda *a: 1)
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -279,6 +281,7 @@ def test_annotation_log_triggers():
             )
 
         assert session.query(AnnotationLog).count() == 1
+        # pylint: disable=no-member
         wkt_geom = session.query(functions.ST_GeomFromEWKT(start_geometry)).scalar()
         assert_log_equals(
             get_last_log(),
@@ -528,7 +531,6 @@ def test_annotations_request_review_not_found(client, simple_annotation):
 def test_annotations_put(client, any_geojson_3857, simple_annotation):
     with connection_manager.get_db_session() as session:
         annotation_id = simple_annotation.id
-        annotator_id = simple_annotation.annotator_id
 
         if any_geojson_3857["type"] == "FeatureCollection":
             first_feature = any_geojson_3857["features"][0]
