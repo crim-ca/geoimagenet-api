@@ -34,6 +34,7 @@ pipeline {
                     docker.image('kartoza/postgis:9.6-2.4').withRun('-e "ALLOW_IP_RANGE=0.0.0.0/0" -e "IP_LIST=*" -e "POSTGRES_USER=docker" -e "POSTGRES_PASS=docker"') { c ->
                         sh """
                         docker run --rm --link ${c.id}:postgis -v \$(pwd)/${TEST_OUTPUT}:/code/${TEST_OUTPUT} -e GEOIMAGENET_API_POSTGIS_USER=docker -e GEOIMAGENET_API_POSTGIS_PASSWORD=docker -e GEOIMAGENET_API_POSTGIS_HOST=postgis $LOCAL_IMAGE_NAME /bin/sh -c \" \
+                        apk add gcc musl-dev && \
                         pip install -r requirements_dev.txt && \
                         pytest --junitxml ${TEST_OUTPUT}/junit.xml --cov 2>&1 | tee ${TEST_OUTPUT}/coverage.out && \
                         chmod -R 777 ${TEST_OUTPUT}\"
