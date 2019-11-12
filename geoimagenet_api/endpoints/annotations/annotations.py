@@ -355,7 +355,7 @@ def post_annotations(
             group by geometry_list.sort_order
             order by geometry_list.sort_order;
         """.format(
-                " ".join(values)
+                ", ".join(values)
             )
         )
         feature_image_ids = [q[0] for q in rows]

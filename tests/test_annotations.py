@@ -1044,6 +1044,21 @@ def test_annotation_post_properties_import(client):
         assert annotation_2["properties"]["review_requested"]
 
 
+def test_annotation_import_more_than_one(client):
+    with _clean_annotation_session() as session:
+        n_annotations = 5
+        for _ in range(n_annotations):
+            write_annotation(
+                session=session, status=AnnotationStatus.validated,
+            )
+        annotations = client.get("/annotations").json()
+
+        r = client.post("/annotations/import", json=annotations)
+        r.raise_for_status()
+
+        assert n_annotations * 2 == session.query(Annotation).count()
+
+
 def test_annotation_post_datasets(client, dummy_images):
     with _clean_annotation_session() as session:
         write_annotation(
