@@ -13,6 +13,12 @@ __pycache__/
 # Pycharm
 .idea/
 
+# vscode
+.vscode
+
+# go-jira
+.jira.d
+
 # Distribution / packaging
 .Python
 build/

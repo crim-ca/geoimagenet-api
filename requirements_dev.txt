@@ -6,3 +6,4 @@ gitchangelog
 pytest-cov
 sphinxcontrib-confluencebuilder
 sphinx-click
+rope
