@@ -23,3 +23,10 @@ will be as followed:
 As a reference, here is a simple python script to import annotations:
 
 .. literalinclude:: examples/import-export.py
+
+To import annotations from an other source, use `POST` on `/annotations/datasets`. As above, 
+will need to login to magpie.
+
+Here is an example:
+
+.. literalinclude:: examples/import-datasets.py
