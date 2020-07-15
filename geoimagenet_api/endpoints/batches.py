@@ -10,7 +10,7 @@ from sqlalchemy import func, and_
 
 from geoimagenet_api.config import config
 from geoimagenet_api.endpoints.images import query_rgbn_16_bit_image
-from geoimagenet_api.endpoints.taxonomy import get_latest_taxonomy_ids
+from geoimagenet_api.endpoints.taxonomy import get_adjusted_taxonomy_ids
 from geoimagenet_api.endpoints.taxonomy_classes import get_all_taxonomy_classes_ids
 from geoimagenet_api.database.models import (
     Annotation as DBAnnotation,
@@ -38,12 +38,12 @@ router = APIRouter()
 def get_annotations():
     """Get annotations for the latest taxonomy version."""
 
-    latest_taxonomy_ids = get_latest_taxonomy_ids()
-
+    adjusted_ids = get_adjusted_taxonomy_ids()
+    
     with connection_manager.get_db_session() as session:
-
+        
         taxonomy_ids = []
-        for taxonomy_id in latest_taxonomy_ids.values():
+        for taxonomy_id in adjusted_ids.values():
             taxonomy_ids += get_all_taxonomy_classes_ids(session, taxonomy_id)
 
         subquery = query_rgbn_16_bit_image(session)
@@ -61,7 +61,8 @@ def get_annotations():
         )
 
         properties = ["image_name", "taxonomy_class_id"]
-        stream = geojson_stream(query, properties=properties, with_geometry=True)
+        stream = geojson_stream(
+            query, properties=properties, with_geometry=True)
 
         return StreamingResponse(stream, media_type="application/json")
 
