@@ -20,9 +20,21 @@ will be as followed:
    being forced to `new` for the regular POST on `/annotations`
  - The review_requested flag will behave in the same way as the status property
 
+This approach is slower as it needs to import each annotation individually,
 As a reference, here is a simple python script to import annotations:
 
-.. literalinclude:: examples/import-export.py
+.. literalinclude:: examples/import-export-via-import.py
+
+However, depending on the versions of each instances used in a transfert, the `/annotations/import`
+route can cause problems. For exemple, if the images are not from the same database or server.
+The consequences of these differences can be false negatives (more rejected annotations) to 
+outright failure of the whole process.
+
+Instead, you can use the `/annotations/datasets` route. The annotations have to be cleaned beforehand
+for this process to work.
+
+Example script for `/annotations/datasets` route
+.. literalinclude:: examples/import-export-via-datasets.py
 
 To import annotations from an other source, use `POST` on `/annotations/datasets`. As above, 
 will need to login to magpie.
