@@ -1122,6 +1122,7 @@ def test_annotation_post_datasets_reject_outside_image(client, dummy_images):
 
         # assert logs
         logs = session.query(AnnotationLog).all()[-3:]
+        print("print lines to confirm log order")
         print(logs[0].status)
         print(logs[1].status)
         print(logs[2].status)
