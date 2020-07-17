@@ -15,8 +15,8 @@ If you want, you can connect to it with the url::
 
   postgresql://docker:docker@localhost/gis
 
-You can also run the tests having a local Geoimagenet instance up and running, as long as you change (temporarily)
-the following variables in geoimagenet_api/config/default.ini, or use a custom.ini file, where:
+You can also run the tests having a local Geoimagenet instance up and running, as long as you change (temporarily) 
+variables in geoimagenet_api/config/default.ini, or use a custom.ini file, where:
 
 `postgis_user` and `postgis_password` are equal to the values assigned to them in the env.local of
 your instance (the compose repository)
