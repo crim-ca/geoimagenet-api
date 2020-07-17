@@ -1121,7 +1121,7 @@ def test_annotation_post_datasets_reject_outside_image(client, dummy_images):
         assert annotation_1["features"][0]["properties"]["status"] == "rejected"
 
         # assert logs
-        logs = session.query(AnnotationLog).all()[-3:]
+        logs = session.query(AnnotationLog).order_by(AnnotationLog.created_at)[-3:]
         assert logs[0].status == AnnotationStatus.new
         assert logs[1].status == AnnotationStatus.pre_released
         assert logs[2].status == AnnotationStatus.rejected

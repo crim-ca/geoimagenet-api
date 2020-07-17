@@ -167,6 +167,9 @@ def get_taxonomy_classes_tree(
 
     Return the specified taxonomy_class_id and its children.
 
+    Be sure to use the TaxonomyClass.id as input, and not TaxonomyClass.taxonomy_id, else this
+    function will build the wrong taxonomy tree.
+
     This is the most effective solution I found to query this kind of nested elements.
 
     The methods tried are:

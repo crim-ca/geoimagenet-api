@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query, Path
 from slugify import slugify
 from sqlalchemy import func
 
+
 import sentry_sdk
 from starlette.exceptions import HTTPException
 
@@ -18,7 +19,11 @@ router = APIRouter()
 
 
 def get_latest_taxonomy_ids() -> Dict[str, int]:
-    """Get ids for the latest taxonomies."""
+    """Get ids for the latest taxonomies.
+    
+    Returns the taxonomy ids from the Taxonomy database, which are the
+    root classes for the TaxonomyClass database.
+    """
     with connection_manager.get_db_session() as session:
         query = session.query(
             DBTaxonomy.name_fr,
@@ -27,6 +32,24 @@ def get_latest_taxonomy_ids() -> Dict[str, int]:
         ).group_by(DBTaxonomy.name_fr)
         return {q.name_fr: q.ids[q.versions.index(max(q.versions))] for q in query}
 
+def get_adjusted_taxonomy_ids() -> Dict[str, int]:
+    """Get the TaxonomyClass ids for the latest taxonomies.
+    
+    Returns the TaxonomyClass ids for the root classes found in the 
+    Taxonomy database.
+    """
+    latest_taxonomy_ids = get_latest_taxonomy_ids()
+
+    with connection_manager.get_db_session() as session:
+
+        adjust_query = session.query(
+            DBTaxonomyClass.name_fr,
+            func.array_agg(DBTaxonomyClass.id).label("ids"),
+            func.array_agg(DBTaxonomyClass.taxonomy_id).label("taxids"),
+        ).filter(DBTaxonomyClass.name_fr.in_(latest_taxonomy_ids.keys())
+        ).group_by(DBTaxonomyClass.name_fr)
+        
+        return {q.name_fr: q.ids[q.taxids.index(latest_taxonomy_ids[q.name_fr])] for q in adjust_query}
 
 def aggregated_taxonomies():
     with connection_manager.get_db_session() as session:

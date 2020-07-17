@@ -7,6 +7,8 @@ Changelog
 Changes
 ~~~~~~~
 - Delete trace cache layer in gwc
+- Bugfix in how "batches/annotations" route gets Taxonomy ids
+
 
 1.4.1 (2019-11-12)
 ------------------
