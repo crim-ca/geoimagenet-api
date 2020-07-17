@@ -1,6 +1,21 @@
 Changelog
 =========
 
+Unreleased
+------------------
+
+Changes
+~~~~~~~
+- Bugfix in how "batches/annotations" route gets Taxonomy ids
+
+
+1.4.1 (2019-11-12)
+------------------
+
+Changes
+~~~~~~~
+- Bugfix in sql import statement.
+
 
 1.4.0 (2019-10-18)
 ------------------
