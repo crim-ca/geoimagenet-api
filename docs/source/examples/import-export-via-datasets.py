@@ -100,6 +100,8 @@ for i, ft in enumerate(features):
     new_payload.append(ft)
     count += 1
     is_last_feature = i == num_annotation -1
+    
+    # The count number can be played with, depending of your infrastructure
     if count == 500 or is_last_feature:
         dict = {
             'type': type,

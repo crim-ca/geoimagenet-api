@@ -23,9 +23,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 #
 # Change the values below for your needs
 #
-host_address = "https://geoimagenet.ca/"
+# Recommended to create a specific user before hand with the role of importer only
+host_address = "https://ip-address"
 host_user = "osm"
-annotation_file = 'Annotations_OSM_All_3857.geojson'
+annotation_file = 'file/path/and/name.geojson'
 verify_ssl = False
 
 def login(host, username) -> requests.Session:

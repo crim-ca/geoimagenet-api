@@ -91,6 +91,10 @@ session_2 = login(host_to, host_to_user)
 # This loop is slow because of how the API haddles the import.
 # If a single annotation has a non matching image id between GIN
 # instances, it will reject the whole batch.
+#
+# If you are sure there will be no errors (identical instances, for example), 
+# you can take inspiration from import-export-via-datasets.py and speed up 
+# the process by packaging more annotations in each request
 for i, ft in enumerate(features):
     new_payload.append(ft)
     count += 1
@@ -108,7 +112,9 @@ for i, ft in enumerate(features):
         batch_rejected += 1
         error_msg.append(r.json()["detail"])
     new_payload = []
- 
+    
+    # The count number can be played with, depending of your infrastructure, but will only
+    # affect the display of information, not the speed
     if count == 500 or is_last_feature:
         count = 0
         print(f"Read {i + 1} annotations out of {num_annotation}, {batch_rejected} annotations have been rejected for the following reasons:")
