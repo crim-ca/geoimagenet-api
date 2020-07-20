@@ -1,4 +1,5 @@
 from getpass import getpass
+import os
 import requests
 import json
 import urllib3
@@ -24,9 +25,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Change the values below for your needs
 #
 # Recommended to create a specific user before hand with the role of importer only
-host_address = "https://ip-address"
-host_user = "osm"
-annotation_file = 'file/path/and/name.geojson'
+host_address = os.getenv("HOST_ADDRESS", "https://ip-address")
+host_user = os.getenv("HOST_USER", "admin")
+annotation_file = os.getenv("ANNOTATION_FILE", "file/path/and/name.geojson")
 verify_ssl = False
 
 def login(host, username) -> requests.Session:
@@ -62,25 +63,22 @@ new_payload = []
 count = 0
 num_annotation = len(annotations['features'])
 
-for i, ft in enumerate(features):
-    new_payload.append(ft)
-    count += 1
-    is_last_feature = i == num_annotation - 1
-    if count == 500 or is_last_feature:
-        dict = {
-            'type': type,
-            'crs': crs,
-            'name': name,
-            'features': new_payload
-        }
-        r = session.post(
-            f"{host_address}/api/v1/annotations/datasets", json=dict, verify=verify_ssl
-        )
-        r.raise_for_status()
-        count = 0
-        new_payload = []
+# The step number can be played with, depending of your infrastructure
+step = 500
+for i in range(0, num_annotation, step):
+    new_payload += features[i: i + step]
+    dict = {
+        'type': type,
+        'crs': crs,
+        'features': new_payload
+    }
+    r = session.post(
+        f"{host_address}/api/v1/annotations/datasets", json=dict, verify=verify_ssl)
+    r.raise_for_status()
+    count += len(new_payload)
+    new_payload = []
 
-        print(f"\nRead {i + 1} annotations out of {num_annotation}. Batch summary:")
-        print(r.json())
+    print(f"\nRead {count} annotations out of {num_annotation}. Batch summary:")
+    print(r.json())
 
 print("All annotations have been written")

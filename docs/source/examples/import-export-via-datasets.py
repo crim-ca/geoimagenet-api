@@ -1,4 +1,5 @@
 from getpass import getpass
+import os
 import requests
 import datetime
 import json
@@ -19,14 +20,14 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 #
 # Change the values below for your needs
 #
-host_from = "https://ip-address"
-host_from_user = "admin"
+host_from = os.getenv("HOST_FROM", "https://ip-address")
+host_from_user = os.getenv("USER_FROM", "admin")
 
-host_to = "https://ip-address"
-host_to_user = "admin"
+host_to = os.getenv("HOST_TO", "https://ip-address")
+host_to_user = os.getenv("USER_TO", "admin")
 
+annotation_status = os.getenv("STATUS", "validated")
 verify_ssl = False
-annotation_status = "released"
 
 
 # Utility login function
@@ -95,26 +96,23 @@ num_annotation = len(annotations['features'])
 # POST request
 #
 session_2 = login(host_to, host_to_user)
- 
-for i, ft in enumerate(features):
-    new_payload.append(ft)
-    count += 1
-    is_last_feature = i == num_annotation -1
-    
-    # The count number can be played with, depending of your infrastructure
-    if count == 500 or is_last_feature:
-        dict = {
-            'type': type,
-            'crs': crs,
-            'features': new_payload
-        }
-        r = session_2.post(
-            f"{host_to}/api/v1/annotations/datasets", json=dict, verify=verify_ssl)
-        r.raise_for_status()
-        count = 0
-        new_payload = []
- 
-        print(f"\nRead {i + 1} annotations out of {num_annotation}. Batch summary:")
-        print(r.json())
+
+# The step number can be played with, depending of your infrastructure
+step = 500
+for i in range(0, num_annotation, step):
+    new_payload += features[i: i + step]
+    dict = {
+        'type': type,
+        'crs': crs,
+        'features': new_payload
+    }
+    r = session_2.post(
+        f"{host_to}/api/v1/annotations/datasets", json=dict, verify=verify_ssl)
+    r.raise_for_status()
+    count += len(new_payload)
+    new_payload = []
+
+    print(f"\nRead {count} annotations out of {num_annotation}. Batch summary:")
+    print(r.json())
 
 print("All annotations have been read")

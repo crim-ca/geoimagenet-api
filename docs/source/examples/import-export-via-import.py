@@ -1,4 +1,5 @@
 from getpass import getpass
+import os
 import requests
 import datetime
 import json
@@ -19,15 +20,27 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 #
 # Change the values below for your needs
 #
-host_from = "https://ip-address"
-host_from_user = "admin"
+#
+host_from = os.getenv("HOST_FROM", "https://ip-address"")
+host_from_user = os.getenv("USER_FROM", "admin")
 
-host_to = "https://ip-address"
-host_to_user = "admin"
+host_to = os.getenv("HOST_TO", "https://ip-address"")
+host_to_user = os.getenv("USER_TO", "admin")
 
+annotation_status = os.getenv("STATUS", "validated")
 verify_ssl = False
-annotation_status = "released"
 
+# The main loop of this script is slow because of how the API haddles the import.
+# If a single annotation has a non matching image id between GIN
+# instances, it will reject the whole batch.
+#
+# If you are sure there will be no errors (identical instances, for example), 
+# you can set "step" to a higher number in order to process the annotations in batches
+# instead of individually.
+step = int(os.getenv("STEP_VALUE", 1))
+if not step or not isinstance(step, int) or step < 1:
+    print("Variable named step is not valid. Must be a number and higher than zero")
+    exit()
 
 # Utility login function
 def login(host, username) -> requests.Session:
@@ -79,8 +92,9 @@ crs = annotations['crs']
 new_payload = []
 count = 0
 num_annotation = len(annotations['features'])
-total_rejected = 0
-batch_rejected = 0
+batch_num = 0
+total_annotations_rejected = 0
+batch_annotations_rejected = 0
 error_msg = []
 
 #
@@ -88,17 +102,18 @@ error_msg = []
 #
 session_2 = login(host_to, host_to_user)
 
-# This loop is slow because of how the API haddles the import.
-# If a single annotation has a non matching image id between GIN
-# instances, it will reject the whole batch.
-#
-# If you are sure there will be no errors (identical instances, for example), 
-# you can take inspiration from import-export-via-datasets.py and speed up 
-# the process by packaging more annotations in each request
-for i, ft in enumerate(features):
-    new_payload.append(ft)
-    count += 1
-    is_last_feature = i == num_annotation -1
+count_step = 500
+batch_msg = f"\nProcessing annotations individually, showing result in batches of {count_step}:"
+if step > 1:
+    count_step = step
+    batch_msg = f"\nProcessing annotations in batches of {count_step}"
+
+print(batch_msg)
+
+for i in range(0, num_annotation, step):
+    new_payload += features[i: i + step]
+    count += len(new_payload)
+    is_last_feature = count == num_annotation
     dict = {
         'type': type,
         'crs': crs,
@@ -107,20 +122,30 @@ for i, ft in enumerate(features):
     r = session_2.post(
         f"{host_to}/api/v1/annotations/import", json=dict, verify=verify_ssl)
     r.raise_for_status()
+    
     if not isinstance(r.json(), list):
-        total_rejected += 1
-        batch_rejected += 1
+        total_annotations_rejected += 1
+        batch_annotations_rejected += 1
         error_msg.append(r.json()["detail"])
     new_payload = []
-    
-    # The count number can be played with, depending of your infrastructure, but will only
-    # affect the display of information, not the speed
-    if count == 500 or is_last_feature:
-        count = 0
-        print(f"Read {i + 1} annotations out of {num_annotation}, {batch_rejected} annotations have been rejected for the following reasons:")
-        if batch_rejected > 0:
+
+    if count % count_step == 0 or is_last_feature:
+
+        msg = f"\nRead {count} annotations out of {num_annotation}"
+        fail_msg = f"{batch_annotations_rejected} annotations of this batch have been rejected have been rejected for the following reason(s):"
+        exit_message = f"All annotations have been read, {total_annotations_rejected} annotations have been rejected"
+
+        if step > 1:
+            msg = f"\nRead {count} annotations out of {num_annotation}."
+            fail_msg = "At least one annotation has been rejected, causing this batch to fail for the following reason(s):"
+            exit_message = f"All annotations have been read, {total_annotations_rejected} batches have been rejected out of {len(range(0, num_annotation, step))}."
+
+        print(msg)
+        if batch_annotations_rejected > 0:
+            print(fail_msg)
             print(list(set(error_msg)))
-        batch_rejected = 0
+
+        batch_annotations_rejected = 0
         error_msg = []
  
-print(f"All annotations have been read, {total_rejected} annotations have been rejected")
+print(exit_message)
