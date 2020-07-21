@@ -9,9 +9,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Even if launching this script for local instances, keep
 # the https of the host address and 'verify_ssl = False'
 #
-# This script includes a workaround for an import size problem with the API.
-# Problems were similar to the /annotations/datasets route, so the
-# same solution is applied here.
+# This script includes a workaround for an import size problem with the API
+# on the `annotations/datasets` route
 #
 # The features are bundled in smaller post requests and everything
 # should work properly.
@@ -28,6 +27,14 @@ host_to_user = os.getenv("USER_TO", "admin")
 
 annotation_status = os.getenv("STATUS", "validated")
 verify_ssl = False
+
+# The step number can be played with, depending of your infrastructure
+# 500 is the recommended value to prevent timeouts and other errors cited
+# above
+step = int(os.getenv("STEP_VALUE", 500))
+if not step or not isinstance(step, int) or step < 1:
+    print("Variable named step is not valid. Must be a number and higher than zero")
+    exit()
 
 
 # Utility login function
@@ -97,8 +104,6 @@ num_annotation = len(annotations['features'])
 #
 session_2 = login(host_to, host_to_user)
 
-# The step number can be played with, depending of your infrastructure
-step = 500
 for i in range(0, num_annotation, step):
     new_payload += features[i: i + step]
     dict = {

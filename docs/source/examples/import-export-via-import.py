@@ -37,6 +37,8 @@ verify_ssl = False
 # If you are sure there will be no errors (identical instances, for example), 
 # you can set "step" to a higher number in order to process the annotations in batches
 # instead of individually.
+#
+# A value above 500 is likely to cause errors as cited above.
 step = int(os.getenv("STEP_VALUE", 1))
 if not step or not isinstance(step, int) or step < 1:
     print("Variable named step is not valid. Must be a number and higher than zero")

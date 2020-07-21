@@ -30,6 +30,14 @@ host_user = os.getenv("HOST_USER", "admin")
 annotation_file = os.getenv("ANNOTATION_FILE", "file/path/and/name.geojson")
 verify_ssl = False
 
+# The step number can be played with, depending of your infrastructure
+# 500 is the recommended value to prevent timeouts and other errors cited
+# above
+step = int(os.getenv("STEP_VALUE", 500))
+if not step or not isinstance(step, int) or step < 1:
+    print("Variable named step is not valid. Must be a number and higher than zero")
+    exit()
+
 def login(host, username) -> requests.Session:
     login_url = f"{host}/magpie/signin"
     data = {
@@ -63,8 +71,7 @@ new_payload = []
 count = 0
 num_annotation = len(annotations['features'])
 
-# The step number can be played with, depending of your infrastructure
-step = 500
+
 for i in range(0, num_annotation, step):
     new_payload += features[i: i + step]
     dict = {
