@@ -37,8 +37,8 @@ verify_ssl = False
 # 500 is the recommended value to prevent timeouts and other errors cited
 # above
 step = int(os.getenv("STEP_VALUE", 500))
-if not step or not isinstance(step, int) or step < 1:
-    print("Variable named step is not valid. Must be a number and higher than zero")
+if not step or step < 1:
+    print("Variable named step is not valid. Must be a number higher than zero")
     exit()
 
 
