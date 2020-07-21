@@ -14,6 +14,11 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 #
 # The features are bundled in smaller post requests and everything
 # should work properly.
+#
+# This script is to be used when only the annotations basic information
+# is to be conserved (without instance specific data), or if the 
+# `import-export-via-import.py` script is not running properly. 
+# The instances must, however, share the same taxonomy codes.
  
  
 #

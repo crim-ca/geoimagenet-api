@@ -15,6 +15,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 #
 # The features are bundled in smaller post requests and everything
 # should work properly.
+#
+# However, depending on the versions of each instances used in a transfert, the `/annotations/import`
+# route can cause problems. For exemple, if the images are not from the same database or server.
+# The consequences of these differences can be false negatives (more rejected annotations) to 
+# outright failure of the whole process.
+#
+# Instead, you can use the `/annotations/datasets` route ( see import-export-via-datasets.py script).
  
  
 #
