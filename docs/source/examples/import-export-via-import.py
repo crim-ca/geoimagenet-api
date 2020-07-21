@@ -21,10 +21,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Change the values below for your needs
 #
 #
-host_from = os.getenv("HOST_FROM", "https://ip-address"")
+host_from = os.getenv("HOST_FROM", "https://ip-address")
 host_from_user = os.getenv("USER_FROM", "admin")
 
-host_to = os.getenv("HOST_TO", "https://ip-address"")
+host_to = os.getenv("HOST_TO", "https://ip-address")
 host_to_user = os.getenv("USER_TO", "admin")
 
 annotation_status = os.getenv("STATUS", "validated")
