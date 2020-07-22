@@ -7,6 +7,17 @@
 Annotation API
 **************
 
+*Warning*
+
+This documentation is generated with the Sphinx library. Any manual modifications outside of
+the source files will eventually be overwritten. 
+
+See the *docs* folder in the source code repository.
+
+=======
+The API
+=======
+
 The GeoImageNet Annotation REST API is the backend for the platform.
 
 Its responsabilities are:

@@ -434,6 +434,18 @@ class GeoServerDatastore:
                         )
                         existing_layers_names.append(layer_name)
 
+                if not self.dry_run:
+                    # gwc layer cache usually gets created by default. Delete it.
+                    logger.info(
+                        f"DELETE layer cache: {workspace_name}:{layer_name}"
+                    )
+                    self.request(
+                        "delete",
+                        f"/layers/{workspace_name}:{layer_name}",
+                        gwc=True,
+                        ignore_codes=[404]
+                    )
+
     def create_styles(self, styles: List[Style]):
         logger.debug(f"Creating styles")
         for style in styles + [default_style]:
